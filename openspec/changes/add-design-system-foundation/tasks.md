@@ -12,8 +12,8 @@ Figma base URL used below: `F = https://www.figma.com/design/1TyF6efL7m5d6DSTktn
 
 ## 3. Colours
 
-- [ ] 3.1 Define the light and dark extended colours (`ending`, `ending-container`, `success`) from D3. Verify: a `commonTest` test asserts each hex value in each mode.
-- [ ] 3.2 **Blocked until the designer adds the missing M3 roles in Figma (design.md, Open Questions).** Then read them with `get_variable_defs`, add them to the D3 table, and build the light and dark `ColorScheme`s from Figma values only. Verify: a `commonTest` test asserts every role in each mode against the D3 table.
+- [ ] 3.1 Define the light and dark extended colours (`ending`, `ending-container`, `success`, `on-success`, `success-container`, `on-success-container`) from D3. Verify: a `commonTest` test asserts each hex value in each mode.
+- [ ] 3.2 Re-read the `Color` collection with `get_variable_defs` and confirm it matches the D3 table, then build the light and dark `ColorScheme`s from Figma values only. Verify: a `commonTest` test asserts every role in each mode against the D3 table.
 
 ## 4. Spacing, radius, elevation, flag opacity
 

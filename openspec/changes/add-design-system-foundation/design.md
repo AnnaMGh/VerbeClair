@@ -52,7 +52,8 @@
 VerbeClairTheme(darkTheme: Boolean = isSystemInDarkTheme(), content)
   +-- MaterialTheme(colorScheme = light/dark, typography = VerbeClairTypography, shapes = VerbeClairShapes)
   +-- CompositionLocalProvider(
-        LocalExtendedColors  -> ending, endingContainer, success (light/dark)
+        LocalExtendedColors  -> ending, endingContainer, success, onSuccess, successContainer,
+                                onSuccessContainer (light/dark)
         LocalSpacing         -> space2 .. space48
         LocalRadius          -> xs, sm, md, lg, xl, full
         LocalElevation       -> level2 (two shadows)
@@ -76,9 +77,21 @@ object VerbeClairTheme { val extendedColors; val spacing; val radius; val elevat
 | color/on-primary-container | `colorScheme.onPrimaryContainer` | #000E5E | #DDE1FF |
 | color/secondary-container | `colorScheme.secondaryContainer` | #E1E1F9 | #444559 |
 | color/on-secondary-container | `colorScheme.onSecondaryContainer` | #191A2C | #E1E1F9 |
+| color/secondary | `colorScheme.secondary` | #5B5D72 | #C4C5DD |
+| color/on-secondary | `colorScheme.onSecondary` | #FFFFFF | #2D2F42 |
+| color/tertiary (alias of color/ending) | `colorScheme.tertiary` | #C0391F | #FFB4A1 |
+| color/on-tertiary | `colorScheme.onTertiary` | #FFFFFF | #5F1409 |
+| color/tertiary-container (alias of color/ending-container) | `colorScheme.tertiaryContainer` | #FFDAD2 | #5F1409 |
+| color/on-tertiary-container | `colorScheme.onTertiaryContainer` | #3E0500 | #FFDAD2 |
 | color/inverse-primary | `colorScheme.inversePrimary` | #B8C4FF | #2E4BCB |
 | color/background | `colorScheme.background` | #FBFAFF | #12131A |
+| color/on-background (alias of color/on-surface) | `colorScheme.onBackground` | #1A1B23 | #E3E1EC |
 | color/surface | `colorScheme.surface` | #FFFFFF | #12131A |
+| color/surface-variant | `colorScheme.surfaceVariant` | #E3E1EC | #464754 |
+| color/surface-tint (alias of color/primary) | `colorScheme.surfaceTint` | #2E4BCB | #B8C4FF |
+| color/surface-dim | `colorScheme.surfaceDim` | #DBD9E4 | #12131A |
+| color/surface-bright | `colorScheme.surfaceBright` | #FFFFFF | #383841 |
+| color/surface-container-lowest | `colorScheme.surfaceContainerLowest` | #FFFFFF | #0D0E15 |
 | color/surface-container-low | `colorScheme.surfaceContainerLow` | #FBFAFF | #1A1B23 |
 | color/surface-container | `colorScheme.surfaceContainer` | #F1F1F9 | #1E1F27 |
 | color/surface-container-high | `colorScheme.surfaceContainerHigh` | #E9E9F3 | #292A32 |
@@ -94,21 +107,32 @@ object VerbeClairTheme { val extendedColors; val spacing; val radius; val elevat
 | color/on-error | `colorScheme.onError` | #FFFFFF | #690005 |
 | color/error-container | `colorScheme.errorContainer` | #FFDAD6 | #93000A |
 | color/on-error-container | `colorScheme.onErrorContainer` | #410002 | #FFDAD6 |
+| color/primary-fixed | `colorScheme.primaryFixed` | #DDE1FF | #DDE1FF |
+| color/primary-fixed-dim | `colorScheme.primaryFixedDim` | #B8C4FF | #B8C4FF |
+| color/on-primary-fixed | `colorScheme.onPrimaryFixed` | #000E5E | #000E5E |
+| color/on-primary-fixed-variant | `colorScheme.onPrimaryFixedVariant` | #1A35AD | #1A35AD |
+| color/secondary-fixed | `colorScheme.secondaryFixed` | #E1E1F9 | #E1E1F9 |
+| color/secondary-fixed-dim | `colorScheme.secondaryFixedDim` | #C4C5DD | #C4C5DD |
+| color/on-secondary-fixed | `colorScheme.onSecondaryFixed` | #191A2C | #191A2C |
+| color/on-secondary-fixed-variant | `colorScheme.onSecondaryFixedVariant` | #444559 | #444559 |
+| color/tertiary-fixed | `colorScheme.tertiaryFixed` | #FFDAD2 | #FFDAD2 |
+| color/tertiary-fixed-dim | `colorScheme.tertiaryFixedDim` | #FFB4A1 | #FFB4A1 |
+| color/on-tertiary-fixed | `colorScheme.onTertiaryFixed` | #3E0500 | #3E0500 |
+| color/on-tertiary-fixed-variant | `colorScheme.onTertiaryFixedVariant` | #8D1500 | #8D1500 |
 | color/ending | `VerbeClairTheme.extendedColors.ending` | #C0391F | #FFB4A1 |
 | color/ending-container | `VerbeClairTheme.extendedColors.endingContainer` | #FFDAD2 | #5F1409 |
 | color/success | `VerbeClairTheme.extendedColors.success` | #2E7D4F | #8FD8A8 |
+| color/on-success | `VerbeClairTheme.extendedColors.onSuccess` | #FFFFFF | #00391D |
+| color/success-container | `VerbeClairTheme.extendedColors.successContainer` | #A4F4BC | #00522C |
+| color/on-success-container | `VerbeClairTheme.extendedColors.onSuccessContainer` | #00210F | #A4F4BC |
 
-**Material 3 roles that Figma does not define** (blocking, see Open Questions):
-- `secondary`, `onSecondary`
-- `tertiary`, `onTertiary`, `tertiaryContainer`, `onTertiaryContainer`
-- `onBackground`
-- `surfaceVariant`, `surfaceTint`, `surfaceBright`, `surfaceDim`, `surfaceContainerLowest`
-- the `*Fixed` roles, if the material3 version's `ColorScheme` requires them
+Every Material 3 role now has a Figma variable, so `ColorScheme` sets no role from Material defaults. Tertiary
+reuses the verb-ending coral palette by decision, so `tertiary` and `ending` look the same. In dark mode
+`on-tertiary` and `tertiary-container` are both #5F1409; they are never drawn on top of each other. The new primitive
+tones (`indigo-gray/20,40,80`, `neutral/4,24,87`, `coral/10,30`, `green/10,20,30,90`) are derived from the existing
+palettes' HCT hue and chroma and still need designer sign-off (see Open Questions).
 
-Possible extended companions, needed only if later components ask for them: `on-success`, `success-container`,
-`on-ending`.
-
-Rule: these roles get no invented value. Colour-scheme task 3.2 stays open until they exist in Figma.
+Rule: no role gets a value that is not in Figma; if Figma changes, this table changes with it.
 
 **Typography:**
 
@@ -198,8 +222,8 @@ Rule: these roles get no invented value. Colour-scheme task 3.2 stays open until
 
 ## Risks / Trade-offs
 
-- [Figma lacks M3 roles] → colour-scheme task 3.2 is blocked until the designer adds them. Everything else
-  (typography, spacing, icons, flag) can go ahead in parallel.
+- [Derived colour tones change after designer review] → the D3 tests compare against the table, so a Figma change
+  fails the build until the table and theme are updated together.
 - [Fraunces has an optical-size axis; Figma may render a different optical size than the static file] → check
   Display/Verb Large and Title/Verb with `android-preview-figma-verify`. If they differ, choose the matching static
   cut (e.g. 9pt or 72pt).
@@ -217,9 +241,10 @@ Rule: these roles get no invented value. Colour-scheme task 3.2 stays open until
 
 ## Open Questions
 
-- **Missing Material 3 colour roles (blocking task 3.2):** the designer adds Light and Dark variables in Figma for the
-  roles listed in D3 (and for `on-success`/`success-container` if components need them). This does not change the
-  approach or the task list, only the values in the colour table.
+- **Designer sign-off on derived colour roles (not blocking):** secondary, on-secondary, the tertiary companions,
+  surface-variant, surface-dim/bright, surface-container-lowest, the `*Fixed` roles and the success companions were
+  added in Figma from tones derived from the existing palettes. The designer confirms or retunes them; any change is
+  a value update in the D3 table only.
 - **Figma variable for flag opacity:** add `color/opacity/flag` = 12% in Figma to match Notion N-14. Until then, the
   token cites Notion.
 - **minSdk mismatch:** `gradle/libs.versions.toml` and `openspec/config.yaml` say minSdk 24, but Notion N-10 says
