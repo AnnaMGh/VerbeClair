@@ -1,0 +1,96 @@
+schema: spec-driven
+
+# Project context — shown to AI when creating every artifact.
+context: |
+  Project: VerbeClair — Kotlin Multiplatform app (Android + iOS) with a shared Compose Multiplatform UI.
+  Package / namespace: com.vamvisions.verbeclair (shared module: com.vamvisions.verbeclair.shared)
+
+  Tech stack:
+    - Kotlin 2.4.20, Compose Multiplatform 1.12.1, Material 3 (compose-material3 1.12.0-alpha03)
+    - AGP 9.1.1 (com.android.kotlin.multiplatform.library for :shared), compileSdk/targetSdk 37, minSdk 24
+    - Dependencies are declared in gradle/libs.versions.toml (version catalog)
+  Modules:
+    - :shared      — common code + Compose UI (commonMain, androidMain, iosMain)
+    - :androidApp  — Android application entry point (depends on :shared)
+    - iosApp       — Xcode project consuming the Shared framework
+
+  ── SOURCES OF TRUTH ─────────────────────────────────────────────────────────
+  Design (Figma) — file key 1TyF6efL7m5d6DSTktnnLy
+    - Screens     (nodeId 3:65):
+        https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=3-65&t=0Uw7BDnFOfArmOK1-1
+    - Components  (nodeId 3:64):
+        https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=3-64&t=HTBk2RJO4rhtOBAH-1
+    - App icons   (nodeId 23:2):
+        https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=23-2&t=HTBk2RJO4rhtOBAH-1
+    - Foundation  (nodeId 3:63) — colors, typography, spacing, shapes, elevation:
+        https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=3-63&t=HTBk2RJO4rhtOBAH-1
+  Requirements (Notion) — page id 3f1d02620bc1804180a7f241233fdacb
+    https://app.notion.com/p/VerbeClair-requirements-3f1d02620bc1804180a7f241233fdacb
+  API (Notion) — page id 3f1d02620bc18082b1d7d0bad9581b31
+    https://app.notion.com/p/VerbeClair-API-3f1d02620bc18082b1d7d0bad9581b31
+
+  ── DECISION POLICY ──────────────────────────────────────────────────────────
+    - Before taking any decision, check Notion (requirements / API) and Figma (design).
+    - If neither specifies the answer, ASK THE USER. Do not invent behavior, copy, or visuals.
+
+  ── FIGMA POLICY ─────────────────────────────────────────────────────────────
+    - Figma MCP tools are mandatory for any design work. If they cannot connect or return an
+      error, STOP and fail with an explicit error. Never improvise or approximate a design.
+    - Implement from the real UI component hierarchy and metadata (get_metadata,
+      get_design_context, get_variable_defs). Never implement from screenshots of the mocks.
+    - Screenshots (get_screenshot, android-preview-figma-verify, android-ui-screenshot-verify) are
+      allowed ONLY for post-implementation verification against Figma — never as the source.
+    - Design system (colors, typography, spacing, shapes) is taken from the Figma Foundation
+      and Components nodes and exposed through the app theme — no hard-coded values.
+    - Before building a screen, check the Components node and the existing code for a component
+      that already exists; reuse it instead of creating a new one.
+    - Icons: export from Figma as SVG and convert with the figma-to-android-vector skill. Use a
+      Material 3 icon only when the icon does not exist in Figma.
+
+  ── SUPPORTED CONFIGURATIONS ─────────────────────────────────────────────────
+    Phone portrait, phone landscape, tablet — each in light mode and dark mode.
+
+  ── DEFINITION OF DONE ───────────────────────────────────────────────────────
+    A task is done only when:
+      1. All tests pass.
+      2. Gradle compiles and `./gradlew build` passes for EVERY affected module, not only the one
+         edited (a change in :shared also affects :androidApp and the iOS targets). When in doubt,
+         run `./gradlew build` from the repository root.
+
+# Per-artifact rules
+rules:
+  proposal:
+    - "Reference the Notion requirement(s) this change implements (link to the requirements page or sub-page)."
+    - "If the requirement is not specified in Notion, stop and ask the user before writing the proposal."
+    - "List the Figma screens/components (with node URLs) affected by the change."
+  specs:
+    - "Derive requirements and scenarios from Notion; derive API contracts only from the Notion API page."
+    - "UI requirements must include scenarios for phone portrait, phone landscape and tablet, in both light and dark mode."
+    - "Every UI state shown in Figma (default, loading, empty, error, disabled, selected, etc.) must have a scenario."
+    - "Never invent behavior missing from Notion/Figma; record it as an open question for the user."
+  design:
+    - "Take colors, typography, spacing and shapes from the Figma Foundation (node 3:63) and Components (node 3:64) and map them to theme tokens; no hard-coded values."
+    - "For each screen, list the existing design-system components it reuses; justify every new component by showing it does not already exist in Figma Components or in code."
+    - "Describe the adaptive layout for phone portrait, phone landscape and tablet, and how light/dark theming is applied."
+    - "Icons come from the Figma App Icons node (23:2) as SVG converted via the figma-to-android-vector skill; Material 3 icons only when the icon is absent from Figma."
+    - "Base the design on Figma metadata (get_metadata / get_design_context / get_variable_defs), never on screenshots."
+  tasks:
+    - "Every component and screen task must include one @Preview per Figma state, with all states covered."
+    - "Each @Preview must be preceded by a comment with the Figma URL of that exact state, e.g. `// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/...?node-id=<state-node-id>`."
+    - "Include preview/verification tasks for phone portrait, phone landscape, tablet, light and dark mode."
+    - "The final task of every change is the done gate: all tests pass and `./gradlew build` passes for every affected module (or the whole project from the root)."
+
+# Per-operation guidance
+operations:
+  apply:
+    guidance:
+      - "Before implementing, re-check Notion (requirements, API) and Figma for the task; ask the user when there is no specification."
+      - "If the Figma MCP tools cannot connect, stop immediately and fail with an error. Never improvise a design."
+      - "Read designs via get_metadata / get_design_context / get_variable_defs; never implement from get_screenshot output."
+      - "Screenshots may be used only to verify a finished implementation against Figma (android-preview-figma-verify / android-ui-screenshot-verify), never as the implementation source."
+      - "Reuse existing design-system components and theme tokens before creating new ones."
+      - "Do not mark a task complete until all tests pass and `./gradlew build` passes for every affected module, including dependent modules."
+  archive:
+    guidance:
+      - "Archive only after confirming, with command output, that all tests pass and `./gradlew build` succeeds for every affected module."
+      - "Confirm every component/screen has a Figma-linked @Preview for each state before archiving."
