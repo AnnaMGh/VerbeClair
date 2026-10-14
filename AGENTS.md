@@ -23,3 +23,6 @@ per-artifact rules and the definition of done. If anything here disagrees with i
 6. **Targets** — phone portrait, phone landscape, tablet; light and dark mode.
 7. **Definition of done** — all tests pass and `./gradlew build` passes for every affected module
    (including modules that depend on the edited one), not just the module edited.
+8. **Branching** — `main` ← `dev` ← work branch. Every feature or change gets a new branch created
+   from `dev`; work branches merge into `dev`, and only `dev` merges into `main`. Never commit
+   directly to `main` or `dev`.
