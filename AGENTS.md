@@ -25,4 +25,5 @@ per-artifact rules and the definition of done. If anything here disagrees with i
    (including modules that depend on the edited one), not just the module edited.
 8. **Branching** — `main` ← `dev` ← work branch. Every feature or change gets a new branch created
    from `dev`; work branches merge into `dev`, and only `dev` merges into `main`. Never commit
-   directly to `main` or `dev`.
+   directly to `main` or `dev`. Merges into `dev` and `main` happen only through a GitHub pull
+   request approved by the user — never merge locally or push to `dev`/`main` directly.

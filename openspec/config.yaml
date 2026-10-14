@@ -62,6 +62,8 @@ context: |
       - Every feature or change gets a NEW branch created from an up-to-date `dev`.
       - Work branches merge into `dev`; only `dev` merges into `main`.
       - Never commit directly to `main` or `dev`.
+      - Merge into `dev` / `main` ONLY via a GitHub pull request that the user approves.
+        Never merge locally or push to `dev` / `main` directly.
 
 # Per-artifact rules
 rules:
