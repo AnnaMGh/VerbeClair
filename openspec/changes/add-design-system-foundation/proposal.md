@@ -11,7 +11,8 @@ code, themed for light and dark mode, before any component or screen can be impl
 - Add the VerbeClair app theme, built from the Figma Foundations and switching between light and dark with the system
   setting:
   - the Figma colour roles for light and dark, mapped onto Material 3 roles
-  - the brand-specific `ending`, `ending-container` and `success` colours as extended theme colours
+  - the brand-specific `ending`, `ending-container` and `success` colours, plus `on-success`, `success-container` and
+    `on-success-container`, as extended theme colours
   - the 14 text styles: Fraunces for verbs and moods, DM Sans for the UI, including `Conjugation/Form` and
     `Conjugation/Ending`
   - spacing (`space/2`…`space/48`), radius (`radius/xs`…`radius/full`) and `Elevation/Level 2` tokens
@@ -67,5 +68,5 @@ code, themed for light and dark mode, before any component or screen can be impl
     `gradle/libs.versions.toml`
   - font files (Fraunces and DM Sans, SIL Open Font License) and the flag image are added as Compose resources
 - **Code:** `shared/src/commonMain/kotlin/com/vamvisions/verbeclair/App.kt` switches to the VerbeClair theme.
-- **Blocked on design:** Material 3 colour roles that Figma does not define yet must be added in Figma before the
-  colour scheme is complete (see design.md, Open Questions).
+- **Design sign-off:** every Material 3 colour role is now defined in Figma. Some of them use tones derived from the
+  existing palettes and are pending designer sign-off; a change only updates values (see design.md, Open Questions).
