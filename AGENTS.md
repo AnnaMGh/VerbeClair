@@ -27,3 +27,13 @@ per-artifact rules and the definition of done. If anything here disagrees with i
    from `dev`; work branches merge into `dev`, and only `dev` merges into `main`. Never commit
    directly to `main` or `dev`. Merges into `dev` and `main` happen only through a GitHub pull
    request approved by the user — never merge locally or push to `dev`/`main` directly.
+
+## Running builds and tests
+
+- **iOS needs Xcode, set per command.** If `xcode-select -p` points at
+  `/Library/Developer/CommandLineTools`, `simctl` is missing and the `iosSimulatorArm64Test` tasks fail
+  (`xcrun` exit 72). Prefix the command instead of changing `xcode-select` or the shell profile:
+  `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./gradlew build`.
+- **`./gradlew build` does not run the Android device tests.** `commonTest` runs on Android as an
+  instrumented test, so "all tests pass" also needs a running emulator/device and
+  `./gradlew connectedAndroidDeviceTest`.
