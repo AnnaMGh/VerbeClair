@@ -1,0 +1,141 @@
+package com.vamvisions.verbeclair.core.designsystem.theme
+
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.Color
+
+// Values come from the Figma `Color` collection (Foundations, node 3:63), Light and Dark modes.
+// See design.md D3 for the variable-to-role table.
+
+internal val LightColorScheme: ColorScheme = lightColorScheme(
+    primary = Color(0xFF2E4BCB),
+    onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFFDDE1FF),
+    onPrimaryContainer = Color(0xFF000E5E),
+    inversePrimary = Color(0xFFB8C4FF),
+    secondary = Color(0xFF5B5D72),
+    onSecondary = Color(0xFFFFFFFF),
+    secondaryContainer = Color(0xFFE1E1F9),
+    onSecondaryContainer = Color(0xFF191A2C),
+    tertiary = Color(0xFFC0391F),
+    onTertiary = Color(0xFFFFFFFF),
+    tertiaryContainer = Color(0xFFFFDAD2),
+    onTertiaryContainer = Color(0xFF3E0500),
+    background = Color(0xFFFBFAFF),
+    onBackground = Color(0xFF1A1B23),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF1A1B23),
+    surfaceVariant = Color(0xFFE3E1EC),
+    onSurfaceVariant = Color(0xFF464754),
+    surfaceTint = Color(0xFF2E4BCB),
+    inverseSurface = Color(0xFF292A32),
+    inverseOnSurface = Color(0xFFF1F1F9),
+    error = Color(0xFFBA1A1A),
+    onError = Color(0xFFFFFFFF),
+    errorContainer = Color(0xFFFFDAD6),
+    onErrorContainer = Color(0xFF410002),
+    outline = Color(0xFF767686),
+    outlineVariant = Color(0xFFC6C5D6),
+    scrim = Color(0xFF000000),
+    surfaceBright = Color(0xFFFFFFFF),
+    surfaceContainer = Color(0xFFF1F1F9),
+    surfaceContainerHigh = Color(0xFFE9E9F3),
+    surfaceContainerHighest = Color(0xFFE3E1EC),
+    surfaceContainerLow = Color(0xFFFBFAFF),
+    surfaceContainerLowest = Color(0xFFFFFFFF),
+    surfaceDim = Color(0xFFDBD9E4),
+    primaryFixed = Color(0xFFDDE1FF),
+    primaryFixedDim = Color(0xFFB8C4FF),
+    onPrimaryFixed = Color(0xFF000E5E),
+    onPrimaryFixedVariant = Color(0xFF1A35AD),
+    secondaryFixed = Color(0xFFE1E1F9),
+    secondaryFixedDim = Color(0xFFC4C5DD),
+    onSecondaryFixed = Color(0xFF191A2C),
+    onSecondaryFixedVariant = Color(0xFF444559),
+    tertiaryFixed = Color(0xFFFFDAD2),
+    tertiaryFixedDim = Color(0xFFFFB4A1),
+    onTertiaryFixed = Color(0xFF3E0500),
+    onTertiaryFixedVariant = Color(0xFF8D1500),
+)
+
+internal val DarkColorScheme: ColorScheme = darkColorScheme(
+    primary = Color(0xFFB8C4FF),
+    onPrimary = Color(0xFF08218A),
+    primaryContainer = Color(0xFF1A35AD),
+    onPrimaryContainer = Color(0xFFDDE1FF),
+    inversePrimary = Color(0xFF2E4BCB),
+    secondary = Color(0xFFC4C5DD),
+    onSecondary = Color(0xFF2D2F42),
+    secondaryContainer = Color(0xFF444559),
+    onSecondaryContainer = Color(0xFFE1E1F9),
+    tertiary = Color(0xFFFFB4A1),
+    onTertiary = Color(0xFF5F1409),
+    tertiaryContainer = Color(0xFF5F1409),
+    onTertiaryContainer = Color(0xFFFFDAD2),
+    background = Color(0xFF12131A),
+    onBackground = Color(0xFFE3E1EC),
+    surface = Color(0xFF12131A),
+    onSurface = Color(0xFFE3E1EC),
+    surfaceVariant = Color(0xFF464754),
+    onSurfaceVariant = Color(0xFFC6C5D6),
+    surfaceTint = Color(0xFFB8C4FF),
+    inverseSurface = Color(0xFFE3E1EC),
+    inverseOnSurface = Color(0xFF292A32),
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005),
+    errorContainer = Color(0xFF93000A),
+    onErrorContainer = Color(0xFFFFDAD6),
+    outline = Color(0xFF908FA0),
+    outlineVariant = Color(0xFF464754),
+    scrim = Color(0xFF000000),
+    surfaceBright = Color(0xFF383841),
+    surfaceContainer = Color(0xFF1E1F27),
+    surfaceContainerHigh = Color(0xFF292A32),
+    surfaceContainerHighest = Color(0xFF33343D),
+    surfaceContainerLow = Color(0xFF1A1B23),
+    surfaceContainerLowest = Color(0xFF0D0E15),
+    surfaceDim = Color(0xFF12131A),
+    primaryFixed = Color(0xFFDDE1FF),
+    primaryFixedDim = Color(0xFFB8C4FF),
+    onPrimaryFixed = Color(0xFF000E5E),
+    onPrimaryFixedVariant = Color(0xFF1A35AD),
+    secondaryFixed = Color(0xFFE1E1F9),
+    secondaryFixedDim = Color(0xFFC4C5DD),
+    onSecondaryFixed = Color(0xFF191A2C),
+    onSecondaryFixedVariant = Color(0xFF444559),
+    tertiaryFixed = Color(0xFFFFDAD2),
+    tertiaryFixedDim = Color(0xFFFFB4A1),
+    onTertiaryFixed = Color(0xFF3E0500),
+    onTertiaryFixedVariant = Color(0xFF8D1500),
+)
+
+/** VerbeClair colours that have no Material 3 role. */
+@Immutable
+data class ExtendedColors(
+    val ending: Color,
+    val endingContainer: Color,
+    val success: Color,
+    val onSuccess: Color,
+    val successContainer: Color,
+    val onSuccessContainer: Color,
+)
+
+internal val LightExtendedColors = ExtendedColors(
+    ending = Color(0xFFC0391F),
+    endingContainer = Color(0xFFFFDAD2),
+    success = Color(0xFF2E7D4F),
+    onSuccess = Color(0xFFFFFFFF),
+    successContainer = Color(0xFFA4F4BC),
+    onSuccessContainer = Color(0xFF00210F),
+)
+
+internal val DarkExtendedColors = ExtendedColors(
+    ending = Color(0xFFFFB4A1),
+    endingContainer = Color(0xFF5F1409),
+    success = Color(0xFF8FD8A8),
+    onSuccess = Color(0xFF00391D),
+    successContainer = Color(0xFF00522C),
+    onSuccessContainer = Color(0xFFA4F4BC),
+)
