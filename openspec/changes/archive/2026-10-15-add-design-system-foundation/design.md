@@ -179,15 +179,21 @@ Rule: no role gets a value that is not in Figma; if Figma changes, this table ch
 
 **Flag:**
 - `flagOpacity` = 0.12f
-- Source: Notion N-14. Figma has no variable for it yet, so a matching Figma variable is still to add.
+- Source: Figma variable `opacity/flag` (12, both modes) and Notion N-14.
 
 ### D4. Fonts
-- Static TTFs bundled in `core/designsystem/src/commonMain/composeResources/font/`:
-  - Fraunces SemiBold
-  - DM Sans Regular, Medium, SemiBold and Bold
-- Loaded with `org.jetbrains.compose.resources.Font` in a `@Composable` font-family builder.
-- Source: Google Fonts, under the SIL Open Font License 1.1. The licence text goes in the same folder.
-- **Alternative:** downloadable Google Fonts. Rejected, because it is Android-only and breaks offline use (Notion N-1).
+- Variable TTFs bundled in `core/designsystem/src/commonMain/composeResources/font/`:
+  - `fraunces_variable.ttf` (Fraunces[SOFT,WONK,opsz,wght])
+  - `dmsans_variable.ttf` (DM Sans[opsz,wght])
+- Figma sets the axes per style, which static cuts cannot match: Fraunces uses wght 600, WONK 1, SOFT 0 and automatic
+  optical size (opsz = font size: 34, 24, 20); DM Sans uses opsz 14. Each style loads the variable font with
+  `org.jetbrains.compose.resources.Font(..., variationSettings = FontVariation.Settings(...))` with exactly those axes.
+- Variation settings apply on Android 8.0+ (API 26) and iOS. On API 24–25 Android uses the font's default instance.
+- Source: Google Fonts (`google/fonts`), under the SIL Open Font License 1.1. The licence texts ship with the app in
+  `composeResources/files/licenses/`, not in `font/`, so they do not become font resources.
+- **Alternatives:**
+  - Static TTFs (Fraunces 9/72/144pt, DM Sans cuts). Rejected: optical size and WONK would differ from Figma.
+  - Downloadable Google Fonts. Rejected, because it is Android-only and breaks offline use (Notion N-1).
 
 ### D5. Icons
 - Each of the 39 symbols in Figma frame 4:2 is exported as SVG through the Figma MCP. It is then converted
@@ -199,13 +205,20 @@ Rule: no role gets a value that is not in Figma; if Figma changes, this table ch
 - Paths are never redrawn by hand.
 
 ### D6. Flag background
-- The Blue (95:211) and White (95:213) stripes are exported from Figma as images, converted to WebP and stored in
-  `composeResources/drawable/` as `flag_stripe_white.webp` and `flag_stripe_blue.webp`.
+- Every stripe in Figma crops one source image (852×1846, the vertical tricolour), and Figma re-crops it to cover each
+  instance. So the app ships full-height columns of that image, converted to WebP in `composeResources/drawable/`:
+  - `flag_stripe_blue.webp`: the left third (284×1846), the stripe of Blue (95:211)
+  - `flag_stripe_white.webp`: the middle third (284×1846), the stripe of White (95:213)
+- Cover-scaling and centring a full column reproduces every Figma crop: the White screen background (393×852), the
+  Blue navigation rail (80×393, 80×834, 80×1194, unrotated) and the Blue bottom bars (393×80, 834×81, 1194×81,
+  rotated 90° clockwise).
 - Two public helpers:
-  - `Modifier.flagScreenBackground()`: background colour, then the White stripe with `ContentScale.Crop` and
-    `Alignment.Center` at `flagOpacity`
-  - `Modifier.flagBarBackground()`: the Blue stripe rotated 90° and cropped to cover
-- Both draw in a `drawBehind`/`Box` layer that is not part of the semantics tree, so screen readers skip it.
+  - `Modifier.flagScreenBackground()`: background colour, then the White stripe scaled to cover, centred, at
+    `flagOpacity`
+  - `Modifier.flagBarBackground()`: background colour (the bar is opaque), then the Blue stripe rotated 90° clockwise
+    and scaled to cover, centred, at `flagOpacity`
+  - The navigation rail uses the Blue stripe unrotated; its helper arrives with the navigation change.
+- Both draw in a `drawBehind` layer that is not part of the semantics tree, so screen readers skip it.
 - The screen helper is applied once at the scaffold root, outside the scrolling content, so the flag stays fixed.
 
 ### D7. Previews and verification
@@ -219,6 +232,9 @@ Rule: no role gets a value that is not in Figma; if Figma changes, this table ch
 - Each is checked with the `android-preview-figma-verify` skill after implementation.
 - Unit tests in `commonTest` check that every token in the D3 tables equals the Figma value, so a drift fails the
   build.
+- `commonTest` also holds Compose UI tests (`runComposeUiTest`). They run natively on the iOS simulator and, on
+  Android, as instrumented device tests (no Robolectric): `./gradlew :core:designsystem:connectedAndroidDeviceTest`
+  needs a running emulator or device.
 
 ## Risks / Trade-offs
 
@@ -232,6 +248,10 @@ Rule: no role gets a value that is not in Figma; if Figma changes, this table ch
   exports.
 - [Compose `dropShadow` API in a material3 alpha / CMP 1.12] → if it is not available on iOS, fall back to a single
   `shadow()` approximation, and record the difference against Figma.
+- [Variable fonts on Android 7.x (API 24–25)] → font variation settings need API 26. On API 24–25 every DM Sans and
+  Fraunces style renders the fonts' default instance, so Conjugation/Ending loses its bold and the ending relies on
+  colour alone, against Notion N-4. This makes the minSdk question (Open Questions) release-blocking: raise minSdk to
+  26 as Notion N-10 says, or bundle static Bold/SemiBold cuts as a fallback.
 - [Extra module adds build time] → negligible for one small module; it makes later feature modules possible.
 
 ## Migration Plan
@@ -245,8 +265,6 @@ Rule: no role gets a value that is not in Figma; if Figma changes, this table ch
   surface-variant, surface-dim/bright, surface-container-lowest, the `*Fixed` roles and the success companions were
   added in Figma from tones derived from the existing palettes. The designer confirms or retunes them; any change is
   a value update in the D3 table only.
-- **Figma variable for flag opacity:** add `color/opacity/flag` = 12% in Figma to match Notion N-14. Until then, the
-  token cites Notion.
 - **minSdk mismatch:** `gradle/libs.versions.toml` and `openspec/config.yaml` say minSdk 24, but Notion N-10 says
   Android 8.0 (API 26). Outside this change; resolve before release.
 - **Flag stripe resolution:** the Notion open question about stripe sharpness on 3× phones and tablets; check after
