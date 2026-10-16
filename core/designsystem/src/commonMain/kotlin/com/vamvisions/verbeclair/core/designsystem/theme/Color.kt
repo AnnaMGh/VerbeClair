@@ -120,6 +120,11 @@ data class ExtendedColors(
     val onSuccess: Color,
     val successContainer: Color,
     val onSuccessContainer: Color,
+    /**
+     * Figma `color/navigation-indicator`: the selected-item indicator of the bottom bar and navigation rail. Light is
+     * indigo-gray/80, one tone darker than `secondary-container` so the selection stands out on the flag background.
+     */
+    val navigationIndicator: Color,
 )
 
 internal val LightExtendedColors = ExtendedColors(
@@ -129,6 +134,7 @@ internal val LightExtendedColors = ExtendedColors(
     onSuccess = Color(0xFFFFFFFF),
     successContainer = Color(0xFFA4F4BC),
     onSuccessContainer = Color(0xFF00210F),
+    navigationIndicator = Color(0xFFC4C5DD),
 )
 
 internal val DarkExtendedColors = ExtendedColors(
@@ -138,4 +144,5 @@ internal val DarkExtendedColors = ExtendedColors(
     onSuccess = Color(0xFF00391D),
     successContainer = Color(0xFF00522C),
     onSuccessContainer = Color(0xFFA4F4BC),
+    navigationIndicator = Color(0xFF444559),
 )
