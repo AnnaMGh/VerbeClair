@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Drafted by the implementer: to be reviewed by the user before merge -->
+    <string name="search_placeholder">Rechercher un verbe…</string>
+    <string name="search_clear">Effacer la recherche</string>
+    <string name="list_tab_all">Tous</string>
+    <string name="list_tab_favourites">Favoris (%1$d)</string>
+    <string name="nav_verbs">Verbes</string>
+    <string name="nav_tests">Tests</string>
+    <string name="nav_settings">Paramètres</string>
+    <string name="favourite_add">Ajouter aux favoris</string>
+    <string name="favourite_remove">Retirer des favoris</string>
+    <string name="test_start">Commencer un test</string>
+    <string name="icon_button_badge">%1$s, %2$d</string>
+</resources>

@@ -87,6 +87,7 @@ class ColorTest {
             assertEquals("#FFFFFF", onSuccess.hex())
             assertEquals("#A4F4BC", successContainer.hex())
             assertEquals("#00210F", onSuccessContainer.hex())
+            assertEquals("#C4C5DD", navigationIndicator.hex())
         }
     }
 
@@ -99,6 +100,7 @@ class ColorTest {
             assertEquals("#00391D", onSuccess.hex())
             assertEquals("#00522C", successContainer.hex())
             assertEquals("#A4F4BC", onSuccessContainer.hex())
+            assertEquals("#444559", navigationIndicator.hex())
         }
     }
 }

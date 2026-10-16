@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Drafted by the implementer: to be reviewed by the user before merge -->
+    <string name="search_placeholder">Caută un verb…</string>
+    <string name="search_clear">Șterge căutarea</string>
+    <string name="list_tab_all">Toate</string>
+    <string name="list_tab_favourites">Favorite (%1$d)</string>
+    <string name="nav_verbs">Verbe</string>
+    <string name="nav_tests">Teste</string>
+    <string name="nav_settings">Setări</string>
+    <string name="favourite_add">Adaugă la favorite</string>
+    <string name="favourite_remove">Elimină din favorite</string>
+    <string name="test_start">Începe un test</string>
+    <string name="icon_button_badge">%1$s, %2$d</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Search bar (Notion L-2, L-3) -->
+    <string name="search_placeholder">Search a verb…</string>
+    <string name="search_clear">Clear search</string>
+    <!-- List tabs (L-12): the count is always shown in brackets, so this is a format string, not a plural -->
+    <string name="list_tab_all">All</string>
+    <string name="list_tab_favourites">Favourites (%1$d)</string>
+    <!-- Bottom bar and navigation rail (NV-1, NV-4) -->
+    <string name="nav_verbs">Verbs</string>
+    <string name="nav_tests">Tests</string>
+    <string name="nav_settings">Settings</string>
+    <!-- Verb cell buttons (L-13, L-14) -->
+    <string name="favourite_add">Add to favourites</string>
+    <string name="favourite_remove">Remove from favourites</string>
+    <string name="test_start">Start a test</string>
+    <!-- Icon button with a badge: the caller's label, then the badge count (L-6, N-4) -->
+    <string name="icon_button_badge">%1$s, %2$d</string>
+</resources>
