@@ -87,3 +87,29 @@ private fun EmptyStateErrorDarkPreview() {
         )
     }
 }
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=7-135
+@Preview(widthDp = 329)
+@Composable
+private fun EmptyStateNeutralNoBodyLightPreview() {
+    ComponentPreview(darkTheme = false) {
+        EmptyState(
+            icon = VerbeClairIcons.BookOpen,
+            title = "Choose a verb to see its conjugation",
+            body = null,
+        )
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=7-135
+@Preview(widthDp = 329)
+@Composable
+private fun EmptyStateNeutralNoBodyDarkPreview() {
+    ComponentPreview(darkTheme = true) {
+        EmptyState(
+            icon = VerbeClairIcons.BookOpen,
+            title = "Choose a verb to see its conjugation",
+            body = null,
+        )
+    }
+}

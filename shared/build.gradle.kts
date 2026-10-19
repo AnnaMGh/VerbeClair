@@ -29,7 +29,10 @@ kotlin {
        androidResources {
            enable = true
        }
-       withHostTest {
+       // Its own tree: commonTest runs on Android only as a device test (AGENTS.md).
+       withHostTestBuilder {
+           sourceSetTreeName = "unitTest"
+       }.configure {
            isIncludeAndroidResources = true
        }
        withDeviceTestBuilder {
@@ -43,9 +46,14 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)
+            implementation(libs.koin.android)
         }
         commonMain.dependencies {
             implementation(project(":core:designsystem"))
+            implementation(project(":core:data"))
+            implementation(project(":core:presentation"))
+            implementation(project(":feature:verblist"))
+            implementation(libs.koin.core)
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
@@ -57,9 +65,16 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.compose.uiTest)
         }
         getByName("androidDeviceTest").dependencies {
             implementation(libs.androidx.testRunner)
+            implementation(libs.androidx.compose.uiTestManifest)
+            implementation(libs.androidx.espresso.core)
+        }
+        getByName("androidHostTest").dependencies {
+            implementation(libs.kotlin.test)
         }
     }
 }

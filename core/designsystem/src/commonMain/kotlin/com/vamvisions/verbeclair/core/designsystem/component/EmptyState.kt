@@ -33,14 +33,14 @@ enum class EmptyStateTone {
 
 /**
  * Empty state (Figma 7:135): a centred column with a 96 dp circle holding a 40 dp [icon], the [title] in
- * Title/Large, the [body] in Body/Medium and an optional [action], normally a Filled [VerbeClairButton]. The icon is
- * decoration and is hidden from screen readers.
+ * Title/Large, an optional [body] in Body/Medium and an optional [action], normally a Filled [VerbeClairButton].
+ * Without a [body], no body line or its spacing is drawn. The icon is decoration and is hidden from screen readers.
  */
 @Composable
 fun EmptyState(
     icon: ImageVector,
     title: String,
-    body: String,
+    body: String?,
     modifier: Modifier = Modifier,
     tone: EmptyStateTone = EmptyStateTone.Neutral,
     action: (@Composable () -> Unit)? = null,
@@ -78,12 +78,14 @@ fun EmptyState(
                 color = colors.onSurface,
                 textAlign = TextAlign.Center,
             )
-            Text(
-                text = body,
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
+            if (body != null) {
+                Text(
+                    text = body,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
         action?.invoke()
     }
