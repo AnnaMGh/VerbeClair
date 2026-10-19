@@ -1,10 +1,12 @@
+# user-data Specification
+
 ## Purpose
 
 The user's own data on this device: favourites, test attempts with their line results, and the remembered verb-list
 choices. It is kept apart from the replaceable verb catalogue so that it survives every update. Sources: Notion A-7,
 T-9, the glossary (*Last test score*), L-7, L-12…L-14.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Separate user database
 Favourites, test attempts and line results SHALL be stored in a user database separate from the verb database. They
@@ -41,10 +43,11 @@ comes back.
 ### Requirement: Test attempts and last test score
 The user database SHALL be able to store test attempts: the date, the selected tenses and, for every checked line, the
 mood code, tense code, person, typed text and result (correct, correct without accents, failed). A verb's last test
-score SHALL be the correct lines ÷ checked lines of its latest test attempt, as a whole percentage rounded half up. A verb
-with no attempt has no score. Lines correct without accents count as correct. Results saved by a review session are stored as
-review attempts and SHALL NOT change the last test score (RV-4). This change only reads attempts; the test and review
-screens that write them come in later changes.
+score SHALL be the correct lines ÷ checked lines of its latest attempt, as a whole percentage rounded half up. A verb
+with no attempt has no score. Lines correct without accents count as correct. A review session SHALL store, for each verb,
+one review attempt holding the cards of that verb checked in the session; the latest attempt of either kind, test or
+review, sets the last test score (RV-4). This change only reads attempts; the test and review screens that write them
+come in later changes.
 
 #### Scenario: Never tested
 - **WHEN** a verb has no stored attempt
@@ -58,9 +61,13 @@ screens that write them come in later changes.
 - **WHEN** the latest attempt has 2 of 3 lines correct
 - **THEN** the last test score is 67%
 
-#### Scenario: Review results don't change the score
-- **WHEN** terminer's latest test attempt is 80% and a later review attempt is 50%
-- **THEN** its last test score is still 80%
+#### Scenario: A later review session counts
+- **WHEN** terminer has a test attempt at 80% followed by a later review session at 50%
+- **THEN** its last test score is 50%
+
+#### Scenario: Review session of several tenses
+- **WHEN** one review session checks two tenses of avoir with 9 of 12 lines correct in total
+- **THEN** avoir's last test score is 75%
 
 #### Scenario: Accent-only answers
 - **WHEN** the latest attempt has 9 correct lines, 1 line correct without accents, and no failed line

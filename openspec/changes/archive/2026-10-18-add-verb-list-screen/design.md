@@ -74,10 +74,10 @@ tenses, the infinitive and the participles" (the Gérondif's verb word equals th
      `Accept: application/octet-stream`) and verifies the SHA-256 against the pin.
   2. `buildBundledVerbDatabase` is a `JavaExec` on the module's JVM compilation. It runs `BundledDatabaseBuilder.main`,
      which opens `VerbDatabase` with `BundledSQLiteDriver` on a file, streams the gzip JSON with kotlinx-serialization,
-     maps it with the same mapper sync will use, writes `metadata`, runs `VACUUM`, and writes `verbs.db` plus
-     `verbs-meta.json` (`lastUpdatedAt`, `schemaVersion`, `bundleBuild`, `attribution`, `datasetLicenseUrl`,
-     `sources`).
-- Outputs go to `:core:data` Compose resources (`files/verbs.db`, `files/verbs-meta.json`). They are registered with
+     maps it with the same mapper sync will use, writes `metadata`, runs `VACUUM`, gzips the result to `verbs.db.gzip`
+     (the uncompressed file is not shipped; not `.gz`, because AGP's asset merger gunzips `.gz` assets and renames them), and writes `verbs-meta.json` (`lastUpdatedAt`, `schemaVersion`,
+     `bundleBuild`, `attribution`, `datasetLicenseUrl`, `sources`).
+- Outputs go to `:core:data` Compose resources (`files/verbs.db.gzip`, `files/verbs-meta.json`). They are registered with
   `compose.resources { customDirectory(sourceSetName = "commonMain", directoryProvider = <task output dir>) }`, so the
   task output feeds resource generation with proper task dependencies (configuration-cache safe). `:core:data` enables
   `androidResources` like `:core:designsystem`. This packs the files into the Android app and the iOS framework bundle
@@ -90,14 +90,17 @@ Alternative: commit the `.db` file. It was rejected by A-2 (history size, skips 
 builder is behind a `single` that first awaits the installer).
 1. Read `verbs-meta.json` from resources (small).
 2. Read the local copy's `metadata` with a raw `SQLiteConnection` (no Room) when the file exists.
-3. If any A-1 condition holds, copy the bundled file by streaming. Never use `Res.readBytes`, which loads the whole
-   file into memory. On Android, open the asset `InputStream` from the path given by `Res.getUri` through
-   `AssetManager`. On iOS, copy the bundle file at that path with `NSFileManager`. Write `verbs.db.tmp`, fsync, then
-   atomically rename it to `verbs.db`. Delete `-wal`/`-shm`. On iOS, set `NSURLIsExcludedFromBackupKey`.
+3. If any A-1 condition holds, decompress the bundled `verbs.db.gzip` by streaming it through okio's multiplatform
+   `GzipSource`. Never use `Res.readBytes`, which loads the whole file into memory. The compressed source comes from
+   the path given by `Res.getUri`: on Android an asset `InputStream` through `AssetManager`, on iOS the bundle file
+   opened with okio's `FileSystem.SYSTEM`. Write `verbs.db.tmp`, fsync, then atomically rename it to `verbs.db`. Delete `-wal`/`-shm`. On iOS, set `NSURLIsExcludedFromBackupKey`. On Android, the backup rules of `:androidApp` exclude
+   `verbs.db` (and its side files) instead: there is no per-file flag, and at 156 MB it would exceed Auto Backup's
+   25 MB quota, which stops the app's backup, favourites included.
 4. Set the checkpoint to the bundled `lastUpdatedAt`.
 
 Platform paths come from `PlatformPaths`, injected by Koin's `platformModule` (D12): Android
-`context.getDatabasePath("verbs.db")`; iOS `Application Support/verbs.db`. The first-launch copy is excluded from the 1 s start target (N-2). The screen shows the
+`context.getDatabasePath("verbs.db")`; iOS `Application Support/verbs.db`. The first-launch install (decompress + write 156 MB, about 1–2 s on a mid-range phone) is excluded from the 1 s
+start target (N-2). The screen shows the
 L-07 skeleton while the install runs.
 
 Alternative: Room's `createFromAsset`. It was rejected because it is Android-only and has no replace-on-newer rule
@@ -124,15 +127,15 @@ The list query is built by a `ListQueryBuilder` into a `RoomRawQuery` (`@RawQuer
 ### D6. User database and scores
 `UserDatabase` v1 tables:
 - `favourites(slug PK, added_at)`
-- `test_attempts(id PK, slug, kind, started_at, selected_tenses JSON)`, with kind `TEST` or `REVIEW`. Review sessions
-  (RV-4) will save their cards here as `REVIEW`. They count in mastery but never in the last test score, so adding
-  them later needs no migration.
+- `test_attempts(id PK, slug, kind, started_at, selected_tenses JSON)`, with kind `TEST` or `REVIEW`. A review session
+  (RV-4) will save one `REVIEW` attempt per (session, verb), appending each card's lines as it is checked. Both kinds
+  count in mastery and in the last test score, so adding reviews later needs no migration.
 - `attempt_lines(attempt_id FK, mood_code, tense_code, person NULL, typed_text, result)`, with result one of `CORRECT`,
   `CORRECT_NO_ACCENTS`, `FAILED`
 
 The schema is exported (`room { schemaDirectory }`) so later versions can auto-migrate. Last score per slug is
 `ROUND_HALF_UP(100 × correct / total)` over the latest attempt, computed in Kotlin from `(correct, total)` counts that
-Room returns. Only the latest attempt with `kind = TEST` counts. `observeScores(slugs)` returns a `Flow<Map<String, Int>>` for the visible page's slugs.
+Room returns. The latest attempt of either kind counts. `observeScores(slugs)` returns a `Flow<Map<String, Int>>` for the visible page's slugs.
 
 Hiding removed verbs: favourites count = `favourites.slug ∈ verbs.slug`. Because the two DBs are separate, the
 repository combines `observeSlugs()` with `VerbCatalog.existingSlugs(slugs)`. No row is deleted.
@@ -261,8 +264,12 @@ The flag stripes come from `flagScreenBackground()` (content), `flagBarBackgroun
   so offline rebuilds work after the first.
 - [Room JVM target in `:core:database` only for the build task] → Keep the JVM target free of app code. The task
   depends only on the JVM compilation of `:core:domain` and `:core:database`.
-- [Compose resources hold a ~25 MB uncompressed DB] → Resources are compressed in the APK (about 8 MB). Copy is
-  streamed, never read fully into memory. Measure APK and IPA size in the PR.
+- [The built DB is 156 MB uncompressed (measured on dataset v3; `forms` alone is 107 MB)] → It is shipped as
+  `verbs.db.gzip` (about 28 MB). On Android the APK compresses assets anyway, so this changes nothing there; on iOS it
+  avoids a second uncompressed 156 MB copy in the app bundle (installed footprint about 184 MB instead of 312 MB).
+  Cost: the first-launch install decompresses instead of copying (about +0.5–1 s on iOS). Decompression is streamed,
+  never read fully into memory. Measure APK and IPA size in the PR. Shrinking the `forms` table is a possible later
+  change.
 - [Search query cost with UNION + correlated subquery] → `form_search` is indexed on `key`. Add an androidHostTest-free
   instrumented benchmark-style test asserting "su" returns within budget on the full bundled DB. Fall back to a
   precomputed `(key, slug, best_form)` table if needed.
@@ -270,6 +277,56 @@ The flag stripes come from `flagScreenBackground()` (content), `flagBarBackgroun
   repository. Fine at expected sizes.
 - [Empty-state body is required by `EmptyState`] → The tablet pane has a title only. Make `body` optional (delta on
   `design-system-components`, Empty state requirement).
+
+## Verification notes (for the PR)
+
+Previews and the running app were checked against Figma on 2026-10-18. `android studio render-compose-preview`
+failed for every `commonMain` preview (it renders `androidMain` previews in another project), so, as for the
+components change, each preview was drawn on the emulator by a temporary device test (not committed) at its `@Preview`
+size, font scale and locale, without system insets, and compared with the Figma frame. The running app was checked
+on a Pixel 9 Pro XL emulator (portrait and landscape) and a Medium Tablet emulator (landscape and portrait), light and
+dark.
+
+Fixed during the check:
+
+- Score shown as "80%%": Compose resources do not unescape `%%`; the strings now use a single `%` (French: narrow
+  no-break space before it). A UI test covers it.
+- Phone landscape: the two cells of a grid line now share the two-line height and centre their content (Figma 87:9641),
+  so the dividers of both columns line up.
+- Rail in dark mode drew the light window background behind light labels: the shell now paints the theme background
+  (UI test: the dark rail is dark).
+- Rail in landscape with a start-side display cutout: the inset narrowed the 80 dp item column and wrapped the labels
+  ("Ver / bs"); the inset now widens the rail instead (UI test in `:core:designsystem`).
+- Active choices row and list-controls sheet: the chips' 48 dp touch targets were added on top of Figma's 8 dp gaps; the
+  extra padding is removed (sheet 80 dp shorter, back in line with 10:405).
+- Compact empty states are centred as in Figma 10:651, whose content area runs under the bottom bar.
+- L-06 previews show "Favourites (12)" as in the frame.
+- Figma fix (confirmed with the user): L-05 (10:595, 13:1045) showed the list-controls button Tonal with badge "1" but
+  no active choices row. No choice is active in that state, so the button is now Standard with the badge hidden, as
+  in L-01.
+
+Minor differences left:
+
+- Chips sit 8 dp lower than Figma under the tabs, and the second Group by row 8 dp lower, because of the 48 dp touch
+  target.
+- Text line height: Compose trims the first and last line, so cells are about 89 dp instead of 93 (as in the
+  components change); the landscape two-line height is 92 dp.
+- DM Sans renders slightly wider than in Figma (which uses the `opsz 14` axis), so a meta line with a score wraps one
+  word earlier in the 360 dp tablet pane.
+- The no-data progress bar and the skeleton are captured on an animation frame.
+
+State differences, not defects:
+
+- TP-01 / TL-01 show the verb details in the right pane; this change shows the "Choose a verb" placeholder (task 7.4).
+- Data in the running app is the real catalogue (alphabetical from "abader"), not the frames' sample rows.
+
+Also seen: one ANR on the software-rendered tablet emulator while it relaunched the activity for a dark-mode change and
+a rotation in quick succession. The main thread was waiting for the render thread to stop (`HardwareRenderer.setStopped`),
+no app frame was on any stack, and it did not recur in seven more cycles or after a fresh install.
+
+Build: `:shared:linkReleaseFrameworkIosSimulatorArm64` ran out of Java heap twice during the root build, when it
+ran alongside the other tasks in the 4 GB Gradle daemon, and passed on the re-run both times. `org.gradle.jvmargs` was
+raised to `-Xmx6144M`; a clean root build with the build cache off (`clean build --no-build-cache`) then passed.
 
 ## Migration Plan
 

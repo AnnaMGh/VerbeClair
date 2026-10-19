@@ -13,10 +13,10 @@ on 2026-10-16.
   `french-verbs-dataset-v<N>.json.gz` from the private VAMVisionsKMP GitHub repository, using a fine-grained,
   read-only token from `local.properties`. It checks the file against the SHA-256 pinned in `gradle.properties`, then
   builds the Room verb database in a JVM task with the app's own `@Database` classes and mapping code, plus a metadata
-  file (`lastUpdatedAt`, schema version, `bundleBuild`, licence attribution and sources). Both files are packed into
-  the Android assets and the iOS bundle. At start-up a shared `commonMain` rule installs the bundled file when there is
-  no local database, or when the bundled data is newer, the schema differs or `bundleBuild` is higher. The copy goes
-  to a temp file that is then renamed. On iOS the database lives in Application Support, excluded from iCloud backup.
+  file (`lastUpdatedAt`, schema version, `bundleBuild`, licence attribution and sources). The database is shipped
+  gzip-compressed (`verbs.db.gzip`); both files are packed into the Android assets and the iOS bundle. At start-up a
+  shared `commonMain` rule installs the bundled file when there is no local database, or when the bundled data is
+  newer, the schema differs or `bundleBuild` is higher. It is decompressed into a temp file that is then renamed. On iOS the database lives in Application Support, excluded from iCloud backup.
 - **Local verb schema and keys (A-3, A-4):** verbs, forms (all parts, variants, position), translations and
   synonyms, plus normalised search and sort keys built by one shared normaliser.
 - **Local list queries (L-1, L-3…L-6):** paged list (Room + Paging 3), prefix search on the infinitive and on the
@@ -104,5 +104,6 @@ on 2026-10-16.
 - **Build:** a new JVM Gradle task builds the bundled DB. `./gradlew build` now needs network access the first time
   for each dataset version, plus a valid GitHub token in `local.properties`. A missing or rejected token fails the
   build with a message naming the property. CI will need the same secret.
-- **App size:** about 8 MB more (compressed bundled database).
+- **App size:** about 28 MB more to download (gzip-compressed bundled database, 156 MB once installed). On the
+  device the installed database takes about 184 MB with the shipped file on both platforms.
 - **No API calls:** the app makes no network calls at runtime in this change.
