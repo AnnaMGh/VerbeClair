@@ -16,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
@@ -39,7 +41,8 @@ private val CellButtonSize = 44.dp
  *
  * - [matchedForm] (L-4): shown right after the infinitive with one space, in Label/Large `primary`; one text, so it
  *   wraps to the next line when the infinitive fills the line, and a screen reader reads both as one phrase.
- * - [selected] (tablet list–detail, N-15): `secondary-container` background.
+ * - [selected] (tablet list–detail, N-15): `secondary-container` background, and announced as selected so colour
+ *   is not the only cue.
  * - Tapping a button reports only that button, never [onClick].
  */
 @Composable
@@ -73,6 +76,7 @@ fun VerbCell(
             .background(if (selected) colors.secondaryContainer else Color.Transparent)
             .bottomLine(colors.outlineVariant)
             .clickable(onClick = onClick)
+            .then(if (selected) Modifier.semantics { this.selected = true } else Modifier)
             .padding(start = spacing.space16, end = spacing.space4, top = spacing.space12, bottom = spacing.space12),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.space12),

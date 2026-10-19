@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Drafted by the implementer: to be reviewed by the user before merge -->
+    <string name="label_group_1">grupa 1</string>
+    <string name="label_group_2">grupa a 2-a</string>
+    <string name="label_group_3">grupa a 3-a</string>
+    <string name="label_auxiliary_avoir">avoir</string>
+    <string name="label_auxiliary_etre">être</string>
+    <string name="label_auxiliary_both">avoir sau être</string>
+    <string name="label_reflexive">reflexiv</string>
+    <string name="label_non_reflexive">nereflexiv</string>
+    <string name="label_frequency_very_common">foarte frecvent</string>
+    <string name="label_frequency_common">frecvent</string>
+    <string name="label_frequency_uncommon">puțin frecvent</string>
+    <string name="label_frequency_rare">rar</string>
+    <string name="score_percent">%1$d%</string>
+    <string name="list_controls">Opțiuni listă</string>
+    <string name="sheet_title">Opțiuni listă</string>
+    <string name="sheet_reset">Resetează</string>
+    <string name="sheet_filter">Filtru</string>
+    <string name="sheet_group_by">Grupează după</string>
+    <string name="sheet_sort">Sortare</string>
+    <string name="sheet_field_group">Grupă</string>
+    <string name="sheet_field_auxiliary">Auxiliar</string>
+    <string name="sheet_field_reflexive">Reflexiv</string>
+    <string name="chip_reflexive">Reflexiv</string>
+    <string name="chip_non_reflexive">Nereflexiv</string>
+    <string name="group_by_none">Niciuna</string>
+    <string name="group_by_group">Grupă</string>
+    <string name="group_by_auxiliary">Auxiliar</string>
+    <string name="group_by_reflexive">Reflexiv</string>
+    <string name="sort_a_to_z">A → Z</string>
+    <string name="sort_z_to_a">Z → A</string>
+    <string name="sort_most_frequent">Cele mai frecvente</string>
+    <string name="active_by_group">După grupă</string>
+    <string name="active_by_auxiliary">După auxiliar</string>
+    <string name="active_by_reflexive">După reflexivitate</string>
+    <string name="empty_result_title">Niciun verb nu corespunde căutării sau filtrelor</string>
+    <string name="empty_result_body">Încearcă altă ortografie sau șterge căutarea și filtrele pentru a vedea toate verbele.</string>
+    <string name="empty_result_action">Șterge filtrele</string>
+    <string name="no_data_title">Încă nu există verbe</string>
+    <string name="no_data_body">Conectează-te la internet pentru a le descărca.</string>
+    <string name="no_favourites_title">Încă nu ai favorite</string>
+    <string name="no_favourites_body">Atinge ☆ pe un verb pentru a-l adăuga.</string>
+    <string name="detail_empty_title">Alege un verb pentru a-i vedea conjugarea</string>
+</resources>

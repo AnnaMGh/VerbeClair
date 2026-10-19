@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Drafted by the implementer: to be reviewed by the user before merge -->
+    <string name="label_group_1">1er groupe</string>
+    <string name="label_group_2">2e groupe</string>
+    <string name="label_group_3">3e groupe</string>
+    <string name="label_auxiliary_avoir">avoir</string>
+    <string name="label_auxiliary_etre">être</string>
+    <string name="label_auxiliary_both">avoir ou être</string>
+    <string name="label_reflexive">pronominal</string>
+    <string name="label_non_reflexive">non pronominal</string>
+    <string name="label_frequency_very_common">très courant</string>
+    <string name="label_frequency_common">courant</string>
+    <string name="label_frequency_uncommon">peu courant</string>
+    <string name="label_frequency_rare">rare</string>
+    <string name="score_percent">%1$d %</string>
+    <string name="list_controls">Options de la liste</string>
+    <string name="sheet_title">Options de la liste</string>
+    <string name="sheet_reset">Réinitialiser</string>
+    <string name="sheet_filter">Filtrer</string>
+    <string name="sheet_group_by">Grouper par</string>
+    <string name="sheet_sort">Trier</string>
+    <string name="sheet_field_group">Groupe</string>
+    <string name="sheet_field_auxiliary">Auxiliaire</string>
+    <string name="sheet_field_reflexive">Pronominal</string>
+    <string name="chip_reflexive">Pronominal</string>
+    <string name="chip_non_reflexive">Non pronominal</string>
+    <string name="group_by_none">Aucun</string>
+    <string name="group_by_group">Groupe</string>
+    <string name="group_by_auxiliary">Auxiliaire</string>
+    <string name="group_by_reflexive">Pronominal</string>
+    <string name="sort_a_to_z">A → Z</string>
+    <string name="sort_z_to_a">Z → A</string>
+    <string name="sort_most_frequent">Les plus fréquents</string>
+    <string name="active_by_group">Par groupe</string>
+    <string name="active_by_auxiliary">Par auxiliaire</string>
+    <string name="active_by_reflexive">Par forme pronominale</string>
+    <string name="empty_result_title">Aucun verbe ne correspond à votre recherche ou à vos filtres</string>
+    <string name="empty_result_body">Essayez une autre orthographe, ou effacez la recherche et les filtres pour voir tous les verbes.</string>
+    <string name="empty_result_action">Effacer les filtres</string>
+    <string name="no_data_title">Pas encore de verbes</string>
+    <string name="no_data_body">Connectez-vous à Internet pour les télécharger.</string>
+    <string name="no_favourites_title">Pas encore de favoris</string>
+    <string name="no_favourites_body">Touchez ☆ sur un verbe pour l’ajouter.</string>
+    <string name="detail_empty_title">Choisissez un verbe pour voir sa conjugaison</string>
+</resources>
