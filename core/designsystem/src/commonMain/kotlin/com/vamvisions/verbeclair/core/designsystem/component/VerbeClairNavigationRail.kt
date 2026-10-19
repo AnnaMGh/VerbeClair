@@ -53,10 +53,12 @@ fun VerbeClairNavigationRail(
     Column(
         modifier = modifier
             .fillMaxHeight()
-            .width(RailWidth)
             .flagRailBackground()
             .endLine(colors.outlineVariant)
+            // The insets (a display cutout on the start side in landscape) widen the rail rather than narrowing
+            // its 80 dp item column, so labels never wrap.
             .windowInsetsPadding(windowInsets)
+            .width(RailWidth)
             .padding(contentPadding)
             .selectableGroup(),
         horizontalAlignment = Alignment.CenterHorizontally,

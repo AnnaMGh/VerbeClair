@@ -1,6 +1,7 @@
 package com.vamvisions.verbeclair.core.designsystem.component
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -12,6 +13,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasProgressBarRangeInfo
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -146,8 +148,38 @@ class ListContentComponentsTest {
                 }
             }
             onNodeWithText("No verbs yet").assertExists()
+            onNodeWithText("Connect to the internet to download them.").assertExists()
             onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick)).assertCountEquals(0)
         }
+    }
+
+    @Test
+    fun selectedVerbCellIsAnnouncedAsSelected() = runComposeUiTest {
+        setContent {
+            VerbeClairTheme {
+                Column {
+                    VerbCell("terminer", "1st group", false, {}, {}, {}, selected = true)
+                    VerbCell("tenir", "3rd group", false, {}, {}, {})
+                }
+            }
+        }
+        onNode(hasText("terminer") and SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)).assertExists()
+        onNode(hasText("tenir") and SemanticsMatcher.keyIsDefined(SemanticsProperties.Selected)).assertDoesNotExist()
+    }
+
+    @Test
+    fun emptyStateWithoutBodyShowsOnlyTheTitle() = runComposeUiTest {
+        setContent {
+            VerbeClairTheme {
+                EmptyState(
+                    icon = VerbeClairIcons.BookOpen,
+                    title = "Choose a verb to see its conjugation",
+                    body = null,
+                )
+            }
+        }
+        onNodeWithText("Choose a verb to see its conjugation").assertExists()
+        onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true).assertCountEquals(1)
     }
 
     @Test

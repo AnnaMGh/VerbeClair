@@ -1,0 +1,442 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "9bd344bba70698ea8ffa14684eab113d",
+    "entities": [
+      {
+        "tableName": "verbs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`slug` TEXT NOT NULL, `infinitive` TEXT NOT NULL, `group` TEXT NOT NULL, `reflexive` INTEGER NOT NULL, `auxiliary` TEXT NOT NULL, `frequency` REAL NOT NULL, `updated_at` TEXT NOT NULL, `infinitive_key` TEXT NOT NULL, `sort_key` TEXT NOT NULL, PRIMARY KEY(`slug`))",
+        "fields": [
+          {
+            "fieldPath": "slug",
+            "columnName": "slug",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "infinitive",
+            "columnName": "infinitive",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "group",
+            "columnName": "group",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reflexive",
+            "columnName": "reflexive",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "auxiliary",
+            "columnName": "auxiliary",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "frequency",
+            "columnName": "frequency",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "infinitiveKey",
+            "columnName": "infinitive_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sortKey",
+            "columnName": "sort_key",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "slug"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_verbs_sort_key",
+            "unique": false,
+            "columnNames": [
+              "sort_key"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_verbs_sort_key` ON `${TABLE_NAME}` (`sort_key`)"
+          },
+          {
+            "name": "index_verbs_infinitive_key",
+            "unique": false,
+            "columnNames": [
+              "infinitive_key"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_verbs_infinitive_key` ON `${TABLE_NAME}` (`infinitive_key`)"
+          },
+          {
+            "name": "index_verbs_frequency",
+            "unique": false,
+            "columnNames": [
+              "frequency"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_verbs_frequency` ON `${TABLE_NAME}` (`frequency`)"
+          }
+        ]
+      },
+      {
+        "tableName": "forms",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `slug` TEXT NOT NULL, `mood_code` TEXT NOT NULL, `mood_name` TEXT NOT NULL, `mood_pos` INTEGER NOT NULL, `tense_code` TEXT NOT NULL, `tense_name` TEXT NOT NULL, `tense_pos` INTEGER NOT NULL, `person` TEXT, `form_pos` INTEGER NOT NULL, `conjugation` TEXT NOT NULL, `root` TEXT, `suffix` TEXT, `auxiliary` TEXT, `semi_auxiliary` TEXT, `infinitive_preposition` TEXT, `reflexive_pronoun` TEXT, `conjunction` TEXT, `preposition` TEXT, `pronoun` TEXT, `spoken_text` TEXT, FOREIGN KEY(`slug`) REFERENCES `verbs`(`slug`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "slug",
+            "columnName": "slug",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "moodCode",
+            "columnName": "mood_code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "moodName",
+            "columnName": "mood_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "moodPos",
+            "columnName": "mood_pos",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tenseCode",
+            "columnName": "tense_code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tenseName",
+            "columnName": "tense_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tensePos",
+            "columnName": "tense_pos",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "person",
+            "columnName": "person",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "formPos",
+            "columnName": "form_pos",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "conjugation",
+            "columnName": "conjugation",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "root",
+            "columnName": "root",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "suffix",
+            "columnName": "suffix",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "auxiliary",
+            "columnName": "auxiliary",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "semiAuxiliary",
+            "columnName": "semi_auxiliary",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "infinitivePreposition",
+            "columnName": "infinitive_preposition",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "reflexivePronoun",
+            "columnName": "reflexive_pronoun",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "conjunction",
+            "columnName": "conjunction",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "preposition",
+            "columnName": "preposition",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "pronoun",
+            "columnName": "pronoun",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "spokenText",
+            "columnName": "spoken_text",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_forms_slug",
+            "unique": false,
+            "columnNames": [
+              "slug"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_forms_slug` ON `${TABLE_NAME}` (`slug`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "verbs",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "slug"
+            ],
+            "referencedColumns": [
+              "slug"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "translations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`slug` TEXT NOT NULL, `language` TEXT NOT NULL, `definition` TEXT, `translation` TEXT, PRIMARY KEY(`slug`), FOREIGN KEY(`slug`) REFERENCES `verbs`(`slug`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "slug",
+            "columnName": "slug",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "language",
+            "columnName": "language",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "definition",
+            "columnName": "definition",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "translation",
+            "columnName": "translation",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "slug"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "verbs",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "slug"
+            ],
+            "referencedColumns": [
+              "slug"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "synonyms",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`slug` TEXT NOT NULL, `position` INTEGER NOT NULL, `synonym_slug` TEXT NOT NULL, `synonym_infinitive` TEXT NOT NULL, PRIMARY KEY(`slug`, `position`), FOREIGN KEY(`slug`) REFERENCES `verbs`(`slug`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "slug",
+            "columnName": "slug",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "synonymSlug",
+            "columnName": "synonym_slug",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "synonymInfinitive",
+            "columnName": "synonym_infinitive",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "slug",
+            "position"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "verbs",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "slug"
+            ],
+            "referencedColumns": [
+              "slug"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "form_search",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`key` TEXT NOT NULL, `slug` TEXT NOT NULL, `form` TEXT NOT NULL, `display_order` INTEGER NOT NULL, PRIMARY KEY(`slug`, `form`), FOREIGN KEY(`slug`) REFERENCES `verbs`(`slug`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "slug",
+            "columnName": "slug",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "form",
+            "columnName": "form",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayOrder",
+            "columnName": "display_order",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "slug",
+            "form"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_form_search_key_slug",
+            "unique": false,
+            "columnNames": [
+              "key",
+              "slug"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_form_search_key_slug` ON `${TABLE_NAME}` (`key`, `slug`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "verbs",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "slug"
+            ],
+            "referencedColumns": [
+              "slug"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "metadata",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`key` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY(`key`))",
+        "fields": [
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "key"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9bd344bba70698ea8ffa14684eab113d')"
+    ]
+  }
+}
