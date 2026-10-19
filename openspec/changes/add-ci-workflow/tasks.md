@@ -5,7 +5,7 @@
 - [ ] 1.1 Create `.github/workflows/ci.yml` with `name: CI`, the triggers and concurrency of design D2, and `permissions: contents: read`. Verify: `actionlint` (or the GitHub workflow editor) reports no errors.
 - [ ] 1.2 Add the `build` job (D1, D3, D5, D7): `macos-15`, checkout, setup-java zulu 21, setup-gradle (read-only cache on PRs), `~/.konan` cache, a step exporting `DEVELOPER_DIR` from `xcode-select -p` and printing the Xcode version, `./gradlew build --stacktrace` with `FRENCH_VERBS_DATASET_TOKEN` from secrets, and test reports uploaded on failure. Verify: the job runs green on the PR for this change.
 - [ ] 1.3 Add the `android-device-tests` job (D1, D4, D5, D7): `ubuntu-latest`, checkout, setup-java zulu 21, setup-gradle, KVM udev rule, AVD snapshot cache, `reactivecircus/android-emulator-runner` (API 34, google_apis, x86_64, animations off, 600 s boot timeout) running `./gradlew connectedAndroidDeviceTest --stacktrace`, and the `androidTests` reports uploaded on failure. Verify: the job runs green on the PR and the log lists the instrumented tests of `:core:designsystem` and `:shared`.
-- [ ] 1.4 Pin every action to a full commit SHA with its version tag in a comment (D6). Verify: `grep -E 'uses: .+@[0-9a-f]{40}' .github/workflows/ci.yml` matches every `uses:` line.
+- [x] 1.4 Pin every action to a full commit SHA with its version tag in a comment (D6). Verify: `grep -E 'uses: .+@[0-9a-f]{40}' .github/workflows/ci.yml` matches every `uses:` line.
 
 ## 2. Behaviour checks
 
