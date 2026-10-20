@@ -13,6 +13,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.waitUntilAtLeastOneExists
 import androidx.paging.LoadState
 import androidx.paging.LoadStates
 import androidx.paging.PagingData
@@ -216,6 +217,7 @@ class VerbListScreenTest {
         runComposeUiTest {
             show(VerbListState(choices = PreviewData.groupedChoices))
 
+            waitUntilAtLeastOneExists(hasContentDescription("List controls, 2"), timeoutMillis = 5_000)
             onNode(hasContentDescription("List controls, 2")).assertExists()
             onNodeWithText("By group").assertExists()
             onNodeWithText("Most frequent").performClick()

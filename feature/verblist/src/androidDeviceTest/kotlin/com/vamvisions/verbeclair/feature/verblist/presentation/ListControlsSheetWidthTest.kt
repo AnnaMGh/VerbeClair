@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.AndroidComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
@@ -31,7 +32,7 @@ class ListControlsSheetWidthTest {
     fun sheetIsAtMost640DpWideAndCentred() =
         runAndroidComposeUiTest<ComponentActivity> {
             activity!!.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            waitForIdle()
+            awaitLandscapeWidth()
             var windowWidth = 0.dp
             setContent {
                 val density = LocalDensity.current
@@ -56,6 +57,15 @@ class ListControlsSheetWidthTest {
             )
             activity!!.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
+
+    /** The rotation is asynchronous and may recreate the activity: wait until the window is really wide. */
+    private fun AndroidComposeUiTest<ComponentActivity>.awaitLandscapeWidth() {
+        waitUntil(timeoutMillis = 10_000) {
+            val widthDp = activity?.resources?.configuration?.screenWidthDp ?: 0
+            widthDp.dp > SheetMaxWidth
+        }
+        waitForIdle()
+    }
 
     private companion object {
         const val SHEET = "sheet"

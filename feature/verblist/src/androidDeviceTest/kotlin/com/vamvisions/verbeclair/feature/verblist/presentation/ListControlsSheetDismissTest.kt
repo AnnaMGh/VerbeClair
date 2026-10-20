@@ -4,6 +4,7 @@ import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runAndroidComposeUiTest
 import androidx.test.platform.app.InstrumentationRegistry
@@ -24,12 +25,18 @@ class ListControlsSheetDismissTest {
             setContent {
                 VerbeClairTheme { ListControlsSheet(choices = ListChoices.Default, onAction = { actions += it }) }
             }
-            onNodeWithText("List options").assertExists()
+            // The sheet animates in and its window takes focus afterwards; a slow emulator needs time for both.
+            waitUntil(timeoutMillis = SETTLE_MILLIS) { onNodeWithText("List options").isDisplayed() }
+            waitForIdle()
 
             // The sheet is its own window, so the key goes to it rather than to the activity's dispatcher.
             InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
-            waitForIdle()
+            waitUntil(timeoutMillis = SETTLE_MILLIS) { actions.isNotEmpty() }
 
             assertEquals(listOf<VerbListAction>(VerbListAction.OnDismissSheet), actions)
         }
+
+    private companion object {
+        const val SETTLE_MILLIS = 10_000L
+    }
 }
