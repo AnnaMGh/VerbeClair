@@ -1,6 +1,7 @@
 rootProject.name = "VerbeClair"
 
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             mavenContent {
@@ -35,3 +36,5 @@ include(":core:database")
 include(":core:data")
 include(":core:presentation")
 include(":feature:verblist")
+include(":tooling:prism-rules")
+include(":tooling:konsist")

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="src/commonTest/kotlin/com/vamvisions/verbeclair/core/database/fixture/DatasetFixtures.kt">
+        <error line="8" column="121" source="standard:max-line-length" />
+        <error line="10" column="120" source="standard:max-line-length" />
+        <error line="12" column="120" source="standard:max-line-length" />
+        <error line="14" column="120" source="standard:max-line-length" />
+        <error line="16" column="120" source="standard:max-line-length" />
+        <error line="18" column="120" source="standard:max-line-length" />
+        <error line="20" column="120" source="standard:max-line-length" />
+        <error line="22" column="120" source="standard:max-line-length" />
+        <error line="24" column="120" source="standard:max-line-length" />
+        <error line="26" column="120" source="standard:max-line-length" />
+        <error line="28" column="120" source="standard:max-line-length" />
+        <error line="30" column="120" source="standard:max-line-length" />
+        <error line="32" column="120" source="standard:max-line-length" />
+    </file>
+</baseline>

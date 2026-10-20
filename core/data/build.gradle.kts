@@ -6,6 +6,9 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    id("prism.ktlint")
+    id("prism.detekt")
+    id("prism.jacoco")
 }
 
 kotlin {
@@ -14,8 +17,14 @@ kotlin {
 
     android {
         namespace = "com.vamvisions.verbeclair.core.data"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
+        compileSdk =
+            libs.versions.android.compileSdk
+                .get()
+                .toInt()
+        minSdk =
+            libs.versions.android.minSdk
+                .get()
+                .toInt()
 
         compilerOptions {
             jvmTarget = JvmTarget.JVM_11
