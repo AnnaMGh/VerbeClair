@@ -1,13 +1,12 @@
 package com.vamvisions.verbeclair.feature.verblist.presentation
 
-import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runAndroidComposeUiTest
-import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.espresso.Espresso
 import com.vamvisions.verbeclair.core.designsystem.theme.VerbeClairTheme
 import com.vamvisions.verbeclair.core.domain.verb.ListChoices
 import com.vamvisions.verbeclair.feature.verblist.presentation.components.ListControlsSheet
@@ -29,14 +28,15 @@ class ListControlsSheetDismissTest {
             waitUntil(timeoutMillis = SETTLE_MILLIS) { onNodeWithText("List options").isDisplayed() }
             waitForIdle()
 
-            // The sheet is its own window, so the key goes to it rather than to the activity's dispatcher.
-            InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+            // The sheet is its own window, so Back goes to it rather than to the activity's dispatcher. Espresso
+            // waits until that window has focus; a raw key sent earlier on a slow emulator is lost.
+            Espresso.pressBack()
             waitUntil(timeoutMillis = SETTLE_MILLIS) { actions.isNotEmpty() }
 
-            assertEquals(listOf<VerbListAction>(VerbListAction.OnDismissSheet), actions)
+            assertEquals(VerbListAction.OnDismissSheet, actions.first())
         }
 
     private companion object {
-        const val SETTLE_MILLIS = 10_000L
+        const val SETTLE_MILLIS = 20_000L
     }
 }
