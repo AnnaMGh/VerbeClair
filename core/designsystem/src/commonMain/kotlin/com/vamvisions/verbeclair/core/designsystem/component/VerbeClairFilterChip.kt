@@ -35,26 +35,29 @@ fun VerbeClairFilterChip(
         onClick = onClick,
         label = { Text(text = label, style = MaterialTheme.typography.labelLarge) },
         modifier = modifier,
-        leadingIcon = if (selected) {
-            { Icon(imageVector = VerbeClairIcons.Check, contentDescription = null, Modifier.size(CheckIconSize)) }
-        } else {
-            null
-        },
+        leadingIcon =
+            if (selected) {
+                { Icon(imageVector = VerbeClairIcons.Check, contentDescription = null, Modifier.size(CheckIconSize)) }
+            } else {
+                null
+            },
         shape = MaterialTheme.shapes.small,
-        colors = FilterChipDefaults.filterChipColors(
-            containerColor = Color.Transparent,
-            labelColor = colors.onSurfaceVariant,
-            selectedContainerColor = colors.secondaryContainer,
-            selectedLabelColor = colors.onSecondaryContainer,
-            selectedLeadingIconColor = colors.onSecondaryContainer,
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            enabled = true,
-            selected = selected,
-            borderColor = colors.outlineVariant,
-            selectedBorderColor = Color.Transparent,
-            borderWidth = 1.dp,
-            selectedBorderWidth = 0.dp,
-        ),
+        colors =
+            FilterChipDefaults.filterChipColors(
+                containerColor = Color.Transparent,
+                labelColor = colors.onSurfaceVariant,
+                selectedContainerColor = colors.secondaryContainer,
+                selectedLabelColor = colors.onSecondaryContainer,
+                selectedLeadingIconColor = colors.onSecondaryContainer,
+            ),
+        border =
+            FilterChipDefaults.filterChipBorder(
+                enabled = true,
+                selected = selected,
+                borderColor = colors.outlineVariant,
+                selectedBorderColor = Color.Transparent,
+                borderWidth = 1.dp,
+                selectedBorderWidth = 0.dp,
+            ),
     )
 }

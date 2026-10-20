@@ -60,41 +60,61 @@ fun VerbeClairButton(
         Text(text = text, style = MaterialTheme.typography.labelLarge)
     }
     when (style) {
-        ButtonStyle.Filled -> Button(
-            onClick = onClick,
-            modifier = modifier,
-            enabled = enabled,
-            shape = shape,
-            colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
-            content = content,
-        )
-        ButtonStyle.Tonal -> FilledTonalButton(
-            onClick = onClick,
-            modifier = modifier,
-            enabled = enabled,
-            shape = shape,
-            colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = colors.secondaryContainer,
-                contentColor = colors.onSecondaryContainer,
-            ),
-            content = content,
-        )
-        ButtonStyle.Outlined -> OutlinedButton(
-            onClick = onClick,
-            modifier = modifier,
-            enabled = enabled,
-            shape = shape,
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.primary),
-            border = if (enabled) BorderStroke(1.dp, colors.outline) else ButtonDefaults.outlinedButtonBorder(false),
-            content = content,
-        )
-        ButtonStyle.Text -> TextButton(
-            onClick = onClick,
-            modifier = modifier,
-            enabled = enabled,
-            shape = shape,
-            colors = ButtonDefaults.textButtonColors(contentColor = colors.primary),
-            content = content,
-        )
+        ButtonStyle.Filled -> {
+            Button(
+                onClick = onClick,
+                modifier = modifier,
+                enabled = enabled,
+                shape = shape,
+                colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
+                content = content,
+            )
+        }
+
+        ButtonStyle.Tonal -> {
+            FilledTonalButton(
+                onClick = onClick,
+                modifier = modifier,
+                enabled = enabled,
+                shape = shape,
+                colors =
+                    ButtonDefaults.filledTonalButtonColors(
+                        containerColor = colors.secondaryContainer,
+                        contentColor = colors.onSecondaryContainer,
+                    ),
+                content = content,
+            )
+        }
+
+        ButtonStyle.Outlined -> {
+            OutlinedButton(
+                onClick = onClick,
+                modifier = modifier,
+                enabled = enabled,
+                shape = shape,
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.primary),
+                border =
+                    if (enabled) {
+                        BorderStroke(
+                            1.dp,
+                            colors.outline,
+                        )
+                    } else {
+                        ButtonDefaults.outlinedButtonBorder(false)
+                    },
+                content = content,
+            )
+        }
+
+        ButtonStyle.Text -> {
+            TextButton(
+                onClick = onClick,
+                modifier = modifier,
+                enabled = enabled,
+                shape = shape,
+                colors = ButtonDefaults.textButtonColors(contentColor = colors.primary),
+                content = content,
+            )
+        }
     }
 }

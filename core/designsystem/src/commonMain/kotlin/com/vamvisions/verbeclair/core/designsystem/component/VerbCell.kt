@@ -16,9 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -60,24 +60,34 @@ fun VerbCell(
 ) {
     val colors = MaterialTheme.colorScheme
     val spacing = VerbeClairTheme.spacing
-    val formStyle = MaterialTheme.typography.labelLarge.toSpanStyle().copy(color = colors.primary)
-    val title = if (matchedForm == null) {
-        AnnotatedString(infinitive)
-    } else {
-        buildAnnotatedString {
-            append(infinitive)
-            append(' ')
-            withStyle(formStyle) { append(matchedForm) }
+    val formStyle =
+        MaterialTheme.typography.labelLarge
+            .toSpanStyle()
+            .copy(color = colors.primary)
+    val title =
+        if (matchedForm == null) {
+            AnnotatedString(infinitive)
+        } else {
+            buildAnnotatedString {
+                append(infinitive)
+                append(' ')
+                withStyle(formStyle) { append(matchedForm) }
+            }
         }
-    }
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(if (selected) colors.secondaryContainer else Color.Transparent)
-            .bottomLine(colors.outlineVariant)
-            .clickable(onClick = onClick)
-            .then(if (selected) Modifier.semantics { this.selected = true } else Modifier)
-            .padding(start = spacing.space16, end = spacing.space4, top = spacing.space12, bottom = spacing.space12),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(if (selected) colors.secondaryContainer else Color.Transparent)
+                .bottomLine(colors.outlineVariant)
+                .clickable(onClick = onClick)
+                .then(if (selected) Modifier.semantics { this.selected = true } else Modifier)
+                .padding(
+                    start = spacing.space16,
+                    end = spacing.space4,
+                    top = spacing.space12,
+                    bottom = spacing.space12,
+                ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.space12),
     ) {
@@ -105,9 +115,10 @@ fun VerbCell(
                 IconButton(onClick = onFavouriteClick) {
                     Icon(
                         imageVector = if (isFavourite) VerbeClairIcons.StarFilled else VerbeClairIcons.Star,
-                        contentDescription = stringResource(
-                            if (isFavourite) Res.string.favourite_remove else Res.string.favourite_add,
-                        ),
+                        contentDescription =
+                            stringResource(
+                                if (isFavourite) Res.string.favourite_remove else Res.string.favourite_add,
+                            ),
                         tint = if (isFavourite) VerbeClairTheme.extendedColors.ending else colors.onSurfaceVariant,
                     )
                 }

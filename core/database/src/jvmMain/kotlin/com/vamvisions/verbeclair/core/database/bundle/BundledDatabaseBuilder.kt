@@ -56,40 +56,48 @@ fun buildBundledDatabase(dataset: File, outputDir: File) {
     val databaseFile = File(outputDir, "verbs.db")
     deleteDatabaseFiles(databaseFile, includingDatabase = true)
 
-    val database = Room.databaseBuilder<VerbDatabase>(name = databaseFile.absolutePath)
-        .setDriver(BundledSQLiteDriver())
-        .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
-        .setQueryCoroutineContext(Dispatchers.IO)
-        .build()
+    val database =
+        Room
+            .databaseBuilder<VerbDatabase>(name = databaseFile.absolutePath)
+            .setDriver(BundledSQLiteDriver())
+            .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
+            .setQueryCoroutineContext(Dispatchers.IO)
+            .build()
 
-    val header = try {
-        val batch = ArrayList<VerbDetailsRecord>(BATCH_SIZE)
-        fun flush() {
-            if (batch.isEmpty()) return
-            val entities = batch.map { it.toEntities() }
-            runBlocking { database.verbDao().replace(entities) }
-            batch.clear()
+    val header =
+        try {
+            val batch = ArrayList<VerbDetailsRecord>(BATCH_SIZE)
+
+            fun flush() {
+                if (batch.isEmpty()) return
+                val entities = batch.map { it.toEntities() }
+                runBlocking { database.verbDao().replace(entities) }
+                batch.clear()
+            }
+            val strategy =
+                StreamingDatasetStrategy { verb ->
+                    batch += verb
+                    if (batch.size == BATCH_SIZE) flush()
+                }
+            val header =
+                GZIPInputStream(
+                    dataset.inputStream().buffered(),
+                ).use { DatasetJson.decodeFromStream(strategy, it) }
+            flush()
+            runBlocking {
+                database.metadataDao().put(
+                    listOf(
+                        MetadataEntity(MetadataKeys.LAST_UPDATED_AT, header.lastUpdatedAt),
+                        MetadataEntity(MetadataKeys.SCHEMA_VERSION, VERB_SCHEMA_VERSION.toString()),
+                        MetadataEntity(MetadataKeys.BUNDLE_BUILD, BUNDLE_BUILD.toString()),
+                        MetadataEntity(MetadataKeys.CHECKPOINT, header.lastUpdatedAt),
+                    ),
+                )
+            }
+            header
+        } finally {
+            database.close()
         }
-        val strategy = StreamingDatasetStrategy { verb ->
-            batch += verb
-            if (batch.size == BATCH_SIZE) flush()
-        }
-        val header = GZIPInputStream(dataset.inputStream().buffered()).use { DatasetJson.decodeFromStream(strategy, it) }
-        flush()
-        runBlocking {
-            database.metadataDao().put(
-                listOf(
-                    MetadataEntity(MetadataKeys.LAST_UPDATED_AT, header.lastUpdatedAt),
-                    MetadataEntity(MetadataKeys.SCHEMA_VERSION, VERB_SCHEMA_VERSION.toString()),
-                    MetadataEntity(MetadataKeys.BUNDLE_BUILD, BUNDLE_BUILD.toString()),
-                    MetadataEntity(MetadataKeys.CHECKPOINT, header.lastUpdatedAt),
-                ),
-            )
-        }
-        header
-    } finally {
-        database.close()
-    }
 
     BundledSQLiteDriver().open(databaseFile.absolutePath).use { it.execSQL("VACUUM") }
     GZIPOutputStream(File(outputDir, BundledFiles.COMPRESSED_DATABASE).outputStream().buffered()).use { gzip ->
@@ -98,14 +106,15 @@ fun buildBundledDatabase(dataset: File, outputDir: File) {
     // Only the gzip is shipped: no database, no journal, and no `.lck` file left by Room on the JVM.
     deleteDatabaseFiles(databaseFile, includingDatabase = true)
 
-    val metadata = BundledMetadata(
-        lastUpdatedAt = header.lastUpdatedAt,
-        schemaVersion = VERB_SCHEMA_VERSION,
-        bundleBuild = BUNDLE_BUILD,
-        attribution = header.attribution,
-        datasetLicenseUrl = header.datasetLicenseUrl,
-        sources = header.sources,
-    )
+    val metadata =
+        BundledMetadata(
+            lastUpdatedAt = header.lastUpdatedAt,
+            schemaVersion = VERB_SCHEMA_VERSION,
+            bundleBuild = BUNDLE_BUILD,
+            attribution = header.attribution,
+            datasetLicenseUrl = header.datasetLicenseUrl,
+            sources = header.sources,
+        )
     File(outputDir, BundledFiles.METADATA).outputStream().use { MetadataJson.encodeToStream(metadata, it) }
 }
 
@@ -128,50 +137,54 @@ private class DatasetHeader(
  * Decodes [DatasetFile] but hands each verb to [onVerb] as soon as it is read, so the 220 MB
  * dataset is never held in memory at once.
  */
-private class StreamingDatasetStrategy(
-    private val onVerb: (VerbDetailsRecord) -> Unit,
-) : DeserializationStrategy<DatasetHeader> {
+private class StreamingDatasetStrategy(private val onVerb: (VerbDetailsRecord) -> Unit) :
+    DeserializationStrategy<DatasetHeader> {
     override val descriptor: SerialDescriptor = DatasetFile.serializer().descriptor
 
-    override fun deserialize(decoder: Decoder): DatasetHeader = decoder.decodeStructure(descriptor) {
-        var lastUpdatedAt: String? = null
-        var attribution: String? = null
-        var datasetLicenseUrl: String? = null
-        var sources: JsonElement? = null
-        while (true) {
-            val index = decodeElementIndex(descriptor)
-            if (index == CompositeDecoder.DECODE_DONE) break
-            when (descriptor.getElementName(index)) {
-                "lastUpdatedAt" -> lastUpdatedAt = decodeStringElement(descriptor, index)
-                "attribution" -> attribution = decodeStringElement(descriptor, index)
-                "datasetLicenseUrl" -> datasetLicenseUrl = decodeStringElement(descriptor, index)
-                "sources" -> sources = decodeSerializableElement(descriptor, index, JsonElement.serializer())
-                "verbs" -> decodeSerializableElement(descriptor, index, StreamingVerbs(onVerb))
-                // Fields this builder does not need are still read, to keep the stream in sync.
-                else -> decodeSerializableElement(descriptor, index, JsonElement.serializer())
+    override fun deserialize(decoder: Decoder): DatasetHeader =
+        decoder.decodeStructure(descriptor) {
+            var lastUpdatedAt: String? = null
+            var attribution: String? = null
+            var datasetLicenseUrl: String? = null
+            var sources: JsonElement? = null
+            while (true) {
+                val index = decodeElementIndex(descriptor)
+                if (index == CompositeDecoder.DECODE_DONE) break
+                when (descriptor.getElementName(index)) {
+                    "lastUpdatedAt" -> lastUpdatedAt = decodeStringElement(descriptor, index)
+
+                    "attribution" -> attribution = decodeStringElement(descriptor, index)
+
+                    "datasetLicenseUrl" -> datasetLicenseUrl = decodeStringElement(descriptor, index)
+
+                    "sources" -> sources = decodeSerializableElement(descriptor, index, JsonElement.serializer())
+
+                    "verbs" -> decodeSerializableElement(descriptor, index, StreamingVerbs(onVerb))
+
+                    // Fields this builder does not need are still read, to keep the stream in sync.
+                    else -> decodeSerializableElement(descriptor, index, JsonElement.serializer())
+                }
             }
+            DatasetHeader(
+                lastUpdatedAt = requireNotNull(lastUpdatedAt) { "Dataset has no lastUpdatedAt" },
+                attribution = requireNotNull(attribution) { "Dataset has no attribution" },
+                datasetLicenseUrl = requireNotNull(datasetLicenseUrl) { "Dataset has no datasetLicenseUrl" },
+                sources = requireNotNull(sources) { "Dataset has no sources" },
+            )
         }
-        DatasetHeader(
-            lastUpdatedAt = requireNotNull(lastUpdatedAt) { "Dataset has no lastUpdatedAt" },
-            attribution = requireNotNull(attribution) { "Dataset has no attribution" },
-            datasetLicenseUrl = requireNotNull(datasetLicenseUrl) { "Dataset has no datasetLicenseUrl" },
-            sources = requireNotNull(sources) { "Dataset has no sources" },
-        )
-    }
 }
 
 /** Reads the `verbs` array element by element. */
-private class StreamingVerbs(
-    private val onVerb: (VerbDetailsRecord) -> Unit,
-) : DeserializationStrategy<Unit> {
+private class StreamingVerbs(private val onVerb: (VerbDetailsRecord) -> Unit) : DeserializationStrategy<Unit> {
     private val verbSerializer = VerbDetailsRecord.serializer()
     override val descriptor: SerialDescriptor = ListSerializer(verbSerializer).descriptor
 
-    override fun deserialize(decoder: Decoder) = decoder.decodeStructure(descriptor) {
-        while (true) {
-            val index = decodeElementIndex(descriptor)
-            if (index == CompositeDecoder.DECODE_DONE) break
-            onVerb(decodeSerializableElement(descriptor, index, verbSerializer))
+    override fun deserialize(decoder: Decoder) =
+        decoder.decodeStructure(descriptor) {
+            while (true) {
+                val index = decodeElementIndex(descriptor)
+                if (index == CompositeDecoder.DECODE_DONE) break
+                onVerb(decodeSerializableElement(descriptor, index, verbSerializer))
+            }
         }
-    }
 }

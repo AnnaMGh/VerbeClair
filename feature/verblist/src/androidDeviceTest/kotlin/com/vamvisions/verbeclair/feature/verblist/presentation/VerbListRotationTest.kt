@@ -36,29 +36,30 @@ class VerbListRotationTest {
     }
 
     @Test
-    fun rotatingKeepsTheQueryAndTheFirstVisibleItem() = runAndroidComposeUiTest<ComponentActivity> {
-        val restoration = StateRestorationTester(this)
-        var layout by mutableStateOf(WindowLayout.Compact)
-        restoration.setContent {
-            VerbeClairTheme {
-                VerbListRoot(onVerbClick = {}, onTestClick = {}, viewModel = viewModel, layout = layout)
+    fun rotatingKeepsTheQueryAndTheFirstVisibleItem() =
+        runAndroidComposeUiTest<ComponentActivity> {
+            val restoration = StateRestorationTester(this)
+            var layout by mutableStateOf(WindowLayout.Compact)
+            restoration.setContent {
+                VerbeClairTheme {
+                    VerbListRoot(onVerbClick = {}, onTestClick = {}, viewModel = viewModel, layout = layout)
+                }
             }
+            waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("verb00")).fetchSemanticsNodes().isNotEmpty() }
+            onNode(hasSetTextAction()).performTextInput("verb")
+            waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("être")).fetchSemanticsNodes().isEmpty() }
+            // An even index stays the first item of its line once the grid has 2 columns.
+            onNodeWithTag(VerbListTestTags.GRID).performScrollToIndex(20)
+            waitForIdle()
+            onNode(hasText("verb20")).assertIsDisplayed()
+
+            restoration.emulateSaveAndRestore()
+            layout = WindowLayout.PhoneLandscape
+            waitForIdle()
+
+            assertEquals("verb", viewModel.state.value.query)
+            onNode(hasSetTextAction() and hasText("verb")).assertExists()
+            onNode(hasText("verb20")).assertIsDisplayed()
+            onNode(hasText("verb00")).assertDoesNotExist()
         }
-        waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("verb00")).fetchSemanticsNodes().isNotEmpty() }
-        onNode(hasSetTextAction()).performTextInput("verb")
-        waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("être")).fetchSemanticsNodes().isEmpty() }
-        // An even index stays the first item of its line once the grid has 2 columns.
-        onNodeWithTag(VerbListTestTags.GRID).performScrollToIndex(20)
-        waitForIdle()
-        onNode(hasText("verb20")).assertIsDisplayed()
-
-        restoration.emulateSaveAndRestore()
-        layout = WindowLayout.PhoneLandscape
-        waitForIdle()
-
-        assertEquals("verb", viewModel.state.value.query)
-        onNode(hasSetTextAction() and hasText("verb")).assertExists()
-        onNode(hasText("verb20")).assertIsDisplayed()
-        onNode(hasText("verb00")).assertDoesNotExist()
-    }
 }

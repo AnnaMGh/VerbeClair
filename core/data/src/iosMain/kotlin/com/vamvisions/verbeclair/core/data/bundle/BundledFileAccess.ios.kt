@@ -28,8 +28,10 @@ internal actual fun syncFile(path: Path) {
 
 @OptIn(ExperimentalForeignApi::class)
 internal actual fun excludeFromBackup(path: Path) {
-    val excluded = NSURL.fileURLWithPath(path.toString())
-        .setResourceValue(true, forKey = NSURLIsExcludedFromBackupKey, error = null)
+    val excluded =
+        NSURL
+            .fileURLWithPath(path.toString())
+            .setResourceValue(true, forKey = NSURLIsExcludedFromBackupKey, error = null)
     if (!excluded) throw IOException("Cannot exclude $path from iCloud backup")
 }
 

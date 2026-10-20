@@ -11,7 +11,12 @@ actual fun KoinApplication.withTestPlatform() = Unit
 @OptIn(ExperimentalForeignApi::class)
 actual fun createTestDirectory(): String {
     val path = NSTemporaryDirectory() + "koin-graph-" + NSUUID().UUIDString
-    NSFileManager.defaultManager.createDirectoryAtPath(path, withIntermediateDirectories = true, attributes = null, error = null)
+    NSFileManager.defaultManager.createDirectoryAtPath(
+        path,
+        withIntermediateDirectories = true,
+        attributes = null,
+        error = null,
+    )
     return path
 }
 

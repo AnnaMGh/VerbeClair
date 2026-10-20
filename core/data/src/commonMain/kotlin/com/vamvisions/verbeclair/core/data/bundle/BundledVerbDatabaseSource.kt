@@ -23,13 +23,10 @@ fun interface ResourceFileOpener {
 
 /** Reads the bundled files from the `:core:data` Compose resources. */
 @OptIn(ExperimentalResourceApi::class)
-class ResourceBundledVerbDatabaseSource(
-    private val opener: ResourceFileOpener,
-) : BundledVerbDatabaseSource {
+class ResourceBundledVerbDatabaseSource(private val opener: ResourceFileOpener) : BundledVerbDatabaseSource {
     override suspend fun metadata(): BundledMetadata =
         DatasetJson.decodeFromString(Res.readBytes("files/${BundledFiles.METADATA}").decodeToString())
 
     // Never Res.readBytes: the database is 28 MB compressed and 156 MB once decompressed.
-    override fun openCompressedDatabase(): Source =
-        opener.open(Res.getUri("files/${BundledFiles.COMPRESSED_DATABASE}"))
+    override fun openCompressedDatabase(): Source = opener.open(Res.getUri("files/${BundledFiles.COMPRESSED_DATABASE}"))
 }

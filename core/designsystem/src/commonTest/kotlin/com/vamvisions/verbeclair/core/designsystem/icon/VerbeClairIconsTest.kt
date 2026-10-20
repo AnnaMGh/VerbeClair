@@ -8,13 +8,48 @@ import kotlin.test.assertTrue
 class VerbeClairIconsTest {
 
     // Symbol names in the Figma Components Icons frame (node 4:2).
-    private val figmaIcons = listOf(
-        "search", "tune", "settings", "arrow-back", "close", "chevron-right", "check", "info", "cloud-off",
-        "cloud-download", "search-off", "book-open", "file-x", "file-text", "star", "shield", "open-in-new",
-        "refresh", "alert", "history", "tag", "sort", "star-filled", "pencil", "volume", "mic", "share",
-        "download", "mail", "target", "lightbulb", "ad-off", "chevron-down", "check-circle", "x-circle",
-        "list-checks", "repeat", "lock", "exam",
-    ).map { "icon/$it" }
+    private val figmaIcons =
+        listOf(
+            "search",
+            "tune",
+            "settings",
+            "arrow-back",
+            "close",
+            "chevron-right",
+            "check",
+            "info",
+            "cloud-off",
+            "cloud-download",
+            "search-off",
+            "book-open",
+            "file-x",
+            "file-text",
+            "star",
+            "shield",
+            "open-in-new",
+            "refresh",
+            "alert",
+            "history",
+            "tag",
+            "sort",
+            "star-filled",
+            "pencil",
+            "volume",
+            "mic",
+            "share",
+            "download",
+            "mail",
+            "target",
+            "lightbulb",
+            "ad-off",
+            "chevron-down",
+            "check-circle",
+            "x-circle",
+            "list-checks",
+            "repeat",
+            "lock",
+            "exam",
+        ).map { "icon/$it" }
 
     @Test
     fun everyFigmaIconHasAnEntry() {

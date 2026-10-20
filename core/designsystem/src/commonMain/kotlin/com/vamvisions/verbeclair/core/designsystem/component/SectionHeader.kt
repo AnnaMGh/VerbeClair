@@ -27,10 +27,11 @@ fun SectionHeader(
     val colors = MaterialTheme.colorScheme
     val spacing = VerbeClairTheme.spacing
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(colors.surfaceContainer)
-            .padding(horizontal = spacing.space16, vertical = spacing.space8),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(colors.surfaceContainer)
+                .padding(horizontal = spacing.space16, vertical = spacing.space8),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.space8),
     ) {

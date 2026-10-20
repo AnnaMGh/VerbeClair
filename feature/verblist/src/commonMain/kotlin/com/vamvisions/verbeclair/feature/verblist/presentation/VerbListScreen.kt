@@ -40,10 +40,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.paging.LoadState
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import com.vamvisions.verbeclair.core.designsystem.component.EmptyState
 import com.vamvisions.verbeclair.core.designsystem.component.IconButtonStyle
@@ -132,49 +132,56 @@ fun VerbListScreen(
         onAction(VerbListAction.OnSelectVerb(slug))
         onVerbClick(slug)
     }
-    val screenModifier = modifier
-        .fillMaxSize()
-        .flagScreenBackground()
-        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.End))
+    val screenModifier =
+        modifier
+            .fillMaxSize()
+            .flagScreenBackground()
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.End))
     when (layout) {
-        WindowLayout.ListDetail -> Row(screenModifier) {
+        WindowLayout.ListDetail -> {
+            Row(screenModifier) {
+                ListPane(
+                    state = state,
+                    verbs = verbs,
+                    columns = 1,
+                    combinedTopRow = false,
+                    selectedSlug = state.selectedSlug,
+                    // The rail and the right pane are next to the list; the list scrolls above the navigation bar.
+                    bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+                    gridState = gridState,
+                    skeletonDelay = skeletonDelay,
+                    onAction = onAction,
+                    onCellClick = onCellClick,
+                    onTestClick = onTestClick,
+                    modifier = Modifier.width(ListPaneWidth).fillMaxHeight(),
+                )
+                VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                DetailPlaceholder(Modifier.weight(1f).fillMaxHeight().testTag(VerbListTestTags.DETAIL_PANE))
+            }
+        }
+
+        else -> {
             ListPane(
                 state = state,
                 verbs = verbs,
-                columns = 1,
-                combinedTopRow = false,
-                selectedSlug = state.selectedSlug,
-                // The rail and the right pane are next to the list; the list scrolls above the navigation bar.
-                bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+                columns = if (layout == WindowLayout.PhoneLandscape) 2 else 1,
+                combinedTopRow = layout == WindowLayout.PhoneLandscape,
+                selectedSlug = null,
+                bottomPadding =
+                    if (layout == WindowLayout.PhoneLandscape) {
+                        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                    } else {
+                        0.dp
+                    },
                 gridState = gridState,
                 skeletonDelay = skeletonDelay,
                 onAction = onAction,
                 onCellClick = onCellClick,
                 onTestClick = onTestClick,
-                modifier = Modifier.width(ListPaneWidth).fillMaxHeight(),
+                modifier = screenModifier,
+                aboveBottomBar = layout == WindowLayout.Compact,
             )
-            VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            DetailPlaceholder(Modifier.weight(1f).fillMaxHeight().testTag(VerbListTestTags.DETAIL_PANE))
         }
-        else -> ListPane(
-            state = state,
-            verbs = verbs,
-            columns = if (layout == WindowLayout.PhoneLandscape) 2 else 1,
-            combinedTopRow = layout == WindowLayout.PhoneLandscape,
-            selectedSlug = null,
-            bottomPadding = if (layout == WindowLayout.PhoneLandscape) {
-                WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-            } else {
-                0.dp
-            },
-            gridState = gridState,
-            skeletonDelay = skeletonDelay,
-            onAction = onAction,
-            onCellClick = onCellClick,
-            onTestClick = onTestClick,
-            modifier = screenModifier,
-            aboveBottomBar = layout == WindowLayout.Compact,
-        )
     }
     if (state.isSheetOpen) {
         ListControlsSheet(choices = state.choices, onAction = onAction)
@@ -236,7 +243,13 @@ private fun ListPane(
 private fun TopBar(state: VerbListState, onAction: (VerbListAction) -> Unit) {
     val spacing = VerbeClairTheme.spacing
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = spacing.space16, end = spacing.space4, top = spacing.space8, bottom = spacing.space8),
+        modifier =
+            Modifier.fillMaxWidth().padding(
+                start = spacing.space16,
+                end = spacing.space4,
+                top = spacing.space8,
+                bottom = spacing.space8,
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Search(state, onAction, Modifier.weight(1f))
@@ -250,7 +263,13 @@ private fun TopBar(state: VerbListState, onAction: (VerbListAction) -> Unit) {
 private fun LandscapeTopRow(state: VerbListState, onAction: (VerbListAction) -> Unit) {
     val spacing = VerbeClairTheme.spacing
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = spacing.space16, end = spacing.space8, top = spacing.space8, bottom = spacing.space4),
+        modifier =
+            Modifier.fillMaxWidth().padding(
+                start = spacing.space16,
+                end = spacing.space8,
+                top = spacing.space8,
+                bottom = spacing.space4,
+            ),
         horizontalArrangement = Arrangement.spacedBy(spacing.space12),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -261,7 +280,11 @@ private fun LandscapeTopRow(state: VerbListState, onAction: (VerbListAction) -> 
 }
 
 @Composable
-private fun Search(state: VerbListState, onAction: (VerbListAction) -> Unit, modifier: Modifier) {
+private fun Search(
+    state: VerbListState,
+    onAction: (VerbListAction) -> Unit,
+    modifier: Modifier,
+) {
     VerbeClairSearchBar(
         query = state.query,
         onQueryChange = { onAction(VerbListAction.OnQueryChange(it)) },
@@ -283,7 +306,11 @@ private fun ListControlsButton(state: VerbListState, onAction: (VerbListAction) 
 }
 
 @Composable
-private fun Tabs(state: VerbListState, onAction: (VerbListAction) -> Unit, modifier: Modifier) {
+private fun Tabs(
+    state: VerbListState,
+    onAction: (VerbListAction) -> Unit,
+    modifier: Modifier,
+) {
     ListTabs(
         selected = if (state.tab == ListTab.FAVOURITES) TabUi.Favourites else TabUi.All,
         favouritesCount = state.favouritesCount,
@@ -311,45 +338,61 @@ private fun ListContent(
 ) {
     val refresh = verbs.loadState.refresh
     when {
-        state.isEmptyDatabase -> CentredEmptyState(aboveBottomBar) {
-            EmptyState(
-                icon = VerbeClairIcons.CloudDownload,
-                title = stringResource(Res.string.no_data_title),
-                body = stringResource(Res.string.no_data_body),
-                modifier = Modifier.fillMaxWidth(),
-            )
+        state.isEmptyDatabase -> {
+            CentredEmptyState(aboveBottomBar) {
+                EmptyState(
+                    icon = VerbeClairIcons.CloudDownload,
+                    title = stringResource(Res.string.no_data_title),
+                    body = stringResource(Res.string.no_data_body),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
-        verbs.itemCount == 0 && refresh is LoadState.Loading -> FirstPageSkeleton(columns, skeletonDelay)
-        verbs.itemCount == 0 && refresh is LoadState.NotLoading && state.tab == ListTab.FAVOURITES &&
-            state.favouritesCount == 0 -> CentredEmptyState(aboveBottomBar) {
-            EmptyState(
-                icon = VerbeClairIcons.Star,
-                title = stringResource(Res.string.no_favourites_title),
-                body = stringResource(Res.string.no_favourites_body),
-                modifier = Modifier.fillMaxWidth(),
-            )
+
+        verbs.itemCount == 0 && refresh is LoadState.Loading -> {
+            FirstPageSkeleton(columns, skeletonDelay)
         }
-        verbs.itemCount == 0 && refresh is LoadState.NotLoading -> CentredEmptyState(aboveBottomBar) {
-            EmptyState(
-                icon = VerbeClairIcons.SearchOff,
-                title = stringResource(Res.string.empty_result_title),
-                body = stringResource(Res.string.empty_result_body),
-                modifier = Modifier.fillMaxWidth(),
-                action = {
-                    VerbeClairButton(
-                        text = stringResource(Res.string.empty_result_action),
-                        onClick = { onAction(VerbListAction.OnClearFilters) },
-                    )
-                },
-            )
+
+        verbs.itemCount == 0 &&
+            refresh is LoadState.NotLoading &&
+            state.tab == ListTab.FAVOURITES &&
+            state.favouritesCount == 0 -> {
+            CentredEmptyState(aboveBottomBar) {
+                EmptyState(
+                    icon = VerbeClairIcons.Star,
+                    title = stringResource(Res.string.no_favourites_title),
+                    body = stringResource(Res.string.no_favourites_body),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
-        else -> LazyVerticalGrid(
-            columns = GridCells.Fixed(columns),
-            state = gridState,
-            modifier = Modifier.fillMaxSize().testTag(VerbListTestTags.GRID),
-            contentPadding = PaddingValues(bottom = bottomPadding),
-        ) {
-            verbRows(verbs, columns, selectedSlug, skeletonDelay, onAction, onCellClick, onTestClick)
+
+        verbs.itemCount == 0 && refresh is LoadState.NotLoading -> {
+            CentredEmptyState(aboveBottomBar) {
+                EmptyState(
+                    icon = VerbeClairIcons.SearchOff,
+                    title = stringResource(Res.string.empty_result_title),
+                    body = stringResource(Res.string.empty_result_body),
+                    modifier = Modifier.fillMaxWidth(),
+                    action = {
+                        VerbeClairButton(
+                            text = stringResource(Res.string.empty_result_action),
+                            onClick = { onAction(VerbListAction.OnClearFilters) },
+                        )
+                    },
+                )
+            }
+        }
+
+        else -> {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(columns),
+                state = gridState,
+                modifier = Modifier.fillMaxSize().testTag(VerbListTestTags.GRID),
+                contentPadding = PaddingValues(bottom = bottomPadding),
+            ) {
+                verbRows(verbs, columns, selectedSlug, skeletonDelay, onAction, onCellClick, onTestClick)
+            }
         }
     }
 }
@@ -481,11 +524,12 @@ private fun CentredEmptyState(aboveBottomBar: Boolean, content: @Composable () -
     val spacing = VerbeClairTheme.spacing
     // Figma 10:651 centres the state in a content area with 48 dp bottom padding. In L-05 / L-06 / L-09 that area
     // runs on under the 80 dp bottom bar, which leaves 80 - 48 = 32 dp more above than below the visible list area.
-    val vertical = if (aboveBottomBar) {
-        Modifier.padding(top = BottomBarHeight - spacing.space48)
-    } else {
-        Modifier.padding(bottom = spacing.space48)
-    }
+    val vertical =
+        if (aboveBottomBar) {
+            Modifier.padding(top = BottomBarHeight - spacing.space48)
+        } else {
+            Modifier.padding(bottom = spacing.space48)
+        }
     Box(
         modifier = Modifier.fillMaxSize().padding(horizontal = spacing.space32).then(vertical),
         contentAlignment = Alignment.Center,

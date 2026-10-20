@@ -13,9 +13,10 @@ class VerbDatabaseProvider(private val open: suspend () -> VerbDatabase) {
     private val mutex = Mutex()
     private var database: VerbDatabase? = null
 
-    suspend fun get(): VerbDatabase = database ?: mutex.withLock {
-        database ?: open().also { database = it }
-    }
+    suspend fun get(): VerbDatabase =
+        database ?: mutex.withLock {
+            database ?: open().also { database = it }
+        }
 
     fun close() {
         database?.close()

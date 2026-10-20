@@ -36,72 +36,80 @@ class VerbListRootTest {
     }
 
     @Test
-    fun typingSuShowsEtreWithSuis() = runComposeUiTest {
-        setContent {
-            VerbeClairTheme {
-                VerbListRoot(onVerbClick = {}, onTestClick = {}, viewModel = viewModel, layout = WindowLayout.Compact)
+    fun typingSuShowsEtreWithSuis() =
+        runComposeUiTest {
+            setContent {
+                VerbeClairTheme {
+                    VerbListRoot(
+                        onVerbClick = {},
+                        onTestClick = {},
+                        viewModel = viewModel,
+                        layout = WindowLayout.Compact,
+                    )
+                }
             }
+            waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("verb00")).fetchSemanticsNodes().isNotEmpty() }
+
+            onNode(hasSetTextAction()).performTextInput("su")
+
+            waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("être suis")).fetchSemanticsNodes().isNotEmpty() }
+            onNode(hasText("savoir su")).assertExists()
+            onNode(hasText("suivre")).assertExists()
+            onNode(hasText("verb00")).assertDoesNotExist()
         }
-        waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("verb00")).fetchSemanticsNodes().isNotEmpty() }
-
-        onNode(hasSetTextAction()).performTextInput("su")
-
-        waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("être suis")).fetchSemanticsNodes().isNotEmpty() }
-        onNode(hasText("savoir su")).assertExists()
-        onNode(hasText("suivre")).assertExists()
-        onNode(hasText("verb00")).assertDoesNotExist()
-    }
 
     @Test
-    fun tapsAndTheLayoutReachTheScreen() = runComposeUiTest {
-        val opened = mutableListOf<String>()
-        val tested = mutableListOf<String>()
-        setContent {
-            VerbeClairTheme {
-                VerbListRoot(
-                    onVerbClick = { opened += it },
-                    onTestClick = { tested += it },
-                    viewModel = viewModel,
-                    layout = WindowLayout.ListDetail,
-                )
+    fun tapsAndTheLayoutReachTheScreen() =
+        runComposeUiTest {
+            val opened = mutableListOf<String>()
+            val tested = mutableListOf<String>()
+            setContent {
+                VerbeClairTheme {
+                    VerbListRoot(
+                        onVerbClick = { opened += it },
+                        onTestClick = { tested += it },
+                        viewModel = viewModel,
+                        layout = WindowLayout.ListDetail,
+                    )
+                }
             }
+            waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("être")).fetchSemanticsNodes().isNotEmpty() }
+            onNodeWithTag(VerbListTestTags.DETAIL_PANE).assertExists()
+
+            onNode(hasText("être")).performClick()
+            onNode(hasContentDescription("Start a test") and hasAnyAncestor(hasText("être"))).performClick()
+
+            assertEquals(listOf("etre"), opened)
+            assertEquals(listOf("etre"), tested)
         }
-        waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("être")).fetchSemanticsNodes().isNotEmpty() }
-        onNodeWithTag(VerbListTestTags.DETAIL_PANE).assertExists()
-
-        onNode(hasText("être")).performClick()
-        onNode(hasContentDescription("Start a test") and hasAnyAncestor(hasText("être"))).performClick()
-
-        assertEquals(listOf("etre"), opened)
-        assertEquals(listOf("etre"), tested)
-    }
 
     /**
      * Rotating a phone switches between the Compact and PhoneLandscape structures. On iOS (and on an
      * Android resize without recreation) the composition is kept, so only the layout changes.
      */
     @Test
-    fun switchingToLandscapeKeepsTheQueryAndTheFirstVisibleItem() = runComposeUiTest {
-        var layout by mutableStateOf(WindowLayout.Compact)
-        setContent {
-            VerbeClairTheme {
-                VerbListRoot(onVerbClick = {}, onTestClick = {}, viewModel = viewModel, layout = layout)
+    fun switchingToLandscapeKeepsTheQueryAndTheFirstVisibleItem() =
+        runComposeUiTest {
+            var layout by mutableStateOf(WindowLayout.Compact)
+            setContent {
+                VerbeClairTheme {
+                    VerbListRoot(onVerbClick = {}, onTestClick = {}, viewModel = viewModel, layout = layout)
+                }
             }
+            waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("verb00")).fetchSemanticsNodes().isNotEmpty() }
+            onNode(hasSetTextAction()).performTextInput("verb")
+            waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("être")).fetchSemanticsNodes().isEmpty() }
+            // An even index stays the first item of its line once the grid has 2 columns.
+            onNodeWithTag(VerbListTestTags.GRID).performScrollToIndex(20)
+            waitForIdle()
+            onNode(hasText("verb20")).assertIsDisplayed()
+
+            layout = WindowLayout.PhoneLandscape
+            waitForIdle()
+
+            assertEquals("verb", viewModel.state.value.query)
+            onNode(hasSetTextAction() and hasText("verb")).assertExists()
+            onNode(hasText("verb20")).assertIsDisplayed()
+            onNode(hasText("verb00")).assertDoesNotExist()
         }
-        waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("verb00")).fetchSemanticsNodes().isNotEmpty() }
-        onNode(hasSetTextAction()).performTextInput("verb")
-        waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("être")).fetchSemanticsNodes().isEmpty() }
-        // An even index stays the first item of its line once the grid has 2 columns.
-        onNodeWithTag(VerbListTestTags.GRID).performScrollToIndex(20)
-        waitForIdle()
-        onNode(hasText("verb20")).assertIsDisplayed()
-
-        layout = WindowLayout.PhoneLandscape
-        waitForIdle()
-
-        assertEquals("verb", viewModel.state.value.query)
-        onNode(hasSetTextAction() and hasText("verb")).assertExists()
-        onNode(hasText("verb20")).assertIsDisplayed()
-        onNode(hasText("verb00")).assertDoesNotExist()
-    }
 }

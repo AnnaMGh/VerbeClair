@@ -55,48 +55,68 @@ class VerbListViewModel(
     private val restored = MutableStateFlow(false)
 
     /** Null until the favourites are first read, so a restored Favourites tab does not query an empty set. */
-    private val favouriteSlugs: StateFlow<Set<String>?> = favourites.observeSlugs()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    private val favouriteSlugs: StateFlow<Set<String>?> =
+        favourites
+            .observeSlugs()
+            .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** Slugs of the rows loaded so far, so the last scores are read only for them (D6). */
     private val loadedSlugs = MutableStateFlow<Set<String>>(emptySet())
 
-    private val debouncedQuery: Flow<String> = _state.map { it.query }
-        .distinctUntilChanged()
-        // A cleared search applies at once; typing waits for a 300 ms pause (L-3).
-        .debounce { if (it.isBlank()) 0L else SEARCH_DEBOUNCE_MILLIS }
+    private val debouncedQuery: Flow<String> =
+        _state
+            .map { it.query }
+            .distinctUntilChanged()
+            // A cleared search applies at once; typing waits for a 300 ms pause (L-3).
+            .debounce { if (it.isBlank()) 0L else SEARCH_DEBOUNCE_MILLIS }
 
-    private val listQuery: Flow<ListQuery> = combine(
-        debouncedQuery,
-        _state.map { it.choices to it.tab }.distinctUntilChanged(),
-        restored,
-        favouriteSlugs,
-    ) { search, (choices, tab), isRestored, favouriteSlugs ->
-        when {
-            !isRestored -> null
-            tab == ListTab.FAVOURITES ->
-                favouriteSlugs?.let { ListQuery(search = search, choices = choices, tab = tab, favouriteSlugs = it) }
-            // The All tab does not depend on favourites, so a star tap does not reload it.
-            else -> ListQuery(search = search, choices = choices, tab = tab, favouriteSlugs = emptySet())
-        }
-    }.filter { it != null }.map { it!! }.distinctUntilChanged()
+    private val listQuery: Flow<ListQuery> =
+        combine(
+            debouncedQuery,
+            _state.map { it.choices to it.tab }.distinctUntilChanged(),
+            restored,
+            favouriteSlugs,
+        ) { search, (choices, tab), isRestored, favouriteSlugs ->
+            when {
+                !isRestored -> {
+                    null
+                }
 
-    private val items: Flow<PagingData<SectionedItem>> = listQuery
-        .flatMapLatest { query ->
-            loadedSlugs.value = emptySet()
-            catalog.pagedList(query).map { page ->
-                page.map { item ->
-                    loadedSlugs.update { it + item.slug }
-                    SectionedItem(item, item.section(query.choices.groupBy))
+                tab == ListTab.FAVOURITES -> {
+                    favouriteSlugs?.let {
+                        ListQuery(
+                            search = search,
+                            choices = choices,
+                            tab = tab,
+                            favouriteSlugs = it,
+                        )
+                    }
+                }
+
+                // The All tab does not depend on favourites, so a star tap does not reload it.
+                else -> {
+                    ListQuery(search = search, choices = choices, tab = tab, favouriteSlugs = emptySet())
                 }
             }
-        }
-        .cachedIn(viewModelScope)
+        }.filter { it != null }.map { it!! }.distinctUntilChanged()
 
-    private val loadedScores: Flow<Map<String, Int>> = loadedSlugs
-        .debounce(SCORES_DEBOUNCE_MILLIS)
-        .flatMapLatest { slugs -> scores.observeScores(slugs) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyMap())
+    private val items: Flow<PagingData<SectionedItem>> =
+        listQuery
+            .flatMapLatest { query ->
+                loadedSlugs.value = emptySet()
+                catalog.pagedList(query).map { page ->
+                    page.map { item ->
+                        loadedSlugs.update { it + item.slug }
+                        SectionedItem(item, item.section(query.choices.groupBy))
+                    }
+                }
+            }.cachedIn(viewModelScope)
+
+    private val loadedScores: Flow<Map<String, Int>> =
+        loadedSlugs
+            .debounce(SCORES_DEBOUNCE_MILLIS)
+            .flatMapLatest { slugs -> scores.observeScores(slugs) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyMap())
 
     /** The grid rows: verb cells, with section headers when the list is grouped (L-5). */
     val verbs: Flow<PagingData<VerbListRowUi>> =
@@ -105,8 +125,7 @@ class VerbListViewModel(
                 .map { (item, section) ->
                     val isFavourite = favouriteSlugs?.contains(item.slug) == true
                     VerbListRowUi.Verb(item.toUi(scores[item.slug], isFavourite), section)
-                }
-                .insertSeparators { before: VerbListRowUi.Verb?, after: VerbListRowUi.Verb? ->
+                }.insertSeparators { before: VerbListRowUi.Verb?, after: VerbListRowUi.Verb? ->
                     val section = after?.section ?: return@insertSeparators null
                     if (before?.section == section) null else VerbListRowUi.Header(section)
                 }
@@ -119,19 +138,20 @@ class VerbListViewModel(
             _state.update { it.copy(choices = choices, tab = tab) }
             restored.value = true
         }
-        favourites.observeCount()
+        favourites
+            .observeCount()
             .onEach { count -> _state.update { it.copy(favouritesCount = count) } }
             .launchIn(viewModelScope)
         syncTrigger.isSyncing
             .onEach { syncing -> _state.update { it.copy(isSyncing = syncing) } }
             .launchIn(viewModelScope)
-        catalog.isEmpty()
+        catalog
+            .isEmpty()
             .distinctUntilChanged()
             .onEach { empty ->
                 _state.update { it.copy(isEmptyDatabase = empty) }
                 if (empty) requestSyncOnce()
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
     }
 
     fun onAction(action: VerbListAction) {

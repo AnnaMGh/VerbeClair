@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
-import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -61,9 +61,10 @@ class ListContentComponentsTest {
     // Verb cell (task 3.1)
 
     @Test
-    fun matchedFormFollowsTheInfinitiveInOneText() = verbCellTest(matchedForm = "suis") {
-        onNodeWithText("être suis").assertExists()
-    }
+    fun matchedFormFollowsTheInfinitiveInOneText() =
+        verbCellTest(matchedForm = "suis") {
+            onNodeWithText("être suis").assertExists()
+        }
 
     @Test
     fun scoreIsShownOnlyWhenGiven() {
@@ -84,41 +85,45 @@ class ListContentComponentsTest {
     }
 
     @Test
-    fun buttonsReportOnlyTheirOwnTaps() = verbCellTest { taps ->
-        onNodeWithContentDescription("Add to favourites").performClick()
-        onNodeWithContentDescription("Start a test").performClick()
-        assertEquals(1, taps.favourite)
-        assertEquals(1, taps.test)
-        assertEquals(0, taps.cell, "a button tap is never a cell tap")
-        onNodeWithText("être").performClick()
-        assertEquals(1, taps.cell)
-        assertEquals(1, taps.favourite, "a cell tap is never a favourite tap")
-        assertEquals(1, taps.test, "a cell tap is never a test tap")
-    }
+    fun buttonsReportOnlyTheirOwnTaps() =
+        verbCellTest { taps ->
+            onNodeWithContentDescription("Add to favourites").performClick()
+            onNodeWithContentDescription("Start a test").performClick()
+            assertEquals(1, taps.favourite)
+            assertEquals(1, taps.test)
+            assertEquals(0, taps.cell, "a button tap is never a cell tap")
+            onNodeWithText("être").performClick()
+            assertEquals(1, taps.cell)
+            assertEquals(1, taps.favourite, "a cell tap is never a favourite tap")
+            assertEquals(1, taps.test, "a cell tap is never a test tap")
+        }
 
     // Section header (task 3.2)
 
     @Test
-    fun sectionHeaderWithoutACountShowsOnlyTheUppercaseTitle() = runComposeUiTest {
-        setContent { VerbeClairTheme { SectionHeader(title = "1st group") } }
-        onNodeWithText("1ST GROUP").assertExists()
-        onNodeWithText("verbs", substring = true).assertDoesNotExist()
-    }
+    fun sectionHeaderWithoutACountShowsOnlyTheUppercaseTitle() =
+        runComposeUiTest {
+            setContent { VerbeClairTheme { SectionHeader(title = "1st group") } }
+            onNodeWithText("1ST GROUP").assertExists()
+            onNodeWithText("verbs", substring = true).assertDoesNotExist()
+        }
 
     @Test
-    fun sectionHeaderShowsTheUppercaseTitleAndTheCount() = runComposeUiTest {
-        setContent { VerbeClairTheme { SectionHeader(title = "1st group", count = "5,684 verbs") } }
-        onNodeWithText("1ST GROUP").assertExists()
-        onNodeWithText("5,684 verbs").assertExists()
-    }
+    fun sectionHeaderShowsTheUppercaseTitleAndTheCount() =
+        runComposeUiTest {
+            setContent { VerbeClairTheme { SectionHeader(title = "1st group", count = "5,684 verbs") } }
+            onNodeWithText("1ST GROUP").assertExists()
+            onNodeWithText("5,684 verbs").assertExists()
+        }
 
     // Skeleton (task 3.3)
 
     @Test
-    fun skeletonIsHiddenFromScreenReaders() = runComposeUiTest {
-        setContent { VerbeClairTheme { Box(Modifier.testTag(TAG)) { VerbCellSkeleton() } } }
-        assertNothingForScreenReaders()
-    }
+    fun skeletonIsHiddenFromScreenReaders() =
+        runComposeUiTest {
+            setContent { VerbeClairTheme { Box(Modifier.testTag(TAG)) { VerbCellSkeleton() } } }
+            assertNothingForScreenReaders()
+        }
 
     // Empty state (task 3.4)
 
@@ -154,65 +159,77 @@ class ListContentComponentsTest {
     }
 
     @Test
-    fun selectedVerbCellIsAnnouncedAsSelected() = runComposeUiTest {
-        setContent {
-            VerbeClairTheme {
-                Column {
-                    VerbCell("terminer", "1st group", false, {}, {}, {}, selected = true)
-                    VerbCell("tenir", "3rd group", false, {}, {}, {})
+    fun selectedVerbCellIsAnnouncedAsSelected() =
+        runComposeUiTest {
+            setContent {
+                VerbeClairTheme {
+                    Column {
+                        VerbCell("terminer", "1st group", false, {}, {}, {}, selected = true)
+                        VerbCell("tenir", "3rd group", false, {}, {}, {})
+                    }
                 }
             }
+            onNode(
+                hasText("terminer") and SemanticsMatcher.expectValue(SemanticsProperties.Selected, true),
+            ).assertExists()
+            onNode(
+                hasText("tenir") and SemanticsMatcher.keyIsDefined(SemanticsProperties.Selected),
+            ).assertDoesNotExist()
         }
-        onNode(hasText("terminer") and SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)).assertExists()
-        onNode(hasText("tenir") and SemanticsMatcher.keyIsDefined(SemanticsProperties.Selected)).assertDoesNotExist()
-    }
 
     @Test
-    fun emptyStateWithoutBodyShowsOnlyTheTitle() = runComposeUiTest {
-        setContent {
-            VerbeClairTheme {
-                EmptyState(
-                    icon = VerbeClairIcons.BookOpen,
-                    title = "Choose a verb to see its conjugation",
-                    body = null,
-                )
+    fun emptyStateWithoutBodyShowsOnlyTheTitle() =
+        runComposeUiTest {
+            setContent {
+                VerbeClairTheme {
+                    EmptyState(
+                        icon = VerbeClairIcons.BookOpen,
+                        title = "Choose a verb to see its conjugation",
+                        body = null,
+                    )
+                }
             }
+            onNodeWithText("Choose a verb to see its conjugation").assertExists()
+            onAllNodes(
+                SemanticsMatcher.keyIsDefined(SemanticsProperties.Text),
+                useUnmergedTree = true,
+            ).assertCountEquals(1)
         }
-        onNodeWithText("Choose a verb to see its conjugation").assertExists()
-        onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true).assertCountEquals(1)
-    }
 
     @Test
-    fun emptyStateIconIsHiddenFromScreenReaders() = runComposeUiTest {
-        setContent {
-            VerbeClairTheme {
-                EmptyState(
-                    icon = VerbeClairIcons.SearchOff,
-                    title = "Verb unavailable",
-                    body = "Try again later.",
-                    tone = EmptyStateTone.Error,
-                )
+    fun emptyStateIconIsHiddenFromScreenReaders() =
+        runComposeUiTest {
+            setContent {
+                VerbeClairTheme {
+                    EmptyState(
+                        icon = VerbeClairIcons.SearchOff,
+                        title = "Verb unavailable",
+                        body = "Try again later.",
+                        tone = EmptyStateTone.Error,
+                    )
+                }
             }
+            onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.ContentDescription), useUnmergedTree = true)
+                .assertCountEquals(0)
+            onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Role), useUnmergedTree = true)
+                .assertCountEquals(0)
         }
-        onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.ContentDescription), useUnmergedTree = true)
-            .assertCountEquals(0)
-        onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Role), useUnmergedTree = true)
-            .assertCountEquals(0)
-    }
 
     // Linear progress (task 3.5)
 
     @Test
-    fun linearProgressIsAnIndeterminateProgressBar() = runComposeUiTest {
-        setContent { VerbeClairTheme { VerbeClairLinearProgress() } }
-        onAllNodes(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate)).assertCountEquals(1)
-    }
+    fun linearProgressIsAnIndeterminateProgressBar() =
+        runComposeUiTest {
+            setContent { VerbeClairTheme { VerbeClairLinearProgress() } }
+            onAllNodes(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate)).assertCountEquals(1)
+        }
 
     @Test
-    fun sheetHandleIsHiddenFromScreenReaders() = runComposeUiTest {
-        setContent { VerbeClairTheme { Box(Modifier.testTag(TAG)) { BottomSheetHandle() } } }
-        assertNothingForScreenReaders()
-    }
+    fun sheetHandleIsHiddenFromScreenReaders() =
+        runComposeUiTest {
+            setContent { VerbeClairTheme { Box(Modifier.testTag(TAG)) { BottomSheetHandle() } } }
+            assertNothingForScreenReaders()
+        }
 
     /**
      * Asserts that nothing under the [TAG] container is exposed to screen readers. `background(color, shape)` adds a
@@ -220,9 +237,12 @@ class ListContentComponentsTest {
      */
     private fun ComposeUiTest.assertNothingForScreenReaders() {
         fun SemanticsNode.descendants(): List<SemanticsNode> = children.flatMap { listOf(it) + it.descendants() }
-        val exposed = onNodeWithTag(TAG, useUnmergedTree = true).fetchSemanticsNode().descendants()
-            .flatMap { node -> node.config.map { it.key } }
-            .filter { it != SemanticsProperties.Shape }
+        val exposed =
+            onNodeWithTag(TAG, useUnmergedTree = true)
+                .fetchSemanticsNode()
+                .descendants()
+                .flatMap { node -> node.config.map { it.key } }
+                .filter { it != SemanticsProperties.Shape }
         assertTrue(exposed.isEmpty(), "no semantics for screen readers, found $exposed")
     }
 

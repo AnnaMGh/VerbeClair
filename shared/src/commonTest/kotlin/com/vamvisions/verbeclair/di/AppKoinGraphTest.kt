@@ -35,20 +35,22 @@ class AppKoinGraphTest {
     @BeforeTest
     fun setUp() {
         directory = createTestDirectory()
-        val testOverrides = module {
-            single<PlatformPaths> {
-                object : PlatformPaths {
-                    override val verbDatabaseFile = "$directory/verbs.db"
-                    override val userDatabaseFile = "$directory/user.db"
-                    override val dataStoreFile = "$directory/app_settings.preferences_pb"
+        val testOverrides =
+            module {
+                single<PlatformPaths> {
+                    object : PlatformPaths {
+                        override val verbDatabaseFile = "$directory/verbs.db"
+                        override val userDatabaseFile = "$directory/user.db"
+                        override val dataStoreFile = "$directory/app_settings.preferences_pb"
+                    }
                 }
             }
-        }
-        app = koinApplication {
-            allowOverride(true)
-            withTestPlatform()
-            modules(appModules + testOverrides)
-        }
+        app =
+            koinApplication {
+                allowOverride(true)
+                withTestPlatform()
+                modules(appModules + testOverrides)
+            }
     }
 
     @AfterTest
@@ -91,7 +93,13 @@ class AppKoinGraphTest {
 
     /** The verb database opens only after the bundled one is installed from the packed resources (D4). */
     @Test
-    fun verbCatalogReadsTheInstalledBundledDatabase() = runTest(timeout = 3.minutes) {
-        assertFalse(app.koin.get<VerbCatalog>().isEmpty().first())
-    }
+    fun verbCatalogReadsTheInstalledBundledDatabase() =
+        runTest(timeout = 3.minutes) {
+            assertFalse(
+                app.koin
+                    .get<VerbCatalog>()
+                    .isEmpty()
+                    .first(),
+            )
+        }
 }

@@ -49,63 +49,83 @@ private class Swatch(
 
 private class SwatchGroup(val title: String, val swatches: List<Swatch>)
 
-private val swatchGroups = listOf(
-    SwatchGroup(
-        "Brand",
-        listOf(
-            Swatch("primary", "blue/40", "blue/80") { MaterialTheme.colorScheme.primary },
-            Swatch("on-primary", "neutral/100", "blue/20") { MaterialTheme.colorScheme.onPrimary },
-            Swatch("primary-container", "blue/90", "blue/30") { MaterialTheme.colorScheme.primaryContainer },
-            Swatch("on-primary-container", "blue/10", "blue/90") { MaterialTheme.colorScheme.onPrimaryContainer },
-            Swatch("secondary-container", "indigo-gray/90", "indigo-gray/30") { MaterialTheme.colorScheme.secondaryContainer },
-            Swatch("on-secondary-container", "indigo-gray/10", "indigo-gray/90") { MaterialTheme.colorScheme.onSecondaryContainer },
-            Swatch("inverse-primary", "blue/80", "blue/40") { MaterialTheme.colorScheme.inversePrimary },
+private val swatchGroups =
+    listOf(
+        SwatchGroup(
+            "Brand",
+            listOf(
+                Swatch("primary", "blue/40", "blue/80") { MaterialTheme.colorScheme.primary },
+                Swatch("on-primary", "neutral/100", "blue/20") { MaterialTheme.colorScheme.onPrimary },
+                Swatch("primary-container", "blue/90", "blue/30") { MaterialTheme.colorScheme.primaryContainer },
+                Swatch("on-primary-container", "blue/10", "blue/90") { MaterialTheme.colorScheme.onPrimaryContainer },
+                Swatch(
+                    "secondary-container",
+                    "indigo-gray/90",
+                    "indigo-gray/30",
+                ) { MaterialTheme.colorScheme.secondaryContainer },
+                Swatch(
+                    "on-secondary-container",
+                    "indigo-gray/10",
+                    "indigo-gray/90",
+                ) { MaterialTheme.colorScheme.onSecondaryContainer },
+                Swatch("inverse-primary", "blue/80", "blue/40") { MaterialTheme.colorScheme.inversePrimary },
+            ),
         ),
-    ),
-    SwatchGroup(
-        "Verb ending",
-        listOf(
-            Swatch("ending", "coral/40", "coral/80") { VerbeClairTheme.extendedColors.ending },
-            Swatch("ending-container", "coral/90", "coral/20") { VerbeClairTheme.extendedColors.endingContainer },
+        SwatchGroup(
+            "Verb ending",
+            listOf(
+                Swatch("ending", "coral/40", "coral/80") { VerbeClairTheme.extendedColors.ending },
+                Swatch("ending-container", "coral/90", "coral/20") { VerbeClairTheme.extendedColors.endingContainer },
+            ),
         ),
-    ),
-    SwatchGroup(
-        "Surfaces",
-        listOf(
-            Swatch("background", "neutral/98", "neutral/6") { MaterialTheme.colorScheme.background },
-            Swatch("surface", "neutral/100", "neutral/6") { MaterialTheme.colorScheme.surface },
-            Swatch("surface-container-low", "neutral/98", "neutral/10") { MaterialTheme.colorScheme.surfaceContainerLow },
-            Swatch("surface-container", "neutral/95", "neutral/12") { MaterialTheme.colorScheme.surfaceContainer },
-            Swatch("surface-container-high", "neutral/92", "neutral/17") { MaterialTheme.colorScheme.surfaceContainerHigh },
-            Swatch("surface-container-highest", "neutral/90", "neutral/22") { MaterialTheme.colorScheme.surfaceContainerHighest },
-            Swatch("inverse-surface", "neutral/17", "neutral/90") { MaterialTheme.colorScheme.inverseSurface },
-            Swatch("inverse-on-surface", "neutral/95", "neutral/17") { MaterialTheme.colorScheme.inverseOnSurface },
-            Swatch("scrim", "neutral/0", "neutral/0") { MaterialTheme.colorScheme.scrim },
+        SwatchGroup(
+            "Surfaces",
+            listOf(
+                Swatch("background", "neutral/98", "neutral/6") { MaterialTheme.colorScheme.background },
+                Swatch("surface", "neutral/100", "neutral/6") { MaterialTheme.colorScheme.surface },
+                Swatch(
+                    "surface-container-low",
+                    "neutral/98",
+                    "neutral/10",
+                ) { MaterialTheme.colorScheme.surfaceContainerLow },
+                Swatch("surface-container", "neutral/95", "neutral/12") { MaterialTheme.colorScheme.surfaceContainer },
+                Swatch(
+                    "surface-container-high",
+                    "neutral/92",
+                    "neutral/17",
+                ) { MaterialTheme.colorScheme.surfaceContainerHigh },
+                Swatch(
+                    "surface-container-highest",
+                    "neutral/90",
+                    "neutral/22",
+                ) { MaterialTheme.colorScheme.surfaceContainerHighest },
+                Swatch("inverse-surface", "neutral/17", "neutral/90") { MaterialTheme.colorScheme.inverseSurface },
+                Swatch("inverse-on-surface", "neutral/95", "neutral/17") { MaterialTheme.colorScheme.inverseOnSurface },
+                Swatch("scrim", "neutral/0", "neutral/0") { MaterialTheme.colorScheme.scrim },
+            ),
         ),
-    ),
-    SwatchGroup(
-        "Content & lines",
-        listOf(
-            Swatch("on-surface", "neutral/10", "neutral/90") { MaterialTheme.colorScheme.onSurface },
-            Swatch("on-surface-variant", "neutral/30", "neutral/80") { MaterialTheme.colorScheme.onSurfaceVariant },
-            Swatch("outline", "neutral/50", "neutral/60") { MaterialTheme.colorScheme.outline },
-            Swatch("outline-variant", "neutral/80", "neutral/30") { MaterialTheme.colorScheme.outlineVariant },
+        SwatchGroup(
+            "Content & lines",
+            listOf(
+                Swatch("on-surface", "neutral/10", "neutral/90") { MaterialTheme.colorScheme.onSurface },
+                Swatch("on-surface-variant", "neutral/30", "neutral/80") { MaterialTheme.colorScheme.onSurfaceVariant },
+                Swatch("outline", "neutral/50", "neutral/60") { MaterialTheme.colorScheme.outline },
+                Swatch("outline-variant", "neutral/80", "neutral/30") { MaterialTheme.colorScheme.outlineVariant },
+            ),
         ),
-    ),
-    SwatchGroup(
-        "Feedback",
-        listOf(
-            Swatch("error", "red/40", "red/80") { MaterialTheme.colorScheme.error },
-            Swatch("on-error", "neutral/100", "red/20") { MaterialTheme.colorScheme.onError },
-            Swatch("error-container", "red/90", "red/30") { MaterialTheme.colorScheme.errorContainer },
-            Swatch("on-error-container", "red/10", "red/90") { MaterialTheme.colorScheme.onErrorContainer },
-            Swatch("success", "green/40", "green/80") { VerbeClairTheme.extendedColors.success },
+        SwatchGroup(
+            "Feedback",
+            listOf(
+                Swatch("error", "red/40", "red/80") { MaterialTheme.colorScheme.error },
+                Swatch("on-error", "neutral/100", "red/20") { MaterialTheme.colorScheme.onError },
+                Swatch("error-container", "red/90", "red/30") { MaterialTheme.colorScheme.errorContainer },
+                Swatch("on-error-container", "red/10", "red/90") { MaterialTheme.colorScheme.onErrorContainer },
+                Swatch("success", "green/40", "green/80") { VerbeClairTheme.extendedColors.success },
+            ),
         ),
-    ),
-)
+    )
 
-private fun Color.hexLabel(): String =
-    "#" + (toArgb() and 0xFFFFFF).toString(16).uppercase().padStart(6, '0')
+private fun Color.hexLabel(): String = "#" + (toArgb() and 0xFFFFFF).toString(16).uppercase().padStart(6, '0')
 
 @Composable
 private fun CatalogFrame(
@@ -116,11 +136,13 @@ private fun CatalogFrame(
 ) {
     val shape = RoundedCornerShape(CatalogCorner)
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(background, shape)
-            .then(if (bordered) Modifier.border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape) else Modifier)
-            .padding(CatalogPadding),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(background, shape)
+                .then(
+                    if (bordered) Modifier.border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape) else Modifier,
+                ).padding(CatalogPadding),
         verticalArrangement = Arrangement.spacedBy(VerbeClairTheme.spacing.space20),
     ) { content() }
 }
@@ -182,21 +204,22 @@ private fun SwatchItem(swatch: Swatch, primitive: String) {
 internal fun TypographyCatalog(modifier: Modifier = Modifier) {
     val type = MaterialTheme.typography
     val extended = VerbeClairTheme.typography
-    val samples: List<Triple<String, TextStyle, String>> = listOf(
-        Triple("Display/Verb Large\nFraunces SemiBold · 34/40", type.displaySmall, "s'appeler"),
-        Triple("Headline/Small\nFraunces SemiBold · 24/32", type.headlineSmall, "Indicatif"),
-        Triple("Title/Verb\nFraunces SemiBold · 20/26", extended.titleVerb, "être"),
-        Triple("Title/Large\nDM Sans SemiBold · 22/28", type.titleLarge, "No verbs match your search"),
-        Triple("Title/Medium\nDM Sans SemiBold · 16/24", type.titleMedium, "Group by"),
-        Triple("Title/Small\nDM Sans SemiBold · 14/20", type.titleSmall, "Passé composé"),
-        Triple("Label/Overline\nDM Sans Bold · 12/16", extended.labelOverline, "1st group".uppercase()),
-        Triple("Label/Large\nDM Sans Medium · 14/20", type.labelLarge, "Clear filters"),
-        Triple("Label/Medium\nDM Sans Medium · 12/16", type.labelMedium, "5,684 verbs"),
-        Triple("Body/Large\nDM Sans Regular · 16/24", type.bodyLarge, "to end; to finish; to terminate"),
-        Triple("Body/Medium\nDM Sans Regular · 14/20", type.bodyMedium, "1st group · avoir · non-reflexive"),
-        Triple("Body/Small\nDM Sans Regular · 12/16", type.bodySmall, "Last updated 30 Sept 2026"),
-        Triple("Conjugation/Form\nDM Sans Regular · 16/24", extended.conjugationForm, "que je termine"),
-    )
+    val samples: List<Triple<String, TextStyle, String>> =
+        listOf(
+            Triple("Display/Verb Large\nFraunces SemiBold · 34/40", type.displaySmall, "s'appeler"),
+            Triple("Headline/Small\nFraunces SemiBold · 24/32", type.headlineSmall, "Indicatif"),
+            Triple("Title/Verb\nFraunces SemiBold · 20/26", extended.titleVerb, "être"),
+            Triple("Title/Large\nDM Sans SemiBold · 22/28", type.titleLarge, "No verbs match your search"),
+            Triple("Title/Medium\nDM Sans SemiBold · 16/24", type.titleMedium, "Group by"),
+            Triple("Title/Small\nDM Sans SemiBold · 14/20", type.titleSmall, "Passé composé"),
+            Triple("Label/Overline\nDM Sans Bold · 12/16", extended.labelOverline, "1st group".uppercase()),
+            Triple("Label/Large\nDM Sans Medium · 14/20", type.labelLarge, "Clear filters"),
+            Triple("Label/Medium\nDM Sans Medium · 12/16", type.labelMedium, "5,684 verbs"),
+            Triple("Body/Large\nDM Sans Regular · 16/24", type.bodyLarge, "to end; to finish; to terminate"),
+            Triple("Body/Medium\nDM Sans Regular · 14/20", type.bodyMedium, "1st group · avoir · non-reflexive"),
+            Triple("Body/Small\nDM Sans Regular · 12/16", type.bodySmall, "Last updated 30 Sept 2026"),
+            Triple("Conjugation/Form\nDM Sans Regular · 16/24", extended.conjugationForm, "que je termine"),
+        )
     CatalogFrame(background = MaterialTheme.colorScheme.surface, bordered = true, modifier = modifier) {
         FrameTitle("Typography · Fraunces (verbs, moods) + DM Sans (UI)")
         samples.forEach { (label, style, sample) ->
@@ -232,8 +255,14 @@ internal fun SpacingRadiusElevationCatalog(modifier: Modifier = Modifier) {
         FrameTitle("Spacing")
         Row(horizontalArrangement = Arrangement.spacedBy(spacing.space24), verticalAlignment = Alignment.Bottom) {
             listOf(
-                2 to spacing.space2, 4 to spacing.space4, 8 to spacing.space8, 12 to spacing.space12,
-                16 to spacing.space16, 20 to spacing.space20, 24 to spacing.space24, 32 to spacing.space32,
+                2 to spacing.space2,
+                4 to spacing.space4,
+                8 to spacing.space8,
+                12 to spacing.space12,
+                16 to spacing.space16,
+                20 to spacing.space20,
+                24 to spacing.space24,
+                32 to spacing.space32,
                 48 to spacing.space48,
             ).forEach { (name, size) ->
                 ScaleSample(name.toString()) {

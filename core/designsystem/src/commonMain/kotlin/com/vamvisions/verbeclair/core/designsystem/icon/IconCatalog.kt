@@ -27,11 +27,12 @@ internal fun IconCatalog(modifier: Modifier = Modifier) {
             Icon(
                 imageVector = icon,
                 contentDescription = name,
-                tint = if (icon == VerbeClairIcons.StarFilled) {
-                    VerbeClairTheme.extendedColors.ending
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
+                tint =
+                    if (icon == VerbeClairIcons.StarFilled) {
+                        VerbeClairTheme.extendedColors.ending
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
             )
         }
     }

@@ -34,35 +34,36 @@ import org.koin.dsl.onClose
 private val AppSettingsScope = named("appSettingsScope")
 
 /** The local stores and repositories (design D12). Paths come from [PlatformPaths] in `platformModule`. */
-val coreDataModule = module {
-    single<BundledVerbDatabaseSource> { ResourceBundledVerbDatabaseSource(get()) }
-    single { BundledVerbDatabaseInstaller(get(), get()) }
+val coreDataModule =
+    module {
+        single<BundledVerbDatabaseSource> { ResourceBundledVerbDatabaseSource(get()) }
+        single { BundledVerbDatabaseInstaller(get(), get()) }
 
-    // Opened on first use, only after the installer has run (D4).
-    single {
-        val installer = get<BundledVerbDatabaseInstaller>()
-        val builder = verbDatabaseBuilder(get<PlatformPaths>().verbDatabaseFile)
-        VerbDatabaseProvider {
-            installer.installIfNeeded()
-            builder.configured().build()
+        // Opened on first use, only after the installer has run (D4).
+        single {
+            val installer = get<BundledVerbDatabaseInstaller>()
+            val builder = verbDatabaseBuilder(get<PlatformPaths>().verbDatabaseFile)
+            VerbDatabaseProvider {
+                installer.installIfNeeded()
+                builder.configured().build()
+            }
+        } onClose { it?.close() }
+
+        single<UserDatabase> {
+            userDatabaseBuilder(get<PlatformPaths>().userDatabaseFile).configured().build()
+        } onClose { it?.close() }
+
+        single(AppSettingsScope) { CoroutineScope(Dispatchers.IO + SupervisorJob()) } onClose { it?.cancel() }
+        single<DataStore<Preferences>> {
+            createAppSettingsDataStore(get<PlatformPaths>().dataStoreFile, get(AppSettingsScope))
         }
-    } onClose { it?.close() }
 
-    single<UserDatabase> {
-        userDatabaseBuilder(get<PlatformPaths>().userDatabaseFile).configured().build()
-    } onClose { it?.close() }
-
-    single(AppSettingsScope) { CoroutineScope(Dispatchers.IO + SupervisorJob()) } onClose { it?.cancel() }
-    single<DataStore<Preferences>> {
-        createAppSettingsDataStore(get<PlatformPaths>().dataStoreFile, get(AppSettingsScope))
+        single<VerbCatalog> { RoomVerbCatalog(get<VerbDatabaseProvider>()::get) }
+        single<FavouritesRepository> { RoomFavouritesRepository(get(), get()) }
+        singleOf(::RoomTestScoreRepository) { bind<TestScoreRepository>() }
+        singleOf(::DataStoreListPreferences) { bind<ListPreferences>() }
+        singleOf(::NoOpDataSyncTrigger) { bind<DataSyncTrigger>() }
     }
-
-    single<VerbCatalog> { RoomVerbCatalog(get<VerbDatabaseProvider>()::get) }
-    single<FavouritesRepository> { RoomFavouritesRepository(get(), get()) }
-    singleOf(::RoomTestScoreRepository) { bind<TestScoreRepository>() }
-    singleOf(::DataStoreListPreferences) { bind<ListPreferences>() }
-    singleOf(::NoOpDataSyncTrigger) { bind<DataSyncTrigger>() }
-}
 
 private fun <T : RoomDatabase> RoomDatabase.Builder<T>.configured(): RoomDatabase.Builder<T> =
     setDriver(BundledSQLiteDriver()).setQueryCoroutineContext(Dispatchers.IO)

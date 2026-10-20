@@ -8,11 +8,12 @@ import org.koin.core.module.Module
 import org.koin.dsl.KoinAppDeclaration
 
 /** Every Koin module of the app, one per layer (design D12). */
-val appModules: List<Module> = listOf(
-    platformModule,
-    coreDataModule,
-    verbListPresentationModule,
-)
+val appModules: List<Module> =
+    listOf(
+        platformModule,
+        coreDataModule,
+        verbListPresentationModule,
+    )
 
 fun initKoin(config: KoinAppDeclaration = {}) {
     startKoin {

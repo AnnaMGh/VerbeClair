@@ -8,7 +8,14 @@ import kotlin.test.assertEquals
 /** Figma text styles (design.md D3): weight, size / line height / letter spacing in sp. */
 class TypeTest {
 
-    private fun assertStyle(name: String, style: TextStyle, weight: FontWeight, size: Float, line: Float, tracking: Float) {
+    private fun assertStyle(
+        name: String,
+        style: TextStyle,
+        weight: FontWeight,
+        size: Float,
+        line: Float,
+        tracking: Float,
+    ) {
         assertEquals(weight, style.fontWeight, "$name weight")
         assertEquals(size, style.fontSize.value, "$name size")
         assertEquals(line, style.lineHeight.value, "$name line height")

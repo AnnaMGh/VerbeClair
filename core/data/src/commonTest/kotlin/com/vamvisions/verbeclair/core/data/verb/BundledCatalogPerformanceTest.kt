@@ -39,11 +39,12 @@ import kotlin.time.TimeSource
 class BundledCatalogPerformanceTest {
     private val fileSystem = FileSystem.SYSTEM
     private val directory: Path = largeTestFilesDirectory() / "performance-${Random.nextLong().toULong()}"
-    private val paths = object : PlatformPaths {
-        override val verbDatabaseFile = (directory / "verbs.db").toString()
-        override val userDatabaseFile = (directory / "user.db").toString()
-        override val dataStoreFile = (directory / "settings.preferences_pb").toString()
-    }
+    private val paths =
+        object : PlatformPaths {
+            override val verbDatabaseFile = (directory / "verbs.db").toString()
+            override val userDatabaseFile = (directory / "user.db").toString()
+            override val dataStoreFile = (directory / "settings.preferences_pb").toString()
+        }
     private var database: VerbDatabase? = null
 
     @AfterTest
@@ -53,37 +54,49 @@ class BundledCatalogPerformanceTest {
     }
 
     @Test
-    fun firstPageAndSearchAreWithinBudget() = runTest(timeout = 3.minutes) {
-        fileSystem.createDirectories(directory)
-        BundledVerbDatabaseInstaller(paths, ResourceBundledVerbDatabaseSource(testResourceFileOpener()))
-            .installIfNeeded()
+    fun firstPageAndSearchAreWithinBudget() =
+        runTest(timeout = 3.minutes) {
+            fileSystem.createDirectories(directory)
+            BundledVerbDatabaseInstaller(paths, ResourceBundledVerbDatabaseSource(testResourceFileOpener()))
+                .installIfNeeded()
 
-        val (firstPage, firstPageTime) = measure {
-            val opened = fileVerbDatabaseBuilder(paths.verbDatabaseFile)
-                .setDriver(BundledSQLiteDriver())
-                .setQueryCoroutineContext(Dispatchers.IO)
-                .build()
-                .also { database = it }
-            opened.firstLoad(ListQuery())
+            val (firstPage, firstPageTime) =
+                measure {
+                    val opened =
+                        fileVerbDatabaseBuilder(paths.verbDatabaseFile)
+                            .setDriver(BundledSQLiteDriver())
+                            .setQueryCoroutineContext(Dispatchers.IO)
+                            .build()
+                            .also { database = it }
+                    opened.firstLoad(ListQuery())
+                }
+            val opened = checkNotNull(database)
+            opened.firstLoad(SEARCH) // warm-up
+            val searchRuns = List(SEARCH_RUNS) { measure { opened.firstLoad(SEARCH) } }
+            val searchTime = searchRuns.map { it.second }.sorted()[SEARCH_RUNS / 2]
+
+            println(
+                "Bundled catalogue timings: first page after open $firstPageTime; \"su\" search median $searchTime " +
+                    "(runs ${searchRuns.joinToString { it.second.toString() }})",
+            )
+            assertEquals(INITIAL_LOAD, firstPage.data.size)
+            assertEquals(
+                "suis",
+                searchRuns
+                    .first()
+                    .first.data
+                    .single { it.slug == "etre" }
+                    .matchedForm,
+            )
+            assertTrue(firstPageTime < 1.seconds, "First page took $firstPageTime (budget 1 s)")
+            assertTrue(searchTime < 100.milliseconds, "\"su\" search took $searchTime (budget 100 ms)")
         }
-        val opened = checkNotNull(database)
-        opened.firstLoad(SEARCH) // warm-up
-        val searchRuns = List(SEARCH_RUNS) { measure { opened.firstLoad(SEARCH) } }
-        val searchTime = searchRuns.map { it.second }.sorted()[SEARCH_RUNS / 2]
-
-        println(
-            "Bundled catalogue timings: first page after open $firstPageTime; \"su\" search median $searchTime " +
-                "(runs ${searchRuns.joinToString { it.second.toString() }})",
-        )
-        assertEquals(INITIAL_LOAD, firstPage.data.size)
-        assertEquals("suis", searchRuns.first().first.data.single { it.slug == "etre" }.matchedForm)
-        assertTrue(firstPageTime < 1.seconds, "First page took $firstPageTime (budget 1 s)")
-        assertTrue(searchTime < 100.milliseconds, "\"su\" search took $searchTime (budget 100 ms)")
-    }
 
     private suspend fun VerbDatabase.firstLoad(query: ListQuery): PagingSource.LoadResult.Page<Int, VerbRow> {
-        val result = verbDao().pagedList(ListQueryBuilder.build(query))
-            .load(PagingSource.LoadParams.Refresh(key = null, loadSize = INITIAL_LOAD, placeholdersEnabled = false))
+        val result =
+            verbDao()
+                .pagedList(ListQueryBuilder.build(query))
+                .load(PagingSource.LoadParams.Refresh(key = null, loadSize = INITIAL_LOAD, placeholdersEnabled = false))
         return assertIs<PagingSource.LoadResult.Page<Int, VerbRow>>(result)
     }
 

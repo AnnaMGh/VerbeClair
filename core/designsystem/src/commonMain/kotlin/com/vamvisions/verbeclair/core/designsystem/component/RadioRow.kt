@@ -35,10 +35,11 @@ fun RadioRow(
     val colors = MaterialTheme.colorScheme
     val spacing = VerbeClairTheme.spacing
     Row(
-        modifier = modifier
-            .heightIn(min = RadioRowMinHeight)
-            .selectable(selected = selected, onClick = onClick, role = Role.RadioButton)
-            .padding(horizontal = spacing.space4),
+        modifier =
+            modifier
+                .heightIn(min = RadioRowMinHeight)
+                .selectable(selected = selected, onClick = onClick, role = Role.RadioButton)
+                .padding(horizontal = spacing.space4),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.space16),
     ) {
@@ -47,10 +48,11 @@ fun RadioRow(
             onClick = null,
             // M3 pads the 20 dp radio by 2 dp; Figma's radio layer is 20 dp.
             modifier = Modifier.size(RadioSize),
-            colors = RadioButtonDefaults.colors(
-                selectedColor = colors.primary,
-                unselectedColor = colors.onSurfaceVariant,
-            ),
+            colors =
+                RadioButtonDefaults.colors(
+                    selectedColor = colors.primary,
+                    unselectedColor = colors.onSurfaceVariant,
+                ),
         )
         Text(
             text = label,

@@ -56,10 +56,11 @@ fun ListTabs(
                 onClick = { onSelect(tab) },
                 text = {
                     Text(
-                        text = when (tab) {
-                            ListTab.All -> stringResource(Res.string.list_tab_all)
-                            ListTab.Favourites -> stringResource(Res.string.list_tab_favourites, favouritesCount)
-                        },
+                        text =
+                            when (tab) {
+                                ListTab.All -> stringResource(Res.string.list_tab_all)
+                                ListTab.Favourites -> stringResource(Res.string.list_tab_favourites, favouritesCount)
+                            },
                         style = MaterialTheme.typography.titleSmall,
                     )
                 },

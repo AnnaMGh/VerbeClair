@@ -3,9 +3,9 @@ package com.vamvisions.verbeclair.core.data.bundle
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.test.platform.app.InstrumentationRegistry
-import okio.Path.Companion.toPath
 import com.vamvisions.verbeclair.core.database.user.UserDatabase
 import com.vamvisions.verbeclair.core.database.verb.VerbDatabase
+import okio.Path.Companion.toPath
 
 private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
 

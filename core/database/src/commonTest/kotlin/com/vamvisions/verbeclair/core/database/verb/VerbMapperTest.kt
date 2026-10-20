@@ -15,17 +15,39 @@ import kotlin.test.assertTrue
 class VerbMapperTest {
 
     private fun record(json: String): VerbDetailsRecord = DatasetJson.decodeFromString(json)
-    private fun searchForms(json: String): Set<String> = record(json).toEntities().formSearch.map { it.form }.toSet()
+
+    private fun searchForms(json: String): Set<String> =
+        record(json)
+            .toEntities()
+            .formSearch
+            .map { it.form }
+            .toSet()
 
     @Test
     fun terminerKeepsVerbFieldsAndKeys() {
         val entities = record(DatasetFixtures.terminer).toEntities()
         assertEquals(
-            VerbEntity("terminer", "terminer", "I", false, "AVOIR", 142.38, "2026-10-08T09:26:22Z", "terminer", "terminer"),
+            VerbEntity(
+                "terminer",
+                "terminer",
+                "I",
+                false,
+                "AVOIR",
+                142.38,
+                "2026-10-08T09:26:22Z",
+                "terminer",
+                "terminer",
+            ),
             entities.verb,
         )
-        assertEquals(TranslationEntity("terminer", "en", "to end; to finish; to terminate", "to end"), entities.translation)
-        assertEquals(listOf("achever", "boucler", "clore", "cloturer"), entities.synonyms.take(4).map { it.synonymSlug })
+        assertEquals(
+            TranslationEntity("terminer", "en", "to end; to finish; to terminate", "to end"),
+            entities.translation,
+        )
+        assertEquals(
+            listOf("achever", "boucler", "clore", "cloturer"),
+            entities.synonyms.take(4).map { it.synonymSlug },
+        )
         assertEquals("clôturer", entities.synonyms[3].synonymInfinitive)
     }
 
@@ -74,7 +96,10 @@ class VerbMapperTest {
         assertTrue(entities.formSearch.none { it.form == "allée" }, "agreement variants are not searchable")
         val alle = entities.formSearch.single { it.form == "allé" }
         val participePasse = entities.forms.first { it.moodCode == "PARTICIPE" && it.tenseCode == "PASSE" }
-        assertEquals(participePasse.moodPos * 10_000 + participePasse.tensePos * 100 + participePasse.formPos, alle.displayOrder)
+        assertEquals(
+            participePasse.moodPos * 10_000 + participePasse.tensePos * 100 + participePasse.formPos,
+            alle.displayOrder,
+        )
         // futur proche `je vais aller`: the semi-auxiliary `vais` is not the verb word; `vais` is
         // only searchable through the présent of aller itself.
         val vais = entities.formSearch.single { it.form == "vais" }
@@ -87,9 +112,10 @@ class VerbMapperTest {
     @Test
     fun payerKeepsBothSpellingsOfOnePerson() {
         val entities = record(DatasetFixtures.payer).toEntities()
-        val firstSingular = entities.forms.filter {
-            it.moodCode == "INDICATIF" && it.tenseCode == "PRESENT" && it.person == "FIRST_SINGULAR"
-        }
+        val firstSingular =
+            entities.forms.filter {
+                it.moodCode == "INDICATIF" && it.tenseCode == "PRESENT" && it.person == "FIRST_SINGULAR"
+            }
         assertEquals(listOf("paye", "paie"), firstSingular.map { it.conjugation.first() })
         assertTrue(entities.formSearch.map { it.form }.containsAll(listOf("paye", "paie")))
     }
@@ -110,22 +136,24 @@ class VerbMapperTest {
     }
 
     @Test
-    fun everyFixtureRoundTripsThroughTheDatabase() = runTest {
-        val db = inMemoryVerbDatabase()
-        val dao = db.verbDao()
-        dao.replace(DatasetFixtures.all.map { record(it).toEntities() })
-        for (fixture in DatasetFixtures.all) {
-            val slug = record(fixture).slug
-            val stored = VerbEntities(
-                verb = dao.verb(slug)!!,
-                forms = dao.forms(slug),
-                translation = dao.translation(slug)!!,
-                synonyms = dao.synonyms(slug),
-                formSearch = dao.formSearch(slug),
-            )
-            val rebuilt: JsonElement = Json.encodeToJsonElement(VerbDetailsRecord.serializer(), stored.toRecord())
-            assertEquals(Json.parseToJsonElement(fixture), rebuilt, "round trip of $slug")
+    fun everyFixtureRoundTripsThroughTheDatabase() =
+        runTest {
+            val db = inMemoryVerbDatabase()
+            val dao = db.verbDao()
+            dao.replace(DatasetFixtures.all.map { record(it).toEntities() })
+            for (fixture in DatasetFixtures.all) {
+                val slug = record(fixture).slug
+                val stored =
+                    VerbEntities(
+                        verb = dao.verb(slug)!!,
+                        forms = dao.forms(slug),
+                        translation = dao.translation(slug)!!,
+                        synonyms = dao.synonyms(slug),
+                        formSearch = dao.formSearch(slug),
+                    )
+                val rebuilt: JsonElement = Json.encodeToJsonElement(VerbDetailsRecord.serializer(), stored.toRecord())
+                assertEquals(Json.parseToJsonElement(fixture), rebuilt, "round trip of $slug")
+            }
+            db.close()
         }
-        db.close()
-    }
 }

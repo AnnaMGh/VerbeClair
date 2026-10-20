@@ -40,7 +40,11 @@ class WindowLayoutTest {
     private fun sizeClass(widthDp: Int, heightDp: Int) =
         WindowSizeClass.BREAKPOINTS_V1.computeWindowSizeClass(widthDp, heightDp)
 
-    private fun assertLayout(expected: WindowLayout, widthDp: Int, heightDp: Int) {
+    private fun assertLayout(
+        expected: WindowLayout,
+        widthDp: Int,
+        heightDp: Int,
+    ) {
         val sizeClass = WindowSizeClass.BREAKPOINTS_V1.computeWindowSizeClass(widthDp, heightDp)
         assertEquals(expected, windowLayoutOf(sizeClass), "$widthDp × $heightDp dp")
     }

@@ -18,17 +18,18 @@ import kotlin.test.assertEquals
 class ListControlsSheetDismissTest {
 
     @Test
-    fun backDismissesTheSheet() = runAndroidComposeUiTest<ComponentActivity> {
-        val actions = mutableListOf<VerbListAction>()
-        setContent {
-            VerbeClairTheme { ListControlsSheet(choices = ListChoices.Default, onAction = { actions += it }) }
+    fun backDismissesTheSheet() =
+        runAndroidComposeUiTest<ComponentActivity> {
+            val actions = mutableListOf<VerbListAction>()
+            setContent {
+                VerbeClairTheme { ListControlsSheet(choices = ListChoices.Default, onAction = { actions += it }) }
+            }
+            onNodeWithText("List options").assertExists()
+
+            // The sheet is its own window, so the key goes to it rather than to the activity's dispatcher.
+            InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+            waitForIdle()
+
+            assertEquals(listOf<VerbListAction>(VerbListAction.OnDismissSheet), actions)
         }
-        onNodeWithText("List options").assertExists()
-
-        // The sheet is its own window, so the key goes to it rather than to the activity's dispatcher.
-        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
-        waitForIdle()
-
-        assertEquals(listOf<VerbListAction>(VerbListAction.OnDismissSheet), actions)
-    }
 }

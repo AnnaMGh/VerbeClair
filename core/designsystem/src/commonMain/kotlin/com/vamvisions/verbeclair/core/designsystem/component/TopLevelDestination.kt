@@ -15,18 +15,20 @@ import org.jetbrains.compose.resources.StringResource
 enum class TopLevelDestination { Verbs, Tests, Settings }
 
 internal val TopLevelDestination.icon: ImageVector
-    get() = when (this) {
-        TopLevelDestination.Verbs -> VerbeClairIcons.BookOpen
-        TopLevelDestination.Tests -> VerbeClairIcons.ListChecks
-        TopLevelDestination.Settings -> VerbeClairIcons.Settings
-    }
+    get() =
+        when (this) {
+            TopLevelDestination.Verbs -> VerbeClairIcons.BookOpen
+            TopLevelDestination.Tests -> VerbeClairIcons.ListChecks
+            TopLevelDestination.Settings -> VerbeClairIcons.Settings
+        }
 
 internal val TopLevelDestination.label: StringResource
-    get() = when (this) {
-        TopLevelDestination.Verbs -> Res.string.nav_verbs
-        TopLevelDestination.Tests -> Res.string.nav_tests
-        TopLevelDestination.Settings -> Res.string.nav_settings
-    }
+    get() =
+        when (this) {
+            TopLevelDestination.Verbs -> Res.string.nav_verbs
+            TopLevelDestination.Tests -> Res.string.nav_tests
+            TopLevelDestination.Settings -> Res.string.nav_settings
+        }
 
 /** Item label: Title/Small when selected, Label/Medium otherwise, as in Figma 49:128 and 86:9531. */
 @Composable

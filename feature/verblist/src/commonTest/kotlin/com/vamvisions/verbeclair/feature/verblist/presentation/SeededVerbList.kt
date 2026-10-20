@@ -15,28 +15,36 @@ import kotlinx.coroutines.runBlocking
  * An in-memory verb database holding être, savoir, suivre (with the forms the "su" search needs)
  * and the 60 filler verbs `verb00`…`verb59`, enough to scroll.
  */
-fun seededVerbDatabase(): VerbDatabase = inMemoryVerbDatabaseBuilder()
-    .setDriver(BundledSQLiteDriver())
-    .setQueryCoroutineContext(Dispatchers.IO)
-    .build()
-    .also { runBlocking { seed(it) } }
+fun seededVerbDatabase(): VerbDatabase =
+    inMemoryVerbDatabaseBuilder()
+        .setDriver(BundledSQLiteDriver())
+        .setQueryCoroutineContext(Dispatchers.IO)
+        .build()
+        .also { runBlocking { seed(it) } }
 
 /** The real ViewModel over [database], with fakes for the user data. */
-fun verbListViewModel(database: VerbDatabase) = VerbListViewModel(
-    catalog = RoomVerbCatalog(database),
-    favourites = FakeFavouritesRepository(),
-    scores = FakeTestScoreRepository(),
-    preferences = FakeListPreferences(),
-    syncTrigger = FakeDataSyncTrigger(),
-)
+fun verbListViewModel(database: VerbDatabase) =
+    VerbListViewModel(
+        catalog = RoomVerbCatalog(database),
+        favourites = FakeFavouritesRepository(),
+        scores = FakeTestScoreRepository(),
+        preferences = FakeListPreferences(),
+        syncTrigger = FakeDataSyncTrigger(),
+    )
 
 private suspend fun seed(database: VerbDatabase) {
     val dao = database.verbDao()
-    val fixtures = listOf(
-        Triple("etre", "être", listOf("suis" to 100, "été" to 500)),
-        Triple("savoir", "savoir", listOf("sais" to 100, "su" to 500)),
-        Triple("suivre", "suivre", listOf("suis" to 100, "suivi" to 500)),
-    ) + (0 until 60).map { "verb${it.toString().padStart(2, '0')}".let { name -> Triple(name, name, emptyList<Pair<String, Int>>()) } }
+    val fixtures =
+        listOf(
+            Triple("etre", "être", listOf("suis" to 100, "été" to 500)),
+            Triple("savoir", "savoir", listOf("sais" to 100, "su" to 500)),
+            Triple("suivre", "suivre", listOf("suis" to 100, "suivi" to 500)),
+        ) +
+            (0 until 60).map {
+                "verb${it.toString().padStart(2, '0')}".let { name ->
+                    Triple(name, name, emptyList<Pair<String, Int>>())
+                }
+            }
     dao.insertVerbs(
         fixtures.map { (slug, infinitive, _) ->
             VerbEntity(

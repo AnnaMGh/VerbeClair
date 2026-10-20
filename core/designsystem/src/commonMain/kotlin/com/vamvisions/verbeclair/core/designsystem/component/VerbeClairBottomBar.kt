@@ -41,13 +41,14 @@ fun VerbeClairBottomBar(
                 onClick = { onSelect(destination) },
                 icon = { Icon(imageVector = destination.icon, contentDescription = null) },
                 label = { DestinationLabel(stringResource(destination.label), isSelected) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = colors.onSecondaryContainer,
-                    selectedTextColor = colors.onSurface,
-                    indicatorColor = VerbeClairTheme.extendedColors.navigationIndicator,
-                    unselectedIconColor = colors.onSurfaceVariant,
-                    unselectedTextColor = colors.onSurfaceVariant,
-                ),
+                colors =
+                    NavigationBarItemDefaults.colors(
+                        selectedIconColor = colors.onSecondaryContainer,
+                        selectedTextColor = colors.onSurface,
+                        indicatorColor = VerbeClairTheme.extendedColors.navigationIndicator,
+                        unselectedIconColor = colors.onSurfaceVariant,
+                        unselectedTextColor = colors.onSurfaceVariant,
+                    ),
             )
         }
     }

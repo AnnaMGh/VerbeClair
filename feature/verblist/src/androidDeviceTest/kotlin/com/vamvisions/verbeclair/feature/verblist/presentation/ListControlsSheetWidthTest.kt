@@ -28,26 +28,34 @@ import kotlin.test.assertTrue
 class ListControlsSheetWidthTest {
 
     @Test
-    fun sheetIsAtMost640DpWideAndCentred() = runAndroidComposeUiTest<ComponentActivity> {
-        activity!!.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        waitForIdle()
-        var windowWidth = 0.dp
-        setContent {
-            val density = LocalDensity.current
-            windowWidth = with(density) { LocalWindowInfo.current.containerSize.width.toDp() }
-            VerbeClairTheme {
-                ListControlsSheet(choices = ListChoices.Default, onAction = {}, modifier = Modifier.testTag(SHEET))
+    fun sheetIsAtMost640DpWideAndCentred() =
+        runAndroidComposeUiTest<ComponentActivity> {
+            activity!!.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            waitForIdle()
+            var windowWidth = 0.dp
+            setContent {
+                val density = LocalDensity.current
+                windowWidth =
+                    with(density) {
+                        LocalWindowInfo.current.containerSize.width
+                            .toDp()
+                    }
+                VerbeClairTheme {
+                    ListControlsSheet(choices = ListChoices.Default, onAction = {}, modifier = Modifier.testTag(SHEET))
+                }
             }
-        }
-        waitForIdle()
+            waitForIdle()
 
-        assertTrue(windowWidth > SheetMaxWidth, "The window ($windowWidth) must be wider than the sheet's maximum")
-        val bounds = onNodeWithTag(SHEET).getBoundsInRoot()
-        val width = bounds.right - bounds.left
-        assertTrue(width <= SheetMaxWidth, "Sheet width $width")
-        assertTrue(abs((bounds.left - (windowWidth - bounds.right)).value) <= 1f, "Sheet not centred: $bounds in $windowWidth")
-        activity!!.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-    }
+            assertTrue(windowWidth > SheetMaxWidth, "The window ($windowWidth) must be wider than the sheet's maximum")
+            val bounds = onNodeWithTag(SHEET).getBoundsInRoot()
+            val width = bounds.right - bounds.left
+            assertTrue(width <= SheetMaxWidth, "Sheet width $width")
+            assertTrue(
+                abs((bounds.left - (windowWidth - bounds.right)).value) <= 1f,
+                "Sheet not centred: $bounds in $windowWidth",
+            )
+            activity!!.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
 
     private companion object {
         const val SHEET = "sheet"

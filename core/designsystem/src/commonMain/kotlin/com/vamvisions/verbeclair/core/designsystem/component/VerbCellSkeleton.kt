@@ -28,10 +28,11 @@ fun VerbCellSkeleton(modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val barShape = MaterialTheme.shapes.extraSmall
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .bottomLine(colors.outlineVariant)
-            .padding(VerbeClairTheme.spacing.space16),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .bottomLine(colors.outlineVariant)
+                .padding(VerbeClairTheme.spacing.space16),
         verticalArrangement = Arrangement.spacedBy(VerbeClairTheme.spacing.space8),
     ) {
         Box(Modifier.size(InfinitiveBarWidth, InfinitiveBarHeight).background(colors.surfaceContainerHighest, barShape))
