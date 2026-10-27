@@ -1,4 +1,7 @@
 {
+  "env": {
+    "PRISM_AVD_PREFIX": "VerbeClair"
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -8,6 +11,11 @@
             "type": "command",
             "command": "sh \"$CLAUDE_PROJECT_DIR/.prism/adapters/lib/prism-hook\" --harness claude-code --gate push",
             "timeout": 3600
+          },
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/pr-gate.sh\"",
+            "timeout": 30
           }
         ]
       }
