@@ -392,6 +392,17 @@ a dirty tree, say so and suggest `/git-commit` — the push gate is the
 authority on whether the work may leave the machine, and this skill should not
 be the thing that decides the work is committable.
 
+**Record the pass (VerbeClair).** On `READY_TO_PUSH` with a clean tree, write the commit that passed:
+
+```bash
+git rev-parse HEAD > .prism/verify/state/finalize-pass
+```
+
+`.claude/hooks/pr-gate.sh` denies `gh pr create --base dev` unless that file holds the current `HEAD`, so any
+newer commit makes the pass stale. With a dirty tree write nothing and say: commit, then run `/finalize` again
+(the baseline read in Stage 2 will show the already-current modules as `ok`). Never write the file on
+`BLOCKED`, and never write it by hand.
+
 ## Honesty contract
 
 The whole point of this skill is that its verdict can be trusted. So:

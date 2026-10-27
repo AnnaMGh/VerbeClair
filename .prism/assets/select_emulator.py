@@ -26,6 +26,7 @@ serial (`emulator-<n>`) out of each line by pattern rather than splitting on spa
 """
 
 import argparse
+import os
 import re
 import shutil
 import subprocess
@@ -99,9 +100,24 @@ def main():
         "--input",
         help="Read listing text from a file instead of running the android CLI (testing).",
     )
+    parser.add_argument(
+        "--name-prefix",
+        default=os.environ.get("PRISM_AVD_PREFIX", ""),
+        help="Only consider AVDs whose id starts with this prefix, so emulators of other "
+        "projects are never picked. Defaults to $PRISM_AVD_PREFIX.",
+    )
     args = parser.parse_args()
 
     avds = parse_avds(load_listing(args.input))
+    if args.name_prefix:
+        avds = [avd for avd in avds if avd[0].startswith(args.name_prefix)]
+        if not avds:
+            print(
+                f"No AVD starts with '{args.name_prefix}'. Create one named '{args.name_prefix}_...' "
+                f"(see scripts/emulator/verbeclair-emulator.sh).",
+                file=sys.stderr,
+            )
+            return 1
     if not avds:
         print("No AVDs exist. Create one with `android emulator create`.", file=sys.stderr)
         return 1
