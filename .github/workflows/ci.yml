@@ -211,5 +211,6 @@ jobs:
           path: |
             **/build/reports/androidTests/
             **/build/outputs/androidTest-results/
+            build/ci-logs/
           retention-days: 7
           if-no-files-found: ignore

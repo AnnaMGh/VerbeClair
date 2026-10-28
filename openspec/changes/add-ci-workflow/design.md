@@ -107,6 +107,16 @@ as the focused window after the tests, so a system dialog in front of the app is
 probably also the `RootViewWithoutFocusException` seen on 2026-10-20. The script sets `hide_error_dialogs` and prints the
 focused window before and after the tests. When the dialog appeared relative to the failing test is not known.
 
+**Flaky device tests.** The first runs of the full workflow failed in two different tests: `backDismissesTheSheet` (above)
+and, once, `AppKoinGraphTest.verbCatalogReadsTheInstalledBundledDatabase` (`FileNotFoundException … verbs.db.tmp`: the
+installer's test directory was gone between writing the temporary file and syncing it). The second did not reproduce
+locally: 37 of 37 passes on the VerbeClair emulator, 12 of them under artificial CPU load. The script therefore:
+- passes `--continue`, so one failing module no longer stops the others from running;
+- waits up to 120 s for the real launcher to take focus (the system reports boot complete while it still shows the
+  `FallbackHome` placeholder);
+- records `logcat` (main, system, crash) for the whole run to `build/ci-logs/logcat.txt`, which the workflow uploads with
+  the test reports when the job fails, so the next failure has the system's side of the story.
+
 **Disk budget.** Building the test APKs of every module first uses enough disk that the emulator refuses to start
 (`Your device does not have enough disk space to run avd`), and the emulator action then waits its full 600 s boot
 timeout. Found on the first run of the split workflow (2026-10-28): the disk check passed before the build and failed
