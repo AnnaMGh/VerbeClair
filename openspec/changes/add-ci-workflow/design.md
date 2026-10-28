@@ -99,6 +99,12 @@ Gradle daemons, runs `adb emu kill`, waits up to 30 s, and then kills `qemu-syst
 The step also has `timeout-minutes: 30`, so a stuck shutdown fails in minutes rather than at the 60 minute job limit.
 The cause of the hung emulator is not known.
 
+**Screen state.** `ListControlsSheetDismissTest.backDismissesTheSheet` sends Back through the real input system and failed
+on CI in every run that got that far: all 8 attempts over 20 s left the sheet open, while it passes on a local emulator.
+Touch-based UI tests are not affected because Compose injects them directly. The script wakes and unlocks the screen
+before the tests and prints the focused window and the keyguard state before, after waking, and after the tests. That
+the screen is asleep or locked on CI is a hypothesis, not yet confirmed.
+
 **Disk budget.** Building the test APKs of every module first uses enough disk that the emulator refuses to start
 (`Your device does not have enough disk space to run avd`), and the emulator action then waits its full 600 s boot
 timeout. Found on the first run of the split workflow (2026-10-28): the disk check passed before the build and failed
