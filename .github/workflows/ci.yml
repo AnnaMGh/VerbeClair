@@ -180,6 +180,8 @@ jobs:
           ps -eo pid,rss,args --sort=-rss | head -8 | cut -c1-160
 
       - name: Run instrumented tests
+        # The tests take about 10 minutes. The timeout turns a stuck emulator shutdown into a quick failure.
+        timeout-minutes: 30
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 34
@@ -190,7 +192,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           emulator-boot-timeout: 600
-          script: ./gradlew connectedAndroidDeviceTest -Dorg.gradle.jvmargs=-Xmx1536M --stacktrace
+          script: bash scripts/ci/run-device-tests.sh
         env:
           FRENCH_VERBS_DATASET_TOKEN: ${{ secrets.FRENCH_VERBS_DATASET_TOKEN }}
 

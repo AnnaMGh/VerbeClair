@@ -90,8 +90,14 @@ together. The first CI runs ended in `System has crashed` and in a step killed w
 memory pressure but is not proven. The job therefore:
 1. builds the test APKs first with `./gradlew packageAndroidDeviceTest`, before the emulator starts;
 2. stops the Gradle daemon (`./gradlew --stop`) and the Kotlin compile daemon, and prints `free -m`;
-3. runs `connectedAndroidDeviceTest` with `-Dorg.gradle.jvmargs=-Xmx1536M`, where every compile task is up to date;
+3. runs `connectedAndroidDeviceTest` with `-Dorg.gradle.jvmargs=-Xmx1536M` through `scripts/ci/run-device-tests.sh`, where every compile task is up to date;
 4. on failure prints `free -m`, `df -h` and the kernel's out-of-memory lines (`dmesg`), so the cause is visible next time.
+
+**Emulator shutdown.** On the run of 2026-10-28 every test passed, but the emulator did not exit after the action's
+`adb emu kill`, and the step stayed open for 40 minutes until the job was cancelled. The script therefore stops the
+Gradle daemons, runs `adb emu kill`, waits up to 30 s, and then kills `qemu-system` itself; it keeps the Gradle exit code.
+The step also has `timeout-minutes: 30`, so a stuck shutdown fails in minutes rather than at the 60 minute job limit.
+The cause of the hung emulator is not known.
 
 **Disk budget.** Building the test APKs of every module first uses enough disk that the emulator refuses to start
 (`Your device does not have enough disk space to run avd`), and the emulator action then waits its full 600 s boot
