@@ -4,24 +4,20 @@
 # open until the job timeout although every test had passed.
 set -u
 
-# Back is sent through Android's input system, which drops keys unless an awake, unlocked window has focus.
-# Wake and unlock the screen, and log the state so a failure shows whether that was the cause.
+# Back is sent through Android's input system, which drops keys unless the window under test has focus. On the
+# slow CI emulator the launcher stops responding and the system puts an "Application Not Responding" dialog in front,
+# which takes the focus. Hide those dialogs, and log the focused window so a failure shows what held the focus.
 show_focus() {
-  adb shell dumpsys window | grep -E 'mCurrentFocus|mFocusedApp|isKeyguardShowing|mDreamingLockscreen' || true
-  adb shell dumpsys power | grep -E 'mWakefulness=' || true
+  adb shell dumpsys window | grep -E 'mCurrentFocus|mFocusedApp' || true
 }
-echo "Screen state before waking:"
-show_focus
-adb shell input keyevent KEYCODE_WAKEUP || true
-adb shell wm dismiss-keyguard || true
-adb shell svc power stayon true || true
-echo "Screen state after waking:"
+adb shell settings put global hide_error_dialogs 1 || true
+echo "Focused window before the tests:"
 show_focus
 
 status=0
 ./gradlew connectedAndroidDeviceTest -Dorg.gradle.jvmargs=-Xmx1536M --stacktrace || status=$?
 
-echo "Screen state after the tests:"
+echo "Focused window after the tests:"
 show_focus
 
 ./gradlew --stop || true

@@ -99,11 +99,13 @@ Gradle daemons, runs `adb emu kill`, waits up to 30 s, and then kills `qemu-syst
 The step also has `timeout-minutes: 30`, so a stuck shutdown fails in minutes rather than at the 60 minute job limit.
 The cause of the hung emulator is not known.
 
-**Screen state.** `ListControlsSheetDismissTest.backDismissesTheSheet` sends Back through the real input system and failed
+**Window focus.** `ListControlsSheetDismissTest.backDismissesTheSheet` sends Back through the real input system and failed
 on CI in every run that got that far: all 8 attempts over 20 s left the sheet open, while it passes on a local emulator.
-Touch-based UI tests are not affected because Compose injects them directly. The script wakes and unlocks the screen
-before the tests and prints the focused window and the keyguard state before, after waking, and after the tests. That
-the screen is asleep or locked on CI is a hypothesis, not yet confirmed.
+Touch-based UI tests are not affected because Compose injects them directly. A sleeping or locked screen was ruled out
+(run of 2026-10-28: awake, no keyguard). The same log showed `Application Not Responding: com.google.android.apps.nexuslauncher`
+as the focused window after the tests, so a system dialog in front of the app is the likely reason Back is dropped, and
+probably also the `RootViewWithoutFocusException` seen on 2026-10-20. The script sets `hide_error_dialogs` and prints the
+focused window before and after the tests. When the dialog appeared relative to the failing test is not known.
 
 **Disk budget.** Building the test APKs of every module first uses enough disk that the emulator refuses to start
 (`Your device does not have enough disk space to run avd`), and the emulator action then waits its full 600 s boot
