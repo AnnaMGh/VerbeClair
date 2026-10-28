@@ -91,8 +91,13 @@ memory pressure but is not proven. The job therefore:
 1. builds the test APKs first with `./gradlew packageAndroidDeviceTest`, before the emulator starts;
 2. stops the Gradle daemon (`./gradlew --stop`) and the Kotlin compile daemon, and prints `free -m`;
 3. runs `connectedAndroidDeviceTest` with `-Dorg.gradle.jvmargs=-Xmx1536M`, where every compile task is up to date;
-4. on failure prints `free -m` and the kernel's out-of-memory lines (`dmesg`), so the cause is visible next time.
+4. on failure prints `free -m`, `df -h` and the kernel's out-of-memory lines (`dmesg`), so the cause is visible next time.
 
+**Disk budget.** Building the test APKs of every module first uses enough disk that the emulator refuses to start
+(`Your device does not have enough disk space to run avd`), and the emulator action then waits its full 600 s boot
+timeout. Found on the first run of the split workflow (2026-10-28): the disk check passed before the build and failed
+right after it. The job therefore starts by deleting toolchains the project doesn't use (dotnet, Haskell, Boost, Swift,
+CodeQL), and prints `df -h` before and after, and again before the emulator starts.
 API 34 is the newest image with a mature, reliable CI history. It is between `minSdk 24` and `targetSdk 37`.
 Instrumented test reports (`**/build/reports/androidTests/`) are uploaded as an artifact when the job fails.
 
@@ -122,7 +127,7 @@ Gradle runs with `--stacktrace`. Each job uploads its reports with `actions/uplo
   discussed on 2026-10-16.
 - [Emulator flakiness (boot timeouts)] → Cached AVD snapshot, a 600 s boot timeout, animations off. A failing run
   shows the emulator log in the step output.
-- [Emulator or step killed on the 2-core / 7 GB runner] → The memory budget in D4 and the failure-only diagnostics
+- [Emulator or step killed on the 2-core / 7 GB runner, or too little disk to start it] → The memory budget in D4 and the failure-only diagnostics
   step. If it still happens, add a swap file or split the device tests by module into separate jobs.
 - [`checks` on Linux skips the Apple targets] → `ios-tests` covers exactly those tasks. If a new iOS-only task joins
   `./gradlew build`, add it to the `ios-tests` command.
