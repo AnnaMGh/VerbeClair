@@ -3,8 +3,11 @@ name: CI
 on:
   pull_request:
     branches: [dev, main]
+    # ready_for_review is not a default type: without it, marking a draft ready would not start a run.
+    types: [opened, synchronize, reopened, ready_for_review]
+  # Pushes to main are not built: the pull request into main already built the same tree.
   push:
-    branches: [dev, main]
+    branches: [dev]
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
@@ -14,12 +17,47 @@ permissions:
   contents: read
 
 jobs:
+  # Decides whether the three jobs below run. They are skipped for drafts and for changes that only touch
+  # documentation or agent configuration. A job skipped by its `if` reports Success, so required checks still pass.
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - id: code
+        name: Detect code changes
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          # The checkout of a pull request is its merge commit, whose first parent is the base branch tip.
+          if [ "$EVENT" = pull_request ]; then base=HEAD^1; else base="$BEFORE"; fi
+          scripts/ci/changed-code.sh "$base" | tee -a "$GITHUB_OUTPUT"
+
+      - id: gate
+        name: Decide
+        env:
+          CODE: ${{ steps.code.outputs.code }}
+          DRAFT: ${{ github.event.pull_request.draft }}
+        run: |
+          if [ "$CODE" = true ] && [ "$DRAFT" != true ]; then run=true; else run=false; fi
+          echo "run=$run (code=$CODE, draft=${DRAFT:-n/a})"
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+
   # Lint, detekt and the JVM / Android host unit tests. Linux is enough: the Apple targets are skipped there
   # and covered by the ios-tests job.
   checks:
     name: Checks and unit tests
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -30,7 +68,8 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
-          cache-read-only: ${{ github.event_name == 'pull_request' }}
+          # Pull requests write their own cache too: GitHub scopes it to the PR, so dev and main never read it.
+          cache-read-only: false
 
       - name: Gradle build
         run: ./gradlew build --stacktrace
@@ -52,8 +91,10 @@ jobs:
   # simulator tests (Compose UI tests included), not XCUITest end-to-end tests of the installed app.
   ios-tests:
     name: iOS simulator tests
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
     runs-on: macos-15
-    timeout-minutes: 60
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -64,7 +105,8 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
-          cache-read-only: ${{ github.event_name == 'pull_request' }}
+          # Pull requests write their own cache too: GitHub scopes it to the PR, so dev and main never read it.
+          cache-read-only: false
 
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -115,8 +157,10 @@ jobs:
   # the test APKs are built first and the Gradle and Kotlin daemons are stopped before the emulator starts.
   android-device-tests:
     name: Android device tests
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 40
     steps:
       # The emulator refuses to start below a free-disk threshold, and building every module's test APKs first
       # takes more than the runner has left. Remove large toolchains this project doesn't use.
@@ -135,7 +179,8 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
-          cache-read-only: ${{ github.event_name == 'pull_request' }}
+          # Pull requests write their own cache too: GitHub scopes it to the PR, so dev and main never read it.
+          cache-read-only: false
 
       - name: Enable KVM
         run: |
