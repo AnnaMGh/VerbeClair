@@ -9,7 +9,8 @@ with repository secrets (A-2, A-9). The first of those secrets, `FRENCH_VERBS_DA
 ## What Changes
 
 - Add a GitHub Actions workflow, `.github/workflows/ci.yml`. It runs on every pull request into `dev` or `main` and
-  on every push to `dev` or `main`.
+  on every push to `dev`. Drafts and changes that only touch documentation or agent configuration skip the three jobs
+  to save billed minutes (added 2026-10-30, after the free Actions allowance ran out).
 - **Checks and unit tests job (Linux):** runs `./gradlew build` from the repository root. On Linux the Apple
   targets are skipped, so this covers the Android build, lint, detekt and the JVM / Android host unit tests of every
   module.

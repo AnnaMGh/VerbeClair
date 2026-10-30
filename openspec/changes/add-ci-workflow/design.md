@@ -55,21 +55,26 @@ hardware acceleration for the x86_64 emulator. Linux with KVM is faster and chea
 on:
   pull_request:
     branches: [dev, main]
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
-    branches: [dev, main]
+    branches: [dev]
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 ```
-Runs on pushes to `dev`/`main` are not cancelled. Each merge result keeps its own status, which makes it clear which
-merge broke a branch.
+Runs on pushes to `dev` are not cancelled. Each merge result keeps its own status, which makes it clear which
+merge broke the branch. Pushes to `main` do not run: `main` only receives `dev` through a pull request, and that
+pull request already built the same tree. `ready_for_review` is listed because it is not a default type: without it,
+marking a draft ready would not start a run.
 
 ### D3. Toolchain
 - **JDK:** `actions/setup-java` with `distribution: zulu`, `java-version: 21`, matching the daemon criteria. Gradle's
   daemon toolchain finds it without downloading another JDK.
-- **Gradle:** `gradle/actions/setup-gradle` provides the dependency and build cache. Writing to the cache is allowed
-  only on `dev`/`main` pushes (`cache-read-only: ${{ github.event_name == 'pull_request' }}`), so PRs read the cache
-  without polluting it.
+- **Gradle:** `gradle/actions/setup-gradle` provides the dependency and build cache. Every run may write
+  the cache (`cache-read-only: false`; it must be explicit, because `main`, not `dev`, is the default branch). GitHub
+  scopes a pull request's caches to that pull request, so `dev` and `main` never read them, and a re-run of the same
+  pull request starts warm. The runs on `dev` still seed the cache that new pull requests start from. The repository
+  cache limit is 10 GB, and the three Gradle caches, the AVD snapshot and `~/.konan` must fit; check with `gh cache list`.
 - **Kotlin/Native:** `actions/cache` on `~/.konan`, keyed by `gradle/libs.versions.toml` (it holds the Kotlin
   version). Only the `ios-tests` job needs it.
 - **Xcode:** in `ios-tests` only, the `macos-15` runner's default Xcode is used, with `DEVELOPER_DIR` set from `xcode-select -p` in a step.
@@ -77,6 +82,22 @@ merge broke a branch.
   the log.
 - **Android SDK:** preinstalled on both runners (`ANDROID_HOME`). No `local.properties` is needed; AGP reads
   `ANDROID_HOME`.
+
+### D8. Saving minutes
+The 2026-10-28 billing showed 436 Linux and 73 macOS minutes in one day: $2.62 and $4.53 before the allowance, so the
+macOS job was about 63% of the cost with 14% of the minutes. The free allowance (about 2,000 Linux minutes, applied as
+a dollar credit) ran out and later jobs failed to start with a payment error. The workflow therefore avoids paying for
+runs that prove nothing:
+- **`changes` job.** A cheap Linux job runs `scripts/ci/changed-code.sh`, which diffs the pull request's merge commit
+  against its base (or a push against its previous head) and answers `code=true|false`. Only `openspec/`, `.claude/`,
+  `docs/`, `*.md` and `LICENSE` count as non-code. `.github/`, `scripts/`, `gradle/` and every Gradle file count as
+  code, and so does any doubt (no base, a git error, an empty diff). The three jobs use
+  `needs: changes` and `if: needs.changes.outputs.run == 'true'`. A job skipped by its `if` reports Success, so the
+  required checks of task 3.1 still pass; `paths-ignore` would leave them pending forever.
+- **Drafts.** `run` is also false when the pull request is a draft. Work on a draft costs the `changes` job only.
+- **Timeouts.** 25 minutes for `checks` and `ios-tests` and 40 for `android-device-tests` (the normal run takes 10, 8 and
+  23), so a stuck job stops early; a stuck macOS job is billed 10×.
+- **Fewer duplicate runs.** No run on pushes to `main` (D2) and warm re-runs of the same pull request (D3).
 
 ### D4. Emulator job
 `reactivecircus/android-emulator-runner`:
@@ -146,13 +167,16 @@ Gradle runs with `--stacktrace`. Each job uploads its reports with `actions/uplo
 
 ## Risks / Trade-offs
 
-- [macOS minutes cost 10× in a private repo] → Caching, cancel-in-progress on PRs, and triggering only on PRs and
-  `dev`/`main` pushes. If the quota becomes a problem, the user can switch to the "iOS only on PRs into main" option
-  discussed on 2026-10-16.
+- [macOS minutes cost 10× in a private repo] → Caching, cancel-in-progress on PRs, triggering only on PRs and
+  `dev` pushes, and the skips and timeouts of D8. If the quota is still a problem, the user can switch to the "iOS only
+  on PRs into main" option discussed on 2026-10-16.
 - [Emulator flakiness (boot timeouts)] → Cached AVD snapshot, a 600 s boot timeout, animations off. A failing run
   shows the emulator log in the step output.
 - [Emulator or step killed on the 2-core / 7 GB runner, or too little disk to start it] → The memory budget in D4 and the failure-only diagnostics
   step. If it still happens, add a swap file or split the device tests by module into separate jobs.
+- [`changes` wrongly says docs-only, so a broken change is never built] → The non-code list is short and explicit, any
+  doubt means `code=true`, and `scripts/ci/changed-code-test.sh` covers the decisions. The `dev` push and the pull
+  request into `main` still build every code change.
 - [`checks` on Linux skips the Apple targets] → `ios-tests` covers exactly those tasks. If a new iOS-only task joins
   `./gradlew build`, add it to the `ios-tests` command.
 - [Configuration cache with secrets] → The token is read as an environment variable through a Gradle provider (in

@@ -7,9 +7,9 @@ than on manual runs.
 ## ADDED Requirements
 
 ### Requirement: When CI runs
-CI SHALL run on every pull request whose base branch is `dev` or `main` (when it is opened, updated or reopened), and
-on every push to `dev` or `main`. It SHALL NOT run on pushes to other branches unless they are part of such a pull
-request. When a newer commit arrives for the same pull request or branch, the run in progress SHALL be cancelled.
+CI SHALL run on every pull request whose base branch is `dev` or `main` (when it is opened, updated, reopened or marked
+ready for review), and on every push to `dev`. It SHALL NOT run on pushes to `main` or to other branches unless they are
+part of such a pull request. When a newer commit arrives for the same pull request or branch, the run in progress SHALL be cancelled.
 
 #### Scenario: Pull request into dev
 - **WHEN** a pull request from `feature/verb-list-screen` into `dev` is opened
@@ -23,9 +23,35 @@ request. When a newer commit arrives for the same pull request or branch, the ru
 - **WHEN** a pull request is merged into `dev`
 - **THEN** CI runs on the resulting `dev` commit
 
+#### Scenario: Merge into main
+- **WHEN** `dev` is merged into `main` through a pull request
+- **THEN** CI does not run again on the resulting `main` commit, because the pull request already built that tree
+
 #### Scenario: Work branch without a pull request
 - **WHEN** a commit is pushed to a work branch that has no open pull request into `dev` or `main`
 - **THEN** CI does not run
+
+### Requirement: Runs that prove nothing are skipped
+CI SHALL NOT start the checks and unit tests, iOS simulator tests and Android device tests jobs for a draft pull request,
+or for a change whose files are all documentation (`openspec/`, `docs/`, `*.md`, `LICENSE`) or agent configuration
+(`.claude/`). Any other file, and any case where the changed files can't be determined, SHALL count as code. A skipped
+job SHALL report Success, so that required checks do not block the pull request.
+
+#### Scenario: Documentation-only commit
+- **WHEN** a commit that only changes files under `openspec/` is pushed to an open pull request
+- **THEN** the three jobs are skipped, their checks show as passing, and only the change-detection job uses runner time
+
+#### Scenario: Workflow or script change
+- **WHEN** a commit changes `.github/workflows/ci.yml` or a file under `scripts/`
+- **THEN** the three jobs run
+
+#### Scenario: Draft pull request
+- **WHEN** a commit is pushed to a draft pull request
+- **THEN** the three jobs are skipped
+
+#### Scenario: Draft marked ready
+- **WHEN** a draft pull request is marked ready for review
+- **THEN** CI runs on its head commit
 
 ### Requirement: Checks and unit tests check
 CI SHALL run `./gradlew build` from the repository root on a Linux runner, covering every Gradle module. This

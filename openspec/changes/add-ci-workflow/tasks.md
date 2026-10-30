@@ -13,11 +13,20 @@
 - [x] 2.1 Check cancel-in-progress. Verify: pushing a second commit to the PR while CI runs cancels the first run, and the new commit gets a fresh run. Checked 2026-10-28: run 40749912380 (`bc34661`) was cancelled, all three jobs, by the push of `317b3ad`, which got run 40750110150.
 - [x] 2.2 Check that a failing test fails the right check. Verify: on a throwaway commit, a failing `commonTest` assertion in `:core:designsystem` turns the `Android device tests` and `iOS simulator tests` checks red and their reports artifacts (`android-test-reports`, `ios-test-reports`) are uploaded. `Checks and unit tests` stays green: `:core:designsystem` has no host test (only `withDeviceTestBuilder`) and `iosSimulatorArm64Test` is skipped on `ubuntu-latest`. Then drop the commit (never merged). Checked 2026-10-28 on run 40750110150 (`317b3ad`), commit dropped.
 - [x] 2.3 Check that secrets are not exposed. Verify: the workflow logs contain no token value (only `***` where the variable is printed), and no step writes `local.properties`.
-- [ ] 2.4 Check the second run time. Verify: on a re-run, the Gradle cache, `~/.konan` and the AVD snapshot are restored. Record the run times of the three jobs in the PR description. Status: `~/.konan` and the AVD snapshot are restored (checked 2026-10-28) and the cold-cache times are in the PR description; the Gradle cache is read-only on PRs and stays empty until the first run on `dev` saves it, so that part is checked after the first `dev` run.
+- [ ] 2.4 Check the second run time. Verify: on a re-run, the Gradle cache, `~/.konan` and the AVD snapshot are restored. Record the run times of the three jobs in the PR description. Status: `~/.konan` and the AVD snapshot are restored (checked 2026-10-28) and the cold-cache times are in the PR description; the Gradle cache was read-only on PRs; since D8 (section 5) PRs write it, so it is checked on the first re-run of the PR after that change, and the `dev` cache after the first `dev` run.
 
 ## 3. Repository settings (user, after merge)
 
 - [ ] 3.1 After the first green run on `dev`, mark `CI / Checks and unit tests`, `CI / iOS simulator tests` and `CI / Android device tests` as required status checks in the branch protection of `dev` and `main`. Verify: a test PR shows all three as "Required", and the merge button stays disabled until they pass.
+
+## 5. Saving minutes (added 2026-10-30, design D2, D3, D8)
+
+- [x] 5.1 Write `scripts/ci/changed-code.sh` and `scripts/ci/changed-code-test.sh`. Verify: `bash scripts/ci/changed-code-test.sh` passes (docs-only, mixed, workflow, empty diff and bad base cases).
+- [x] 5.2 Edit `.github/workflows/ci.yml`: the `changes` job, `needs`/`if` on the three jobs, `ready_for_review` trigger, push to `dev` only, timeouts 25/25/40, `cache-read-only: false`. Verify: `actionlint` reports no errors and every `uses:` is still pinned to a SHA.
+- [ ] 5.3 Check a code change runs everything. Verify: the first push with these changes (it touches `ci.yml`) runs the `changes` job with `run=true` and all three jobs go green.
+- [ ] 5.4 Check a documentation-only commit is skipped. Verify: a commit touching only `openspec/` leaves the three jobs skipped (shown as passing) and the run costs about one minute.
+- [ ] 5.5 Check drafts. Verify: with the PR converted to draft, a push skips the three jobs; marking it ready starts a full run.
+- [ ] 5.6 Check the cache fits. Verify: after a re-run of the PR, `gh cache list` shows the Gradle caches of the PR, the AVD snapshot and `~/.konan` together under 10 GB, and the re-run restores the Gradle cache.
 
 ## 4. Done gate
 
