@@ -10,8 +10,8 @@
 
 ## 2. Behaviour checks
 
-- [ ] 2.1 Check cancel-in-progress. Verify: pushing a second commit to the PR while CI runs cancels the first run, and the new commit gets a fresh run.
-- [ ] 2.2 Check that a failing test fails the right check. Verify: on a throwaway commit, a failing `commonTest` assertion in `:core:designsystem` turns the `Checks and unit tests` and `Android device tests` checks red (the test also runs on iOS, so `iOS simulator tests` turns red too), and the reports artifacts are uploaded. Then drop the commit (never merged).
+- [x] 2.1 Check cancel-in-progress. Verify: pushing a second commit to the PR while CI runs cancels the first run, and the new commit gets a fresh run. Checked 2026-10-28: run 40749912380 (`bc34661`) was cancelled, all three jobs, by the push of `317b3ad`, which got run 40750110150.
+- [x] 2.2 Check that a failing test fails the right check. Verify: on a throwaway commit, a failing `commonTest` assertion in `:core:designsystem` turns the `Android device tests` and `iOS simulator tests` checks red and their reports artifacts (`android-test-reports`, `ios-test-reports`) are uploaded. `Checks and unit tests` stays green: `:core:designsystem` has no host test (only `withDeviceTestBuilder`) and `iosSimulatorArm64Test` is skipped on `ubuntu-latest`. Then drop the commit (never merged). Checked 2026-10-28 on run 40750110150 (`317b3ad`), commit dropped.
 - [x] 2.3 Check that secrets are not exposed. Verify: the workflow logs contain no token value (only `***` where the variable is printed), and no step writes `local.properties`.
 - [ ] 2.4 Check the second run time. Verify: on a re-run, the Gradle cache, `~/.konan` and the AVD snapshot are restored. Record the run times of the three jobs in the PR description. Status: `~/.konan` and the AVD snapshot are restored (checked 2026-10-28) and the cold-cache times are in the PR description; the Gradle cache is read-only on PRs and stays empty until the first run on `dev` saves it, so that part is checked after the first `dev` run.
 
