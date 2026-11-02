@@ -50,36 +50,44 @@ fun VerbeClairIconButton(
     badgeCount: Int? = null,
 ) {
     val colors = MaterialTheme.colorScheme
-    val label = if (badgeCount != null) {
-        stringResource(Res.string.icon_button_badge, contentDescription, badgeCount)
-    } else {
-        contentDescription
-    }
+    val label =
+        if (badgeCount != null) {
+            stringResource(Res.string.icon_button_badge, contentDescription, badgeCount)
+        } else {
+            contentDescription
+        }
     // The badge is a sibling drawn over the button: inside the tonal button's circular container its top-right
     // corner would be clipped.
     Box(modifier) {
         when (style) {
-            IconButtonStyle.Standard -> IconButton(
-                onClick = onClick,
-                colors = IconButtonDefaults.iconButtonColors(contentColor = colors.onSurfaceVariant),
-            ) {
-                Icon(imageVector = icon, contentDescription = label)
+            IconButtonStyle.Standard -> {
+                IconButton(
+                    onClick = onClick,
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = colors.onSurfaceVariant),
+                ) {
+                    Icon(imageVector = icon, contentDescription = label)
+                }
             }
-            IconButtonStyle.Tonal -> FilledTonalIconButton(
-                onClick = onClick,
-                colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = colors.secondaryContainer,
-                    contentColor = colors.onSecondaryContainer,
-                ),
-            ) {
-                Icon(imageVector = icon, contentDescription = label)
+
+            IconButtonStyle.Tonal -> {
+                FilledTonalIconButton(
+                    onClick = onClick,
+                    colors =
+                        IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = colors.secondaryContainer,
+                            contentColor = colors.onSecondaryContainer,
+                        ),
+                ) {
+                    Icon(imageVector = icon, contentDescription = label)
+                }
             }
         }
         if (badgeCount != null) {
             Badge(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .offset(x = BadgeOffsetX, y = VerbeClairTheme.spacing.space4),
+                modifier =
+                    Modifier
+                        .align(Alignment.TopStart)
+                        .offset(x = BadgeOffsetX, y = VerbeClairTheme.spacing.space4),
                 containerColor = colors.error,
                 contentColor = colors.onError,
             ) {

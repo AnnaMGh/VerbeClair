@@ -26,15 +26,20 @@ fun ActiveChoicesRow(
 ) {
     val spacing = VerbeClairTheme.spacing
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            // Figma has 8 dp under the 32 dp chips; the chip's 48 dp touch target already adds it (and 8 dp above).
-            .padding(horizontal = spacing.space16),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                // Figma has 8 dp under the 32 dp chips; the chip's 48 dp touch target already adds it (and 8 dp above).
+                .padding(horizontal = spacing.space16),
         horizontalArrangement = Arrangement.spacedBy(spacing.space8),
     ) {
         choices.forEach { choice ->
-            VerbeClairFilterChip(label = stringResource(choice.label()), selected = true, onClick = { onRemove(choice) })
+            VerbeClairFilterChip(
+                label = stringResource(choice.label()),
+                selected = true,
+                onClick = { onRemove(choice) },
+            )
         }
     }
 }

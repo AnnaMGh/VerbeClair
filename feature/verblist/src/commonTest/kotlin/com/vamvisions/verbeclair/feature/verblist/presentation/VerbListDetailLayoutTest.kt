@@ -60,33 +60,38 @@ class VerbListDetailLayoutTest {
     private val selected = SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)
 
     @Test
-    fun tappingACellSelectsItAndOpensTheVerb() = runComposeUiTest {
-        showTablet()
-        onNode(hasText("terminer") and selected).assertDoesNotExist()
+    fun tappingACellSelectsItAndOpensTheVerb() =
+        runComposeUiTest {
+            showTablet()
+            onNode(hasText("terminer") and selected).assertDoesNotExist()
 
-        onNodeWithText("terminer").performClick()
+            onNodeWithText("terminer").performClick()
 
-        onNode(hasText("terminer") and selected).assertExists()
-        assertEquals(listOf("terminer"), opened)
-    }
-
-    @Test
-    fun rightPaneShowsTheEmptyStateWithOrWithoutASelection() = runComposeUiTest {
-        showTablet()
-        val emptyState = hasText("Choose a verb to see its conjugation") and hasAnyAncestor(hasTestTag(VerbListTestTags.DETAIL_PANE))
-        onNode(emptyState).assertExists()
-
-        onNodeWithText("terminer").performClick()
-
-        onNode(emptyState).assertExists()
-    }
+            onNode(hasText("terminer") and selected).assertExists()
+            assertEquals(listOf("terminer"), opened)
+        }
 
     @Test
-    fun listPaneIs360DpWide() = runComposeUiTest {
-        showTablet()
+    fun rightPaneShowsTheEmptyStateWithOrWithoutASelection() =
+        runComposeUiTest {
+            showTablet()
+            val emptyState =
+                hasText("Choose a verb to see its conjugation") and
+                    hasAnyAncestor(hasTestTag(VerbListTestTags.DETAIL_PANE))
+            onNode(emptyState).assertExists()
 
-        val grid = onNodeWithTag(VerbListTestTags.GRID).getBoundsInRoot()
+            onNodeWithText("terminer").performClick()
 
-        assertTrue(abs((grid.right - grid.left - 360.dp).value) < 1f, "List pane width ${grid.right - grid.left}")
-    }
+            onNode(emptyState).assertExists()
+        }
+
+    @Test
+    fun listPaneIs360DpWide() =
+        runComposeUiTest {
+            showTablet()
+
+            val grid = onNodeWithTag(VerbListTestTags.GRID).getBoundsInRoot()
+
+            assertTrue(abs((grid.right - grid.left - 360.dp).value) < 1f, "List pane width ${grid.right - grid.left}")
+        }
 }

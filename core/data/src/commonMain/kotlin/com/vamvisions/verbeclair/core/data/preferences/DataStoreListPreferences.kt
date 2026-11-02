@@ -36,24 +36,34 @@ fun createAppSettingsDataStore(
  */
 class DataStoreListPreferences(private val dataStore: DataStore<Preferences>) : ListPreferences {
 
-    override val choices: Flow<ListChoices> = dataStore.data
-        .map { preferences ->
-            ListChoices(
-                filters = ListFilters(
-                    groups = preferences[Keys.GROUPS].orEmpty().mapNotNullTo(mutableSetOf()) { enumOrNull<VerbGroup>(it) },
-                    auxiliaries = preferences[Keys.AUXILIARIES].orEmpty()
-                        .mapNotNullTo(mutableSetOf()) { enumOrNull<AuxiliaryFilter>(it) },
-                    reflexive = preferences[Keys.REFLEXIVE].orEmpty().mapNotNullTo(mutableSetOf()) { it.toBooleanStrictOrNull() },
-                ),
-                groupBy = enumOrNull<GroupBy>(preferences[Keys.GROUP_BY]) ?: ListChoices.Default.groupBy,
-                sort = enumOrNull<SortOrder>(preferences[Keys.SORT]) ?: ListChoices.Default.sort,
-            )
-        }
-        .distinctUntilChanged()
+    override val choices: Flow<ListChoices> =
+        dataStore.data
+            .map { preferences ->
+                ListChoices(
+                    filters =
+                        ListFilters(
+                            groups =
+                                preferences[Keys.GROUPS].orEmpty().mapNotNullTo(
+                                    mutableSetOf(),
+                                ) { enumOrNull<VerbGroup>(it) },
+                            auxiliaries =
+                                preferences[Keys.AUXILIARIES]
+                                    .orEmpty()
+                                    .mapNotNullTo(mutableSetOf()) { enumOrNull<AuxiliaryFilter>(it) },
+                            reflexive =
+                                preferences[Keys.REFLEXIVE].orEmpty().mapNotNullTo(
+                                    mutableSetOf(),
+                                ) { it.toBooleanStrictOrNull() },
+                        ),
+                    groupBy = enumOrNull<GroupBy>(preferences[Keys.GROUP_BY]) ?: ListChoices.Default.groupBy,
+                    sort = enumOrNull<SortOrder>(preferences[Keys.SORT]) ?: ListChoices.Default.sort,
+                )
+            }.distinctUntilChanged()
 
-    override val tab: Flow<ListTab> = dataStore.data
-        .map { preferences -> enumOrNull<ListTab>(preferences[Keys.TAB]) ?: ListTab.ALL }
-        .distinctUntilChanged()
+    override val tab: Flow<ListTab> =
+        dataStore.data
+            .map { preferences -> enumOrNull<ListTab>(preferences[Keys.TAB]) ?: ListTab.ALL }
+            .distinctUntilChanged()
 
     override suspend fun setChoices(choices: ListChoices) {
         dataStore.edit { preferences ->
@@ -79,5 +89,4 @@ class DataStoreListPreferences(private val dataStore: DataStore<Preferences>) : 
     }
 }
 
-private inline fun <reified T : Enum<T>> enumOrNull(name: String?): T? =
-    enumValues<T>().firstOrNull { it.name == name }
+private inline fun <reified T : Enum<T>> enumOrNull(name: String?): T? = enumValues<T>().firstOrNull { it.name == name }

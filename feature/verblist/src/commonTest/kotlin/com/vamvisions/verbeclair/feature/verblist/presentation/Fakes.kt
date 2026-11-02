@@ -37,8 +37,10 @@ class FakeVerbCatalog(var verbs: List<VerbListItem> = emptyList()) : VerbCatalog
 
     private companion object {
         /** The whole list in one page, as Room reports it, so separators see the list start. */
-        val COMPLETE = LoadState.NotLoading(endOfPaginationReached = true)
-            .let { LoadStates(refresh = LoadState.NotLoading(false), prepend = it, append = it) }
+        val COMPLETE =
+            LoadState
+                .NotLoading(endOfPaginationReached = true)
+                .let { LoadStates(refresh = LoadState.NotLoading(false), prepend = it, append = it) }
     }
 }
 
@@ -66,14 +68,10 @@ class FakeFavouritesRepository(initial: Set<String> = emptySet(), loaded: Boolea
 }
 
 class FakeTestScoreRepository(private val scores: Map<String, Int> = emptyMap()) : TestScoreRepository {
-    override fun observeScores(slugs: Set<String>): Flow<Map<String, Int>> =
-        flowOf(scores.filterKeys { it in slugs })
+    override fun observeScores(slugs: Set<String>): Flow<Map<String, Int>> = flowOf(scores.filterKeys { it in slugs })
 }
 
-class FakeListPreferences(
-    choices: ListChoices = ListChoices.Default,
-    tab: ListTab = ListTab.ALL,
-) : ListPreferences {
+class FakeListPreferences(choices: ListChoices = ListChoices.Default, tab: ListTab = ListTab.ALL) : ListPreferences {
     val storedChoices = MutableStateFlow(choices)
     val storedTab = MutableStateFlow(tab)
 

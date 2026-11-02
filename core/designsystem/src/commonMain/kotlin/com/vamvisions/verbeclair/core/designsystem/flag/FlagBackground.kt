@@ -26,24 +26,26 @@ import kotlin.math.max
  * readers never see it.
  */
 @Composable
-fun Modifier.flagScreenBackground(): Modifier = flagBackground(
-    stripe = painterResource(Res.drawable.flag_stripe_white),
-    background = MaterialTheme.colorScheme.background,
-    alpha = VerbeClairTheme.flagOpacity,
-    placement = FlagPlacement.Screen,
-)
+fun Modifier.flagScreenBackground(): Modifier =
+    flagBackground(
+        stripe = painterResource(Res.drawable.flag_stripe_white),
+        background = MaterialTheme.colorScheme.background,
+        alpha = VerbeClairTheme.flagOpacity,
+        placement = FlagPlacement.Screen,
+    )
 
 /**
  * Bottom-bar background (Figma `Background/Flag stripe` Blue 95:211): the background colour, so the bar is opaque,
  * then the Blue stripe rotated 90° and scaled to cover, at [VerbeClairTheme.flagOpacity].
  */
 @Composable
-fun Modifier.flagBarBackground(): Modifier = flagBackground(
-    stripe = painterResource(Res.drawable.flag_stripe_blue),
-    background = MaterialTheme.colorScheme.background,
-    alpha = VerbeClairTheme.flagOpacity,
-    placement = FlagPlacement.Bar,
-)
+fun Modifier.flagBarBackground(): Modifier =
+    flagBackground(
+        stripe = painterResource(Res.drawable.flag_stripe_blue),
+        background = MaterialTheme.colorScheme.background,
+        alpha = VerbeClairTheme.flagOpacity,
+        placement = FlagPlacement.Bar,
+    )
 
 /**
  * Navigation-rail background (Notion N-14, Figma `Background/Flag stripe` Blue 95:211 behind the rail): the Blue
@@ -51,12 +53,13 @@ fun Modifier.flagBarBackground(): Modifier = flagBackground(
  * colour of its own, so the screen background shows through around the stripe.
  */
 @Composable
-fun Modifier.flagRailBackground(): Modifier = flagBackground(
-    stripe = painterResource(Res.drawable.flag_stripe_blue),
-    background = null,
-    alpha = VerbeClairTheme.flagOpacity,
-    placement = FlagPlacement.Rail,
-)
+fun Modifier.flagRailBackground(): Modifier =
+    flagBackground(
+        stripe = painterResource(Res.drawable.flag_stripe_blue),
+        background = null,
+        alpha = VerbeClairTheme.flagOpacity,
+        placement = FlagPlacement.Rail,
+    )
 
 /** How each flag background places its stripe: the bar's stripe is rotated by 90°, the others are not. */
 internal enum class FlagPlacement(val rotated: Boolean) {
@@ -70,16 +73,21 @@ private fun Modifier.flagBackground(
     background: Color?,
     alpha: Float,
     placement: FlagPlacement,
-): Modifier = drawBehind {
-    if (background != null) drawRect(background)
-    clipRect { drawCover(stripe, alpha, placement.rotated) }
-}
+): Modifier =
+    drawBehind {
+        if (background != null) drawRect(background)
+        clipRect { drawCover(stripe, alpha, placement.rotated) }
+    }
 
 /**
  * The size, before rotation, to draw an image of [intrinsic] size so that it covers [area], keeping its aspect ratio.
  * A 90° rotation swaps the image's width and height on screen.
  */
-internal fun coverSize(intrinsic: Size, area: Size, rotated: Boolean): Size {
+internal fun coverSize(
+    intrinsic: Size,
+    area: Size,
+    rotated: Boolean,
+): Size {
     val coverWidth = if (rotated) intrinsic.height else intrinsic.width
     val coverHeight = if (rotated) intrinsic.width else intrinsic.height
     val scale = max(area.width / coverWidth, area.height / coverHeight)
@@ -87,7 +95,11 @@ internal fun coverSize(intrinsic: Size, area: Size, rotated: Boolean): Size {
 }
 
 /** Draws [painter] centred and scaled to cover the whole draw area, optionally rotated by 90°. */
-private fun DrawScope.drawCover(painter: Painter, alpha: Float, rotated: Boolean) {
+private fun DrawScope.drawCover(
+    painter: Painter,
+    alpha: Float,
+    rotated: Boolean,
+) {
     val intrinsic = painter.intrinsicSize
     if (intrinsic.isUnspecified() || intrinsic.width <= 0f || intrinsic.height <= 0f) return
     val drawn = coverSize(intrinsic, size, rotated)

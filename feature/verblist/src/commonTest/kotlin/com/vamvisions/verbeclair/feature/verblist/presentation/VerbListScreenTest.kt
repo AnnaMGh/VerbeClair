@@ -1,18 +1,19 @@
 package com.vamvisions.verbeclair.feature.verblist.presentation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.ComposeUiTest
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.waitUntilAtLeastOneExists
 import androidx.paging.LoadState
 import androidx.paging.LoadStates
 import androidx.paging.PagingData
@@ -43,11 +44,12 @@ class VerbListScreenTest {
             VerbeClairTheme {
                 VerbListScreen(
                     state = state,
-                    verbs = when {
-                        rows == null -> previewLoadingItems()
-                        loadingNextPage -> loadingNextPageItems(rows)
-                        else -> previewItems(rows)
-                    },
+                    verbs =
+                        when {
+                            rows == null -> previewLoadingItems()
+                            loadingNextPage -> loadingNextPageItems(rows)
+                            else -> previewItems(rows)
+                        },
                     layout = layout,
                     onAction = { actions += it },
                     onVerbClick = { opened += it },
@@ -60,153 +62,169 @@ class VerbListScreenTest {
     private fun cellOf(infinitive: String) = hasAnyAncestor(hasText(infinitive, substring = true))
 
     @Test
-    fun tappingACellOpensThatVerb() = runComposeUiTest {
-        show(VerbListState())
+    fun tappingACellOpensThatVerb() =
+        runComposeUiTest {
+            show(VerbListState())
 
-        onNodeWithText("terminer").performClick()
+            onNodeWithText("terminer").performClick()
 
-        assertEquals(listOf("terminer"), opened)
-        assertTrue(tested.isEmpty())
-    }
-
-    @Test
-    fun scoreShowsOnePercentSign() = runComposeUiTest {
-        show(VerbListState())
-
-        onNodeWithText("80%").assertExists()
-        onNodeWithText("80%%").assertDoesNotExist()
-    }
+            assertEquals(listOf("terminer"), opened)
+            assertTrue(tested.isEmpty())
+        }
 
     @Test
-    fun tappingTheTestButtonOnlyStartsATest() = runComposeUiTest {
-        show(VerbListState())
+    fun scoreShowsOnePercentSign() =
+        runComposeUiTest {
+            show(VerbListState())
 
-        onTerminerButton("Start a test").performClick()
-
-        assertEquals(listOf("terminer"), tested)
-        assertTrue(opened.isEmpty())
-        assertTrue(actions.none { it is VerbListAction.OnToggleFavourite })
-    }
+            onNodeWithText("80%").assertExists()
+            onNodeWithText("80%%").assertDoesNotExist()
+        }
 
     @Test
-    fun tappingTheStarOnlyTogglesTheFavourite() = runComposeUiTest {
-        show(VerbListState())
+    fun tappingTheTestButtonOnlyStartsATest() =
+        runComposeUiTest {
+            show(VerbListState())
 
-        onTerminerButton("Add to favourites").performClick()
+            onTerminerButton("Start a test").performClick()
 
-        assertEquals(listOf<VerbListAction>(VerbListAction.OnToggleFavourite("terminer")), actions)
-        assertTrue(opened.isEmpty())
-        assertTrue(tested.isEmpty())
-    }
-
-    @Test
-    fun clearButtonEmptiesTheSearch() = runComposeUiTest {
-        show(VerbListState(query = "su"), PreviewData.searchSu)
-
-        onNodeWithContentDescription("Clear search").performClick()
-
-        assertEquals(listOf<VerbListAction>(VerbListAction.OnQueryChange("")), actions)
-    }
+            assertEquals(listOf("terminer"), tested)
+            assertTrue(opened.isEmpty())
+            assertTrue(actions.none { it is VerbListAction.OnToggleFavourite })
+        }
 
     @Test
-    fun emptyResultOffersClearFilters() = runComposeUiTest {
-        show(VerbListState(query = "xyz"), emptyList())
+    fun tappingTheStarOnlyTogglesTheFavourite() =
+        runComposeUiTest {
+            show(VerbListState())
 
-        onNodeWithText("No verbs match your search or filters").assertExists()
-        onNodeWithText("Clear filters").performClick()
+            onTerminerButton("Add to favourites").performClick()
 
-        assertEquals(listOf<VerbListAction>(VerbListAction.OnClearFilters), actions)
-    }
-
-    @Test
-    fun listHasNoClearFiltersButton() = runComposeUiTest {
-        show(VerbListState())
-
-        onNodeWithText("Clear filters").assertDoesNotExist()
-    }
+            assertEquals(listOf<VerbListAction>(VerbListAction.OnToggleFavourite("terminer")), actions)
+            assertTrue(opened.isEmpty())
+            assertTrue(tested.isEmpty())
+        }
 
     @Test
-    fun noDataHasNoButton() = runComposeUiTest {
-        show(VerbListState(isEmptyDatabase = true), emptyList())
+    fun clearButtonEmptiesTheSearch() =
+        runComposeUiTest {
+            show(VerbListState(query = "su"), PreviewData.searchSu)
 
-        onNodeWithText("No verbs yet").assertExists()
-        onNodeWithText("Clear filters").assertDoesNotExist()
-    }
+            onNodeWithContentDescription("Clear search").performClick()
 
-    @Test
-    fun noFavouritesHasNoButton() = runComposeUiTest {
-        show(VerbListState(tab = ListTab.FAVOURITES), emptyList())
-
-        onNodeWithText("No favourites yet").assertExists()
-        onNodeWithText("Clear filters").assertDoesNotExist()
-    }
+            assertEquals(listOf<VerbListAction>(VerbListAction.OnQueryChange("")), actions)
+        }
 
     @Test
-    fun favouritesThatDoNotMatchShowTheEmptyResult() = runComposeUiTest {
-        show(VerbListState(tab = ListTab.FAVOURITES, favouritesCount = 3, query = "xyz"), emptyList())
+    fun emptyResultOffersClearFilters() =
+        runComposeUiTest {
+            show(VerbListState(query = "xyz"), emptyList())
 
-        onNodeWithText("No verbs match your search or filters").assertExists()
-        onNodeWithText("No favourites yet").assertDoesNotExist()
-    }
+            onNodeWithText("No verbs match your search or filters").assertExists()
+            onNodeWithText("Clear filters").performClick()
 
-    @Test
-    fun tappingATabSelectsIt() = runComposeUiTest {
-        show(VerbListState(favouritesCount = 3))
-
-        onNodeWithText("Favourites (3)").performClick()
-        onNodeWithText("All").performClick()
-
-        assertEquals(
-            listOf(VerbListAction.OnTabSelect(ListTab.FAVOURITES), VerbListAction.OnTabSelect(ListTab.ALL)),
-            actions.filterIsInstance<VerbListAction.OnTabSelect>(),
-        )
-    }
+            assertEquals(listOf<VerbListAction>(VerbListAction.OnClearFilters), actions)
+        }
 
     @Test
-    fun skeletonWaitsForTheDelay() = runComposeUiTest {
-        mainClock.autoAdvance = false
-        show(VerbListState(), rows = null)
+    fun listHasNoClearFiltersButton() =
+        runComposeUiTest {
+            show(VerbListState())
 
-        mainClock.advanceTimeBy(100)
-        onNodeWithTag(VerbListTestTags.SKELETON).assertDoesNotExist()
-
-        mainClock.advanceTimeBy(100)
-        onNodeWithTag(VerbListTestTags.SKELETON).assertExists()
-    }
+            onNodeWithText("Clear filters").assertDoesNotExist()
+        }
 
     @Test
-    fun nextPageSkeletonWaitsForTheDelay() = runComposeUiTest {
-        mainClock.autoAdvance = false
-        show(VerbListState(), rows = PreviewData.tablet.take(2), loadingNextPage = true)
+    fun noDataHasNoButton() =
+        runComposeUiTest {
+            show(VerbListState(isEmptyDatabase = true), emptyList())
 
-        mainClock.advanceTimeBy(100)
-        onAllNodesWithTag(VerbListTestTags.NEXT_PAGE_SKELETON).assertCountEquals(0)
-
-        mainClock.advanceTimeBy(100)
-        onAllNodesWithTag(VerbListTestTags.NEXT_PAGE_SKELETON).assertCountEquals(1)
-    }
+            onNodeWithText("No verbs yet").assertExists()
+            onNodeWithText("Clear filters").assertDoesNotExist()
+        }
 
     @Test
-    fun loadedListShowsNoSkeleton() = runComposeUiTest {
-        mainClock.autoAdvance = false
-        show(VerbListState())
+    fun noFavouritesHasNoButton() =
+        runComposeUiTest {
+            show(VerbListState(tab = ListTab.FAVOURITES), emptyList())
 
-        mainClock.advanceTimeBy(300)
-        onNodeWithTag(VerbListTestTags.SKELETON).assertDoesNotExist()
-        onNodeWithText("terminer").assertExists()
-    }
+            onNodeWithText("No favourites yet").assertExists()
+            onNodeWithText("Clear filters").assertDoesNotExist()
+        }
 
     @Test
-    fun badgeCountsTheSelectedFilters() = runComposeUiTest {
-        show(VerbListState(choices = PreviewData.groupedChoices))
+    fun favouritesThatDoNotMatchShowTheEmptyResult() =
+        runComposeUiTest {
+            show(VerbListState(tab = ListTab.FAVOURITES, favouritesCount = 3, query = "xyz"), emptyList())
 
-        onNode(hasContentDescription("List controls, 2")).assertExists()
-        onNodeWithText("By group").assertExists()
-        onNodeWithText("Most frequent").performClick()
+            onNodeWithText("No verbs match your search or filters").assertExists()
+            onNodeWithText("No favourites yet").assertDoesNotExist()
+        }
 
-        assertEquals(1, actions.size)
-        assertTrue(actions.single() is VerbListAction.OnRemoveChoice)
-    }
+    @Test
+    fun tappingATabSelectsIt() =
+        runComposeUiTest {
+            show(VerbListState(favouritesCount = 3))
+
+            onNodeWithText("Favourites (3)").performClick()
+            onNodeWithText("All").performClick()
+
+            assertEquals(
+                listOf(VerbListAction.OnTabSelect(ListTab.FAVOURITES), VerbListAction.OnTabSelect(ListTab.ALL)),
+                actions.filterIsInstance<VerbListAction.OnTabSelect>(),
+            )
+        }
+
+    @Test
+    fun skeletonWaitsForTheDelay() =
+        runComposeUiTest {
+            mainClock.autoAdvance = false
+            show(VerbListState(), rows = null)
+
+            mainClock.advanceTimeBy(100)
+            onNodeWithTag(VerbListTestTags.SKELETON).assertDoesNotExist()
+
+            mainClock.advanceTimeBy(100)
+            onNodeWithTag(VerbListTestTags.SKELETON).assertExists()
+        }
+
+    @Test
+    fun nextPageSkeletonWaitsForTheDelay() =
+        runComposeUiTest {
+            mainClock.autoAdvance = false
+            show(VerbListState(), rows = PreviewData.tablet.take(2), loadingNextPage = true)
+
+            mainClock.advanceTimeBy(100)
+            onAllNodesWithTag(VerbListTestTags.NEXT_PAGE_SKELETON).assertCountEquals(0)
+
+            mainClock.advanceTimeBy(100)
+            onAllNodesWithTag(VerbListTestTags.NEXT_PAGE_SKELETON).assertCountEquals(1)
+        }
+
+    @Test
+    fun loadedListShowsNoSkeleton() =
+        runComposeUiTest {
+            mainClock.autoAdvance = false
+            show(VerbListState())
+
+            mainClock.advanceTimeBy(300)
+            onNodeWithTag(VerbListTestTags.SKELETON).assertDoesNotExist()
+            onNodeWithText("terminer").assertExists()
+        }
+
+    @Test
+    fun badgeCountsTheSelectedFilters() =
+        runComposeUiTest {
+            show(VerbListState(choices = PreviewData.groupedChoices))
+
+            waitUntilAtLeastOneExists(hasContentDescription("List controls, 2"), timeoutMillis = 5_000)
+            onNode(hasContentDescription("List controls, 2")).assertExists()
+            onNodeWithText("By group").assertExists()
+            onNodeWithText("Most frequent").performClick()
+
+            assertEquals(1, actions.size)
+            assertTrue(actions.single() is VerbListAction.OnRemoveChoice)
+        }
 
     /** [rows] loaded, with the next page still loading. */
     @Composable

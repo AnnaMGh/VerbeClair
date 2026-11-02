@@ -26,6 +26,7 @@ import androidx.room.TypeConverters
 @ConstructedBy(VerbDatabaseConstructor::class)
 abstract class VerbDatabase : RoomDatabase() {
     abstract fun verbDao(): VerbDao
+
     abstract fun metadataDao(): MetadataDao
 }
 

@@ -50,10 +50,11 @@ fun AppShell(
                 onSelect = {},
                 modifier = Modifier.testTag(AppShellTestTags.RAIL),
                 // Figma PL-01 (87:9534) has 16 dp above the items; TP-01 / TL-01 (88:759) 24 dp.
-                contentPadding = PaddingValues(
-                    top = if (layout == WindowLayout.PhoneLandscape) spacing.space16 else spacing.space24,
-                    bottom = spacing.space16,
-                ),
+                contentPadding =
+                    PaddingValues(
+                        top = if (layout == WindowLayout.PhoneLandscape) spacing.space16 else spacing.space24,
+                        bottom = spacing.space16,
+                    ),
             )
         }
         Column(Modifier.weight(1f)) {

@@ -33,17 +33,18 @@ class VerbeClairThemeTest {
         runComposeUiTest {
             setContent {
                 VerbeClairTheme(darkTheme = darkTheme) {
-                    read = Read(
-                        colorScheme = MaterialTheme.colorScheme,
-                        typography = MaterialTheme.typography,
-                        shapes = MaterialTheme.shapes,
-                        extendedColors = VerbeClairTheme.extendedColors,
-                        extendedTypography = VerbeClairTheme.typography,
-                        spacing = VerbeClairTheme.spacing,
-                        radius = VerbeClairTheme.radius,
-                        elevation = VerbeClairTheme.elevation,
-                        flagOpacity = VerbeClairTheme.flagOpacity,
-                    )
+                    read =
+                        Read(
+                            colorScheme = MaterialTheme.colorScheme,
+                            typography = MaterialTheme.typography,
+                            shapes = MaterialTheme.shapes,
+                            extendedColors = VerbeClairTheme.extendedColors,
+                            extendedTypography = VerbeClairTheme.typography,
+                            spacing = VerbeClairTheme.spacing,
+                            radius = VerbeClairTheme.radius,
+                            elevation = VerbeClairTheme.elevation,
+                            flagOpacity = VerbeClairTheme.flagOpacity,
+                        )
                 }
             }
             waitForIdle()
@@ -52,12 +53,17 @@ class VerbeClairThemeTest {
     }
 
     @Test
-    fun lightThemeProvidesLightTokens() = assertTheme(readTheme(darkTheme = false), LightColorScheme, LightExtendedColors)
+    fun lightThemeProvidesLightTokens() =
+        assertTheme(readTheme(darkTheme = false), LightColorScheme, LightExtendedColors)
 
     @Test
     fun darkThemeProvidesDarkTokens() = assertTheme(readTheme(darkTheme = true), DarkColorScheme, DarkExtendedColors)
 
-    private fun assertTheme(read: Read, colorScheme: ColorScheme, extendedColors: ExtendedColors) {
+    private fun assertTheme(
+        read: Read,
+        colorScheme: ColorScheme,
+        extendedColors: ExtendedColors,
+    ) {
         assertSame(colorScheme, read.colorScheme)
         assertEquals(extendedColors, read.extendedColors)
         assertEquals(verbeClairShapes(), read.shapes)
@@ -71,9 +77,21 @@ class VerbeClairThemeTest {
             assertEquals(TypeTokens.BodyLarge.lineHeight, bodyLarge.lineHeight)
             // Every M3 slot, including the ones Figma does not define, uses a bundled font.
             listOf(
-                displayLarge, displayMedium, displaySmall, headlineLarge, headlineMedium, headlineSmall,
-                titleLarge, titleMedium, titleSmall, bodyLarge, bodyMedium, bodySmall,
-                labelLarge, labelMedium, labelSmall,
+                displayLarge,
+                displayMedium,
+                displaySmall,
+                headlineLarge,
+                headlineMedium,
+                headlineSmall,
+                titleLarge,
+                titleMedium,
+                titleSmall,
+                bodyLarge,
+                bodyMedium,
+                bodySmall,
+                labelLarge,
+                labelMedium,
+                labelSmall,
             ).forEach { style ->
                 assertNotNull(style.fontFamily)
                 assertNotEquals(FontFamily.Default, style.fontFamily)

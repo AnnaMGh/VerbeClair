@@ -23,17 +23,19 @@ class IosPlatformPaths : PlatformPaths {
 
 @OptIn(ExperimentalForeignApi::class)
 private fun directory(directory: NSSearchPathDirectory): String {
-    val url = NSFileManager.defaultManager.URLForDirectory(
-        directory = directory,
-        inDomain = NSUserDomainMask,
-        appropriateForURL = null,
-        create = true,
-        error = null,
-    )
+    val url =
+        NSFileManager.defaultManager.URLForDirectory(
+            directory = directory,
+            inDomain = NSUserDomainMask,
+            appropriateForURL = null,
+            create = true,
+            error = null,
+        )
     return requireNotNull(url?.path) { "Cannot resolve the iOS directory $directory" }
 }
 
-actual val platformModule: Module = module {
-    single<PlatformPaths> { IosPlatformPaths() }
-    single<ResourceFileOpener> { IosResourceFileOpener() }
-}
+actual val platformModule: Module =
+    module {
+        single<PlatformPaths> { IosPlatformPaths() }
+        single<ResourceFileOpener> { IosResourceFileOpener() }
+    }

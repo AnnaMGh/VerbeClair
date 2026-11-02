@@ -51,16 +51,17 @@ fun VerbeClairNavigationRail(
 ) {
     val colors = MaterialTheme.colorScheme
     Column(
-        modifier = modifier
-            .fillMaxHeight()
-            .flagRailBackground()
-            .endLine(colors.outlineVariant)
-            // The insets (a display cutout on the start side in landscape) widen the rail rather than narrowing
-            // its 80 dp item column, so labels never wrap.
-            .windowInsetsPadding(windowInsets)
-            .width(RailWidth)
-            .padding(contentPadding)
-            .selectableGroup(),
+        modifier =
+            modifier
+                .fillMaxHeight()
+                .flagRailBackground()
+                .endLine(colors.outlineVariant)
+                // The insets (a display cutout on the start side in landscape) widen the rail rather than narrowing
+                // its 80 dp item column, so labels never wrap.
+                .windowInsetsPadding(windowInsets)
+                .width(RailWidth)
+                .padding(contentPadding)
+                .selectableGroup(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(VerbeClairTheme.spacing.space16),
     ) {
@@ -71,13 +72,14 @@ fun VerbeClairNavigationRail(
                 onClick = { onSelect(destination) },
                 icon = { Icon(imageVector = destination.icon, contentDescription = null) },
                 label = { DestinationLabel(stringResource(destination.label), isSelected) },
-                colors = NavigationRailItemDefaults.colors(
-                    selectedIconColor = colors.onSecondaryContainer,
-                    selectedTextColor = colors.onSurface,
-                    indicatorColor = VerbeClairTheme.extendedColors.navigationIndicator,
-                    unselectedIconColor = colors.onSurfaceVariant,
-                    unselectedTextColor = colors.onSurfaceVariant,
-                ),
+                colors =
+                    NavigationRailItemDefaults.colors(
+                        selectedIconColor = colors.onSecondaryContainer,
+                        selectedTextColor = colors.onSurface,
+                        indicatorColor = VerbeClairTheme.extendedColors.navigationIndicator,
+                        unselectedIconColor = colors.onSurfaceVariant,
+                        unselectedTextColor = colors.onSurfaceVariant,
+                    ),
             )
         }
     }

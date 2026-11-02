@@ -32,23 +32,25 @@ data class VerbUi(
 /** A section of a grouped list (L-5), in display order. */
 data class VerbSection(val id: String, val title: StringResource)
 
-fun VerbListItem.toUi(score: Int? = null, isFavourite: Boolean = false) = VerbUi(
-    slug = slug,
-    infinitive = infinitive,
-    matchedForm = matchedForm,
-    meta = metaLabels(),
-    score = score,
-    isFavourite = isFavourite,
-)
+fun VerbListItem.toUi(score: Int? = null, isFavourite: Boolean = false) =
+    VerbUi(
+        slug = slug,
+        infinitive = infinitive,
+        matchedForm = matchedForm,
+        meta = metaLabels(),
+        score = score,
+        isFavourite = isFavourite,
+    )
 
 /** The meta line labels of the labels table (Notion section 6). */
 fun VerbListItem.metaLabels(): List<StringResource> =
     listOf(group.label(), auxiliary.label(), reflexiveLabel(reflexive), frequencyLabel(frequency))
 
 /** The section [this] verb belongs to for [groupBy], or null when the list is not grouped. */
-fun VerbListItem.section(groupBy: GroupBy): VerbSection? = when (groupBy) {
-    GroupBy.NONE -> null
-    GroupBy.GROUP -> VerbSection("group-${group.name}", group.label())
-    GroupBy.AUXILIARY -> VerbSection("auxiliary-${auxiliary.name}", auxiliary.label())
-    GroupBy.REFLEXIVE -> VerbSection("reflexive-$reflexive", reflexiveLabel(reflexive))
-}
+fun VerbListItem.section(groupBy: GroupBy): VerbSection? =
+    when (groupBy) {
+        GroupBy.NONE -> null
+        GroupBy.GROUP -> VerbSection("group-${group.name}", group.label())
+        GroupBy.AUXILIARY -> VerbSection("auxiliary-${auxiliary.name}", auxiliary.label())
+        GroupBy.REFLEXIVE -> VerbSection("reflexive-$reflexive", reflexiveLabel(reflexive))
+    }

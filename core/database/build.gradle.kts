@@ -7,6 +7,9 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    id("prism.ktlint")
+    id("prism.detekt")
+    id("prism.jacoco")
 }
 
 kotlin {
@@ -21,8 +24,14 @@ kotlin {
 
     android {
         namespace = "com.vamvisions.verbeclair.core.database"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
+        compileSdk =
+            libs.versions.android.compileSdk
+                .get()
+                .toInt()
+        minSdk =
+            libs.versions.android.minSdk
+                .get()
+                .toInt()
 
         compilerOptions {
             jvmTarget = JvmTarget.JVM_11
@@ -70,11 +79,20 @@ dependencies {
 private val datasetRepository = "AnnaMGh/VAMVisionsKMP"
 
 val pinnedDatasetVersion = providers.gradleProperty("frenchVerbsDataset.version")
-val datasetToken: Provider<String> = providers.fileContents(rootProject.layout.projectDirectory.file("local.properties"))
-    .asText
-    .map { text -> Properties().apply { load(text.reader()) }.getProperty(DownloadFrenchVerbsDatasetTask.DATASET_TOKEN_PROPERTY).orEmpty() }
-    .filter { it.isNotBlank() }
-    .orElse(providers.environmentVariable(DownloadFrenchVerbsDatasetTask.DATASET_TOKEN_VARIABLE))
+val datasetToken: Provider<String> =
+    providers
+        .fileContents(rootProject.layout.projectDirectory.file("local.properties"))
+        .asText
+        .map { text ->
+            Properties()
+                .apply {
+                    load(
+                        text.reader(),
+                    )
+                }.getProperty(DownloadFrenchVerbsDatasetTask.DATASET_TOKEN_PROPERTY)
+                .orEmpty()
+        }.filter { it.isNotBlank() }
+        .orElse(providers.environmentVariable(DownloadFrenchVerbsDatasetTask.DATASET_TOKEN_VARIABLE))
 
 val downloadFrenchVerbsDataset by tasks.registering(DownloadFrenchVerbsDatasetTask::class) {
     group = "verbeclair"
@@ -83,9 +101,11 @@ val downloadFrenchVerbsDataset by tasks.registering(DownloadFrenchVerbsDatasetTa
     sha256.set(providers.gradleProperty("frenchVerbsDataset.sha256"))
     repository.set(datasetRepository)
     token.set(datasetToken)
-    datasetFile.set(layout.buildDirectory.zip(pinnedDatasetVersion) { dir, version ->
-        dir.file("dataset/french-verbs-dataset-v$version.json.gz")
-    })
+    datasetFile.set(
+        layout.buildDirectory.zip(pinnedDatasetVersion) { dir, version ->
+            dir.file("dataset/french-verbs-dataset-v$version.json.gz")
+        },
+    )
 }
 
 // Output folder of buildBundledVerbDatabase: a Compose resources root, so the files land in `files/`.
@@ -102,9 +122,10 @@ val buildBundledVerbDatabase by tasks.registering(JavaExec::class) {
     val filesDir = bundledVerbDatabaseDir.map { it.dir("files") }
     inputs.file(dataset).withPropertyName("dataset").withPathSensitivity(PathSensitivity.NONE)
     outputs.dir(bundledVerbDatabaseDir).withPropertyName("bundledVerbDatabase")
-    argumentProviders += CommandLineArgumentProvider {
-        listOf(dataset.get().asFile.absolutePath, filesDir.get().asFile.absolutePath)
-    }
+    argumentProviders +=
+        CommandLineArgumentProvider {
+            listOf(dataset.get().asFile.absolutePath, filesDir.get().asFile.absolutePath)
+        }
 }
 
 // Consumed by :core:data, which packs the files as Compose resources (design D3).
@@ -117,7 +138,11 @@ artifacts.add(bundledVerbDatabaseElements.name, bundledVerbDatabaseDir) {
 }
 
 tasks.named<Test>("jvmTest") {
-    inputs.files(buildBundledVerbDatabase).withPropertyName("bundledVerbDatabase").withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs
+        .files(
+            buildBundledVerbDatabase,
+        ).withPropertyName("bundledVerbDatabase")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
     val filesDir = bundledVerbDatabaseDir.map { it.dir("files").asFile.absolutePath }
     jvmArgumentProviders += CommandLineArgumentProvider { listOf("-DbundledVerbDatabaseDir=${filesDir.get()}") }
 }

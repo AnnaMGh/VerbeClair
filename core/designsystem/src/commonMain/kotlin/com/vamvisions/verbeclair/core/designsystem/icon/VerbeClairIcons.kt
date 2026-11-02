@@ -362,6 +362,7 @@ object VerbeClairIcons {
             "M15.5 15.5L12.5 18.5",
         )
     }
+
     /** Every icon keyed by its Figma symbol name, in Figma order. */
     val all: Map<String, ImageVector> by lazy {
         linkedMapOf(
@@ -408,22 +409,27 @@ object VerbeClairIcons {
     }
 }
 
-private fun icon(name: String, filled: Boolean, vararg pathData: String): ImageVector =
-    ImageVector.Builder(
-        name = name,
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f,
-    ).apply {
-        pathData.forEach { d ->
-            addPath(
-                pathData = addPathNodes(d),
-                fill = if (filled) SolidColor(Color.Black) else null,
-                stroke = SolidColor(Color.Black),
-                strokeLineWidth = 2f,
-                strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round,
-            )
-        }
-    }.build()
+private fun icon(
+    name: String,
+    filled: Boolean,
+    vararg pathData: String,
+): ImageVector =
+    ImageVector
+        .Builder(
+            name = name,
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f,
+        ).apply {
+            pathData.forEach { d ->
+                addPath(
+                    pathData = addPathNodes(d),
+                    fill = if (filled) SolidColor(Color.Black) else null,
+                    stroke = SolidColor(Color.Black),
+                    strokeLineWidth = 2f,
+                    strokeLineCap = StrokeCap.Round,
+                    strokeLineJoin = StrokeJoin.Round,
+                )
+            }
+        }.build()

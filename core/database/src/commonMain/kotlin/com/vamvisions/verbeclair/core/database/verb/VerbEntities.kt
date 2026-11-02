@@ -105,6 +105,7 @@ object MetadataKeys {
     const val LAST_UPDATED_AT = "lastUpdatedAt"
     const val SCHEMA_VERSION = "schemaVersion"
     const val BUNDLE_BUILD = "bundleBuild"
+
     /** The sync checkpoint (SY-2). After a bundled install it is the bundled `lastUpdatedAt` (A-1). */
     const val CHECKPOINT = "checkpoint"
 }

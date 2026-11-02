@@ -8,9 +8,10 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 
 internal val LocalExtendedColors = staticCompositionLocalOf { LightExtendedColors }
-internal val LocalExtendedTypography = staticCompositionLocalOf<ExtendedTypography> {
-    error("No ExtendedTypography provided; wrap the content in VerbeClairTheme")
-}
+internal val LocalExtendedTypography =
+    staticCompositionLocalOf<ExtendedTypography> {
+        error("No ExtendedTypography provided; wrap the content in VerbeClairTheme")
+    }
 internal val LocalSpacing = staticCompositionLocalOf { Spacing() }
 internal val LocalRadius = staticCompositionLocalOf { Radius() }
 internal val LocalElevation = staticCompositionLocalOf { Elevation() }
@@ -21,10 +22,7 @@ internal val LocalFlagOpacity = staticCompositionLocalOf { FLAG_OPACITY }
  * plus the VerbeClair-only tokens read through [VerbeClairTheme].
  */
 @Composable
-fun VerbeClairTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit,
-) {
+fun VerbeClairTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val radius = Radius()
     CompositionLocalProvider(
         LocalExtendedColors provides if (darkTheme) DarkExtendedColors else LightExtendedColors,
@@ -45,15 +43,21 @@ fun VerbeClairTheme(
 
 object VerbeClairTheme {
     val extendedColors: ExtendedColors
-        @Composable @ReadOnlyComposable get() = LocalExtendedColors.current
+        @Composable @ReadOnlyComposable
+        get() = LocalExtendedColors.current
     val typography: ExtendedTypography
-        @Composable @ReadOnlyComposable get() = LocalExtendedTypography.current
+        @Composable @ReadOnlyComposable
+        get() = LocalExtendedTypography.current
     val spacing: Spacing
-        @Composable @ReadOnlyComposable get() = LocalSpacing.current
+        @Composable @ReadOnlyComposable
+        get() = LocalSpacing.current
     val radius: Radius
-        @Composable @ReadOnlyComposable get() = LocalRadius.current
+        @Composable @ReadOnlyComposable
+        get() = LocalRadius.current
     val elevation: Elevation
-        @Composable @ReadOnlyComposable get() = LocalElevation.current
+        @Composable @ReadOnlyComposable
+        get() = LocalElevation.current
     val flagOpacity: Float
-        @Composable @ReadOnlyComposable get() = LocalFlagOpacity.current
+        @Composable @ReadOnlyComposable
+        get() = LocalFlagOpacity.current
 }

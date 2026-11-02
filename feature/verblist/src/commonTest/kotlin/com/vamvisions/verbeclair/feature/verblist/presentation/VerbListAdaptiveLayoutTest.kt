@@ -21,7 +21,11 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalTestApi::class)
 class VerbListAdaptiveLayoutTest {
 
-    private fun ComposeUiTest.showLandscape(state: VerbListState, rows: List<VerbListRowUi>, width: Dp = 772.dp) {
+    private fun ComposeUiTest.showLandscape(
+        state: VerbListState,
+        rows: List<VerbListRowUi>,
+        width: Dp = 772.dp,
+    ) {
         setContent {
             VerbeClairTheme {
                 // 852 × 393 dp minus the 80 dp rail drawn by the app shell.
@@ -40,51 +44,64 @@ class VerbListAdaptiveLayoutTest {
     }
 
     @Test
-    fun cellsFlowInTwoColumns() = runComposeUiTest {
-        showLandscape(VerbListState(), PreviewData.default)
+    fun cellsFlowInTwoColumns() =
+        runComposeUiTest {
+            showLandscape(VerbListState(), PreviewData.default)
 
-        val first = onNodeWithText("abaisser").getBoundsInRoot()
-        val second = onNodeWithText("abandonner").getBoundsInRoot()
-        val third = onNodeWithText("abattre").getBoundsInRoot()
+            val first = onNodeWithText("abaisser").getBoundsInRoot()
+            val second = onNodeWithText("abandonner").getBoundsInRoot()
+            val third = onNodeWithText("abattre").getBoundsInRoot()
 
-        assertTrue(abs((first.top - second.top).value) < 1f, "abaisser and abandonner share a row")
-        // Bounds are relative to the window; the forced 772 dp area may be offset in a narrower one.
-        assertTrue(abs((second.left - first.left - 772.dp / 2).value) < 1f, "abandonner starts the second column")
-        assertTrue(third.top > first.top && abs((third.left - first.left).value) < 1f, "abattre starts the next row")
-    }
+            assertTrue(abs((first.top - second.top).value) < 1f, "abaisser and abandonner share a row")
+            // Bounds are relative to the window; the forced 772 dp area may be offset in a narrower one.
+            assertTrue(abs((second.left - first.left - 772.dp / 2).value) < 1f, "abandonner starts the second column")
+            assertTrue(
+                third.top > first.top && abs((third.left - first.left).value) < 1f,
+                "abattre starts the next row",
+            )
+        }
 
     @Test
-    fun sectionHeaderSpansBothColumns() = runComposeUiTest {
-        showLandscape(VerbListState(choices = PreviewData.groupedChoices), PreviewData.grouped)
+    fun sectionHeaderSpansBothColumns() =
+        runComposeUiTest {
+            showLandscape(VerbListState(choices = PreviewData.groupedChoices), PreviewData.grouped)
 
-        val header = onNodeWithTag(VerbListTestTags.sectionHeader("group-I")).getBoundsInRoot()
+            val header = onNodeWithTag(VerbListTestTags.sectionHeader("group-I")).getBoundsInRoot()
 
-        assertTrue(abs((header.right - header.left - 772.dp).value) < 1f, "Header width ${header.right - header.left}")
-        onNodeWithText("search a verb…", ignoreCase = true).assertExists()
-        onNodeWithText("All").assertExists()
-    }
+            assertTrue(
+                abs((header.right - header.left - 772.dp).value) < 1f,
+                "Header width ${header.right - header.left}",
+            )
+            onNodeWithText("search a verb…", ignoreCase = true).assertExists()
+            onNodeWithText("All").assertExists()
+        }
 
     /** Figma PL-01 (87:9557): search, then the 272 dp tabs, in one row above the list. */
     @Test
-    fun searchAndTabsShareTheTopRow() = runComposeUiTest {
-        showLandscape(VerbListState(), PreviewData.default)
+    fun searchAndTabsShareTheTopRow() =
+        runComposeUiTest {
+            showLandscape(VerbListState(), PreviewData.default)
 
-        val search = onNodeWithText("search a verb…", ignoreCase = true, useUnmergedTree = true).getBoundsInRoot()
-        val all = onNodeWithText("All").getBoundsInRoot()
+            val search = onNodeWithText("search a verb…", ignoreCase = true, useUnmergedTree = true).getBoundsInRoot()
+            val all = onNodeWithText("All").getBoundsInRoot()
 
-        assertTrue(all.top < search.bottom && search.top < all.bottom, "search $search and tabs $all overlap vertically")
-        assertTrue(all.left > search.right, "tabs follow the search")
-        assertTrue(abs((all.right - all.left - 272.dp / 2).value) < 1f, "Tab width ${all.right - all.left}")
-    }
+            assertTrue(
+                all.top < search.bottom && search.top < all.bottom,
+                "search $search and tabs $all overlap vertically",
+            )
+            assertTrue(all.left > search.right, "tabs follow the search")
+            assertTrue(abs((all.right - all.left - 272.dp / 2).value) < 1f, "Tab width ${all.right - all.left}")
+        }
 
     /** Figma PL-01 (87:9641): every cell of a line has the two-line height, so both columns' dividers line up. */
     @Test
-    fun oneLineCellsTakeTheTwoLineHeight() = runComposeUiTest {
-        // Wide enough that every meta line fits on one line, so only the two-line minimum sets the height.
-        showLandscape(VerbListState(), PreviewData.default, width = 1600.dp)
+    fun oneLineCellsTakeTheTwoLineHeight() =
+        runComposeUiTest {
+            // Wide enough that every meta line fits on one line, so only the two-line minimum sets the height.
+            showLandscape(VerbListState(), PreviewData.default, width = 1600.dp)
 
-        val cell = onNodeWithText("abaisser").getBoundsInRoot()
+            val cell = onNodeWithText("abaisser").getBoundsInRoot()
 
-        assertTrue(cell.bottom - cell.top >= 90.dp, "Cell height ${cell.bottom - cell.top}")
-    }
+            assertTrue(cell.bottom - cell.top >= 90.dp, "Cell height ${cell.bottom - cell.top}")
+        }
 }

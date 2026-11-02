@@ -24,56 +24,72 @@ import kotlin.test.assertTrue
 
 /** Checks the output of `buildBundledVerbDatabase` (design D3), which Gradle runs before this test. */
 class BundledVerbDatabaseTest {
-    private val filesDir = File(requireNotNull(System.getProperty("bundledVerbDatabaseDir")) {
-        "bundledVerbDatabaseDir is not set; run the test through Gradle's jvmTest task"
-    })
+    private val filesDir =
+        File(
+            requireNotNull(System.getProperty("bundledVerbDatabaseDir")) {
+                "bundledVerbDatabaseDir is not set; run the test through Gradle's jvmTest task"
+            },
+        )
 
     /** The shipped gzip, decompressed to a temporary file. */
-    private val databaseFile: File = File.createTempFile("verbs", ".db").also { copy ->
-        copy.deleteOnExit()
-        GZIPInputStream(File(filesDir, BundledFiles.COMPRESSED_DATABASE).inputStream().buffered()).use { gzip ->
-            copy.outputStream().use { gzip.copyTo(it) }
-        }
-    }
-
-    @Test
-    fun holdsEveryVerbOfDatasetV3() = runTest {
-        val database = Room.databaseBuilder<VerbDatabase>(name = databaseFile.absolutePath)
-            .setDriver(BundledSQLiteDriver())
-            .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
-            .setQueryCoroutineContext(Dispatchers.IO)
-            .build()
-        try {
-            assertEquals(7_092, database.verbDao().count())
-            val metadata = database.metadataDao()
-            assertEquals("2026-10-08T09:26:22Z", metadata.get(MetadataKeys.LAST_UPDATED_AT))
-            assertEquals(VERB_SCHEMA_VERSION.toString(), metadata.get(MetadataKeys.SCHEMA_VERSION))
-            assertEquals(BUNDLE_BUILD.toString(), metadata.get(MetadataKeys.BUNDLE_BUILD))
-            assertEquals("2026-10-08T09:26:22Z", metadata.get(MetadataKeys.CHECKPOINT))
-        } finally {
-            database.close()
-        }
-    }
-
-    @Test
-    fun schemaIdentityMatchesTheRuntimeDatabase() = runTest {
-        val bundledHash = BundledSQLiteDriver().open(databaseFile.absolutePath).use { it.identityHash() }
-        val runtime = inMemoryVerbDatabase()
-        val runtimeHash = try {
-            runtime.verbDao().count() // opens the database, which writes Room's identity hash
-            runtime.useReaderConnection { connection ->
-                connection.usePrepared(IDENTITY_HASH_QUERY) { it.step(); it.getText(0) }
+    private val databaseFile: File =
+        File.createTempFile("verbs", ".db").also { copy ->
+            copy.deleteOnExit()
+            GZIPInputStream(File(filesDir, BundledFiles.COMPRESSED_DATABASE).inputStream().buffered()).use { gzip ->
+                copy.outputStream().use { gzip.copyTo(it) }
             }
-        } finally {
-            runtime.close()
         }
-        assertEquals(runtimeHash, bundledHash)
-    }
+
+    @Test
+    fun holdsEveryVerbOfDatasetV3() =
+        runTest {
+            val database =
+                Room
+                    .databaseBuilder<VerbDatabase>(name = databaseFile.absolutePath)
+                    .setDriver(BundledSQLiteDriver())
+                    .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
+                    .setQueryCoroutineContext(Dispatchers.IO)
+                    .build()
+            try {
+                assertEquals(7_092, database.verbDao().count())
+                val metadata = database.metadataDao()
+                assertEquals("2026-10-08T09:26:22Z", metadata.get(MetadataKeys.LAST_UPDATED_AT))
+                assertEquals(VERB_SCHEMA_VERSION.toString(), metadata.get(MetadataKeys.SCHEMA_VERSION))
+                assertEquals(BUNDLE_BUILD.toString(), metadata.get(MetadataKeys.BUNDLE_BUILD))
+                assertEquals("2026-10-08T09:26:22Z", metadata.get(MetadataKeys.CHECKPOINT))
+            } finally {
+                database.close()
+            }
+        }
+
+    @Test
+    fun schemaIdentityMatchesTheRuntimeDatabase() =
+        runTest {
+            val bundledHash = BundledSQLiteDriver().open(databaseFile.absolutePath).use { it.identityHash() }
+            val runtime = inMemoryVerbDatabase()
+            val runtimeHash =
+                try {
+                    runtime.verbDao().count() // opens the database, which writes Room's identity hash
+                    runtime.useReaderConnection { connection ->
+                        connection.usePrepared(IDENTITY_HASH_QUERY) {
+                            it.step()
+                            it.getText(0)
+                        }
+                    }
+                } finally {
+                    runtime.close()
+                }
+            assertEquals(runtimeHash, bundledHash)
+        }
 
     /** The builder vacuums the database before compressing it (D3), so vacuuming it again saves nothing. */
     @Test
     fun shippedDatabaseIsVacuumed() {
-        val vacuumed = File.createTempFile("verbs-vacuumed", ".db").apply { delete(); deleteOnExit() }
+        val vacuumed =
+            File.createTempFile("verbs-vacuumed", ".db").apply {
+                delete()
+                deleteOnExit()
+            }
         BundledSQLiteDriver().open(databaseFile.absolutePath).use { connection ->
             connection.execSQL("VACUUM INTO '${vacuumed.absolutePath}'")
         }
@@ -97,7 +113,10 @@ class BundledVerbDatabaseTest {
     }
 
     private fun SQLiteConnection.identityHash(): String =
-        prepare(IDENTITY_HASH_QUERY).use { it.step(); it.getText(0) }
+        prepare(IDENTITY_HASH_QUERY).use {
+            it.step()
+            it.getText(0)
+        }
 
     private companion object {
         const val IDENTITY_HASH_QUERY = "SELECT identity_hash FROM room_master_table"

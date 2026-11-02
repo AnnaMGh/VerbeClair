@@ -15,7 +15,8 @@ class AndroidPlatformPaths(context: Context) : PlatformPaths {
         File(context.filesDir, "datastore/$DATA_STORE_FILE_NAME").absolutePath
 }
 
-actual val platformModule: Module = module {
-    single<PlatformPaths> { AndroidPlatformPaths(androidContext()) }
-    single<ResourceFileOpener> { AndroidResourceFileOpener(androidContext()) }
-}
+actual val platformModule: Module =
+    module {
+        single<PlatformPaths> { AndroidPlatformPaths(androidContext()) }
+        single<ResourceFileOpener> { AndroidResourceFileOpener(androidContext()) }
+    }

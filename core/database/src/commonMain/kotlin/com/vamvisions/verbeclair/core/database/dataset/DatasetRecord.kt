@@ -39,10 +39,18 @@ data class VerbDetailsRecord(
 data class SynonymRecord(val slug: String, val infinitive: String)
 
 @Serializable
-data class MoodRecord(val code: String, val name: String, val tense: List<TenseRecord>)
+data class MoodRecord(
+    val code: String,
+    val name: String,
+    val tense: List<TenseRecord>,
+)
 
 @Serializable
-data class TenseRecord(val code: String, val name: String, val form: List<FormRecord>)
+data class TenseRecord(
+    val code: String,
+    val name: String,
+    val form: List<FormRecord>,
+)
 
 /** All twelve keys are always present in the API; a part that doesn't apply is null. */
 @Serializable

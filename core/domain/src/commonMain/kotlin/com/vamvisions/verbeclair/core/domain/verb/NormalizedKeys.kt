@@ -28,14 +28,15 @@ fun sortKey(infinitive: String): String {
     }
 }
 
-private val FOLDED: Map<Char, Char> = buildMap {
-    "àâäáãå".forEach { put(it, 'a') }
-    "éèêë".forEach { put(it, 'e') }
-    "îïíì".forEach { put(it, 'i') }
-    "ôöóòõ".forEach { put(it, 'o') }
-    "ùûüú".forEach { put(it, 'u') }
-    "ÿý".forEach { put(it, 'y') }
-    put('ç', 'c')
-    put('ñ', 'n')
-    put('’', '\'')
-}
+private val FOLDED: Map<Char, Char> =
+    buildMap {
+        "àâäáãå".forEach { put(it, 'a') }
+        "éèêë".forEach { put(it, 'e') }
+        "îïíì".forEach { put(it, 'i') }
+        "ôöóòõ".forEach { put(it, 'o') }
+        "ùûüú".forEach { put(it, 'u') }
+        "ÿý".forEach { put(it, 'y') }
+        put('ç', 'c')
+        put('ñ', 'n')
+        put('’', '\'')
+    }

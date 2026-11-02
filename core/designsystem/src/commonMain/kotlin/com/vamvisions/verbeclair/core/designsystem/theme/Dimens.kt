@@ -33,13 +33,14 @@ data class Radius(
     val full: RoundedCornerShape = RoundedCornerShape(percent = 50),
 )
 
-internal fun verbeClairShapes(radius: Radius = Radius()) = Shapes(
-    extraSmall = RoundedCornerShape(radius.xs),
-    small = RoundedCornerShape(radius.sm),
-    medium = RoundedCornerShape(radius.md),
-    large = RoundedCornerShape(radius.lg),
-    extraLarge = RoundedCornerShape(radius.xl),
-)
+internal fun verbeClairShapes(radius: Radius = Radius()) =
+    Shapes(
+        extraSmall = RoundedCornerShape(radius.xs),
+        small = RoundedCornerShape(radius.sm),
+        medium = RoundedCornerShape(radius.md),
+        large = RoundedCornerShape(radius.lg),
+        extraLarge = RoundedCornerShape(radius.xl),
+    )
 
 /** One drop shadow of a Figma effect style. */
 @Immutable
@@ -52,10 +53,11 @@ data class ShadowSpec(
 /** Figma effect style `Elevation/Level 2`: two drop shadows on #0D0F33. */
 @Immutable
 data class Elevation(
-    val level2: List<ShadowSpec> = listOf(
-        ShadowSpec(offset = DpOffset(0.dp, 2.dp), blur = 6.dp, color = Color(0x1F0D0F33)),
-        ShadowSpec(offset = DpOffset(0.dp, 8.dp), blur = 24.dp, color = Color(0x1A0D0F33)),
-    ),
+    val level2: List<ShadowSpec> =
+        listOf(
+            ShadowSpec(offset = DpOffset(0.dp, 2.dp), blur = 6.dp, color = Color(0x1F0D0F33)),
+            ShadowSpec(offset = DpOffset(0.dp, 8.dp), blur = 24.dp, color = Color(0x1A0D0F33)),
+        ),
 )
 
 /** Figma variable `opacity/flag` (12) and Notion N-14: opacity of the flag background. */

@@ -20,11 +20,12 @@ enum class WindowLayout {
 }
 
 /** The [WindowLayout] of a window in [sizeClass]. */
-fun windowLayoutOf(sizeClass: WindowSizeClass): WindowLayout = when {
-    !sizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND) -> WindowLayout.Compact
-    !sizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_MEDIUM_LOWER_BOUND) -> WindowLayout.PhoneLandscape
-    else -> WindowLayout.ListDetail
-}
+fun windowLayoutOf(sizeClass: WindowSizeClass): WindowLayout =
+    when {
+        !sizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND) -> WindowLayout.Compact
+        !sizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_MEDIUM_LOWER_BOUND) -> WindowLayout.PhoneLandscape
+        else -> WindowLayout.ListDetail
+    }
 
 /** The [WindowLayout] of the current window; it changes when the window is rotated or resized. */
 @Composable

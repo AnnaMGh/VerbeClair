@@ -28,6 +28,7 @@ import kotlinx.serialization.json.Json
 @ConstructedBy(UserDatabaseConstructor::class)
 abstract class UserDatabase : RoomDatabase() {
     abstract fun favouriteDao(): FavouriteDao
+
     abstract fun attemptDao(): AttemptDao
 }
 

@@ -30,18 +30,19 @@ class BundledVerbDatabaseInstaller(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     /** Returns `true` when the bundled database was installed, `false` when the local one was kept. */
-    suspend fun installIfNeeded(): Boolean = withContext(ioDispatcher) {
-        val target = paths.verbDatabaseFile.toPath()
-        val temporary = "${paths.verbDatabaseFile}$TEMPORARY_SUFFIX".toPath()
-        // A copy cut short by a killed app is never resumed: it is redone from the start.
-        fileSystem.delete(temporary)
+    suspend fun installIfNeeded(): Boolean =
+        withContext(ioDispatcher) {
+            val target = paths.verbDatabaseFile.toPath()
+            val temporary = "${paths.verbDatabaseFile}$TEMPORARY_SUFFIX".toPath()
+            // A copy cut short by a killed app is never resumed: it is redone from the start.
+            fileSystem.delete(temporary)
 
-        val bundled = bundle.metadata()
-        if (!shouldInstall(bundled, readLocalMetadata(target))) return@withContext false
+            val bundled = bundle.metadata()
+            if (!shouldInstall(bundled, readLocalMetadata(target))) return@withContext false
 
-        install(target, temporary)
-        true
-    }
+            install(target, temporary)
+            true
+        }
 
     private fun install(target: Path, temporary: Path) {
         target.parent?.let(fileSystem::createDirectories)
@@ -104,11 +105,12 @@ internal fun shouldInstall(bundled: BundledMetadata, local: LocalMetadata?): Boo
 
 // Compared as instants, not strings: "…22.5Z" sorts before "…22Z" as text.
 @OptIn(ExperimentalTime::class)
-private fun String.toInstantOrNull(): Instant? = try {
-    Instant.parse(this)
-} catch (_: IllegalArgumentException) {
-    null
-}
+private fun String.toInstantOrNull(): Instant? =
+    try {
+        Instant.parse(this)
+    } catch (_: IllegalArgumentException) {
+        null
+    }
 
 /** Forces the file's bytes to storage before it is renamed into place. */
 internal expect fun syncFile(path: Path)

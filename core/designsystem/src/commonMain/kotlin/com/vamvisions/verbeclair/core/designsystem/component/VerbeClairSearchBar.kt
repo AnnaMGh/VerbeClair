@@ -56,12 +56,13 @@ fun VerbeClairSearchBar(
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         decorationBox = { innerTextField ->
             Row(
-                modifier = Modifier
-                    .background(colors.surfaceContainerHigh, VerbeClairTheme.radius.full)
-                    .heightIn(min = SearchBarHeight)
-                    // Filled: the 48 dp clear button keeps its icon 12 dp from the end, where Figma puts it
-                    // (a 40 dp button inside 4 dp of padding).
-                    .padding(start = spacing.space16, end = if (isEmpty) spacing.space16 else 0.dp),
+                modifier =
+                    Modifier
+                        .background(colors.surfaceContainerHigh, VerbeClairTheme.radius.full)
+                        .heightIn(min = SearchBarHeight)
+                        // Filled: the 48 dp clear button keeps its icon 12 dp from the end, where Figma puts it
+                        // (a 40 dp button inside 4 dp of padding).
+                        .padding(start = spacing.space16, end = if (isEmpty) spacing.space16 else 0.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(spacing.space12),
             ) {

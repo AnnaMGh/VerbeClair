@@ -47,7 +47,12 @@ internal object TypeTokens {
     const val FRAUNCES_SOFT = 0f
     const val DM_SANS_OPTICAL_SIZE = 14f
 
-    private fun style(weight: FontWeight, size: Int, lineHeight: Int, letterSpacing: Float) = TextStyle(
+    private fun style(
+        weight: FontWeight,
+        size: Int,
+        lineHeight: Int,
+        letterSpacing: Float,
+    ) = TextStyle(
         fontWeight = weight,
         fontSize = size.sp,
         lineHeight = lineHeight.sp,
@@ -63,30 +68,33 @@ private fun frauncesFamily(style: TextStyle): FontFamily {
         Font(
             resource = Res.font.fraunces_variable,
             weight = weight,
-            variationSettings = FontVariation.Settings(
-                FontVariation.weight(weight.weight),
-                FontVariation.Setting("opsz", style.fontSize.value),
-                FontVariation.Setting("WONK", TypeTokens.FRAUNCES_WONK),
-                FontVariation.Setting("SOFT", TypeTokens.FRAUNCES_SOFT),
-            ),
+            variationSettings =
+                FontVariation.Settings(
+                    FontVariation.weight(weight.weight),
+                    FontVariation.Setting("opsz", style.fontSize.value),
+                    FontVariation.Setting("WONK", TypeTokens.FRAUNCES_WONK),
+                    FontVariation.Setting("SOFT", TypeTokens.FRAUNCES_SOFT),
+                ),
         ),
     )
 }
 
 @OptIn(ExperimentalTextApi::class)
 @Composable
-private fun dmSansFamily(): FontFamily = FontFamily(
-    listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold).map { weight ->
-        Font(
-            resource = Res.font.dmsans_variable,
-            weight = weight,
-            variationSettings = FontVariation.Settings(
-                FontVariation.weight(weight.weight),
-                FontVariation.Setting("opsz", TypeTokens.DM_SANS_OPTICAL_SIZE),
-            ),
-        )
-    },
-)
+private fun dmSansFamily(): FontFamily =
+    FontFamily(
+        listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold).map { weight ->
+            Font(
+                resource = Res.font.dmsans_variable,
+                weight = weight,
+                variationSettings =
+                    FontVariation.Settings(
+                        FontVariation.weight(weight.weight),
+                        FontVariation.Setting("opsz", TypeTokens.DM_SANS_OPTICAL_SIZE),
+                    ),
+            )
+        },
+    )
 
 /** The M3 [Typography]; slots Figma does not define keep the M3 defaults in DM Sans. */
 @Composable

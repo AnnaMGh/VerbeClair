@@ -1,0 +1,2 @@
+<?xml version="1.0" ?>
+<SmellBaseline><ManuallySuppressedIssues /><CurrentIssues><ID>ClassBodyMissingLeadingBlankLine:MainActivity.kt:MainActivity$override fun onCreate</ID><ID>ClassBodyMissingLeadingBlankLine:VerbeClairApplication.kt:VerbeClairApplication$override fun onCreate</ID></CurrentIssues></SmellBaseline>

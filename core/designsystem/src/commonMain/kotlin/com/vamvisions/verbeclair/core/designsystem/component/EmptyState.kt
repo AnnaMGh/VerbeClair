@@ -47,10 +47,11 @@ fun EmptyState(
 ) {
     val colors = MaterialTheme.colorScheme
     val spacing = VerbeClairTheme.spacing
-    val (circleColor, iconColor) = when (tone) {
-        EmptyStateTone.Neutral -> colors.primaryContainer to colors.onPrimaryContainer
-        EmptyStateTone.Error -> colors.errorContainer to colors.onErrorContainer
-    }
+    val (circleColor, iconColor) =
+        when (tone) {
+            EmptyStateTone.Neutral -> colors.primaryContainer to colors.onPrimaryContainer
+            EmptyStateTone.Error -> colors.errorContainer to colors.onErrorContainer
+        }
     Column(
         modifier = modifier.padding(spacing.space24),
         horizontalAlignment = Alignment.CenterHorizontally,

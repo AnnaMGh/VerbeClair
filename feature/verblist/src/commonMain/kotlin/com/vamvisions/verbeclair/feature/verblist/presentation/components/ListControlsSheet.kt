@@ -180,8 +180,19 @@ private fun Overline(text: String) {
 @Composable
 private fun ChipField(label: String, chips: @Composable () -> Unit) {
     val spacing = VerbeClairTheme.spacing
-    Column(modifier = Modifier.fillMaxWidth().padding(start = spacing.space24, end = spacing.space24, top = spacing.space8)) {
-        Text(text = label, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Column(
+        modifier =
+            Modifier.fillMaxWidth().padding(
+                start = spacing.space24,
+                end = spacing.space24,
+                top = spacing.space8,
+            ),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(spacing.space8)) { chips() }
     }
 }

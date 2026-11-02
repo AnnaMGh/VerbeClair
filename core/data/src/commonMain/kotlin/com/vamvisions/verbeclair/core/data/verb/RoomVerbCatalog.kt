@@ -25,14 +25,15 @@ class RoomVerbCatalog(private val database: suspend () -> VerbDatabase) : VerbCa
 
     constructor(database: VerbDatabase) : this({ database })
 
-    override fun pagedList(query: ListQuery): Flow<PagingData<VerbListItem>> = flow {
-        val dao = database().verbDao()
-        emitAll(
-            Pager(PagingConfig(pageSize = PAGE_SIZE, enablePlaceholders = false)) {
-                dao.pagedList(ListQueryBuilder.build(query))
-            }.flow,
-        )
-    }.map { page -> page.map { it.toListItem() } }
+    override fun pagedList(query: ListQuery): Flow<PagingData<VerbListItem>> =
+        flow {
+            val dao = database().verbDao()
+            emitAll(
+                Pager(PagingConfig(pageSize = PAGE_SIZE, enablePlaceholders = false)) {
+                    dao.pagedList(ListQueryBuilder.build(query))
+                }.flow,
+            )
+        }.map { page -> page.map { it.toListItem() } }
 
     override fun isEmpty(): Flow<Boolean> = flow { emitAll(database().verbDao().observeIsEmpty()) }
 
@@ -48,12 +49,13 @@ class RoomVerbCatalog(private val database: suspend () -> VerbDatabase) : VerbCa
     }
 }
 
-internal fun VerbRow.toListItem() = VerbListItem(
-    slug = slug,
-    infinitive = infinitive,
-    group = VerbGroup.valueOf(group),
-    reflexive = reflexive,
-    auxiliary = Auxiliary.valueOf(auxiliary),
-    frequency = frequency,
-    matchedForm = matchedForm,
-)
+internal fun VerbRow.toListItem() =
+    VerbListItem(
+        slug = slug,
+        infinitive = infinitive,
+        group = VerbGroup.valueOf(group),
+        reflexive = reflexive,
+        auxiliary = Auxiliary.valueOf(auxiliary),
+        frequency = frequency,
+        matchedForm = matchedForm,
+    )
