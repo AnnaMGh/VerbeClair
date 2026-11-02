@@ -28,7 +28,7 @@
 - [ ] 5.5 Check drafts. Verify: with the PR converted to draft, a push skips the three jobs; marking it ready starts a full run.
 - [ ] 5.6 Check the cache fits. Verify: after a re-run of the PR, `gh cache list` shows the Gradle caches of the PR, the AVD snapshot and `~/.konan` together under 10 GB, and the re-run restores the Gradle cache.
 
-- [x] 5.7 Change the gate to look at the pushed commits and to require a green previous head (design D8, safety check): add `scripts/ci/previous-head-green.sh`, its cases in `scripts/ci/changed-code-test.sh`, and the `changes` job steps. Verify: `bash scripts/ci/changed-code-test.sh` passes, `actionlint` is clean, and the script answers `true` for the check runs of `bc34661`, `5191bf4` and `f7dc0e5` and `false` for `7df130f` and `317b3ad` (done locally 2026-11-02).
+- [x] 5.7 Change the gate to look at the pushed commits and to require a green previous head (design D8, safety check): add `scripts/ci/previous-head-green.sh`, its cases in `scripts/ci/changed-code-test.sh`, and the `changes` job steps. Verify: `bash scripts/ci/changed-code-test.sh` passes, `actionlint` is clean, and the script answers `true` for the check runs of `bc34661`, `5191bf4` and `f7dc0e5` and `false` for `7df130f` and `317b3ad` (done locally 2026-11-02). On run 41417540143 (`edcae3f`) the `changes` log showed `ACTION: synchronize`, `BEFORE` = the previous head and `code=true`, and all three jobs went green.
 - [ ] 5.8 Check a docs-only commit after a failing head runs everything. Verify: when the previous head's run was cancelled or failed, the next `openspec/`-only commit runs all three jobs and the log shows `previous head ... green: false`.
 
 ## 4. Done gate
