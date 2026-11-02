@@ -23,6 +23,9 @@ jobs:
     name: Changes
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      checks: read
     outputs:
       run: ${{ steps.gate.outputs.run }}
     steps:
@@ -30,15 +33,31 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Only the commits pushed since the previous head are looked at, and only when that head's three jobs passed
+      # (or were skipped). Otherwise a docs-only commit after a broken one would show green on broken code.
+      # A new, reopened or ready-for-review pull request always runs.
       - id: code
         name: Detect code changes
         env:
           EVENT: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
           BEFORE: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          # The checkout of a pull request is its merge commit, whose first parent is the base branch tip.
-          if [ "$EVENT" = pull_request ]; then base=HEAD^1; else base="$BEFORE"; fi
-          scripts/ci/changed-code.sh "$base" | tee -a "$GITHUB_OUTPUT"
+          code=true
+          if [ "$EVENT" = push ] || [ "$ACTION" = synchronize ]; then
+            code=$(scripts/ci/changed-code.sh "$BEFORE" "$HEAD_SHA")
+            code=${code#code=}
+            if [ "$code" = false ]; then
+              green=$(gh api "repos/$REPO/commits/$BEFORE/check-runs?per_page=100" 2>/dev/null \
+                | scripts/ci/previous-head-green.sh || echo false)
+              echo "previous head $BEFORE green: $green"
+              [ "$green" = true ] || code=true
+            fi
+          fi
+          echo "code=$code" | tee -a "$GITHUB_OUTPUT"
 
       - id: gate
         name: Decide

@@ -88,12 +88,21 @@ The 2026-10-28 billing showed 436 Linux and 73 macOS minutes in one day: $2.62 a
 macOS job was about 63% of the cost with 14% of the minutes. The free allowance (about 2,000 Linux minutes, applied as
 a dollar credit) ran out and later jobs failed to start with a payment error. The workflow therefore avoids paying for
 runs that prove nothing:
-- **`changes` job.** A cheap Linux job runs `scripts/ci/changed-code.sh`, which diffs the pull request's merge commit
-  against its base (or a push against its previous head) and answers `code=true|false`. Only `openspec/`, `.claude/`,
+- **`changes` job.** A cheap Linux job (permissions `contents: read` and `checks: read`) runs
+  `scripts/ci/changed-code.sh`, which diffs the commits just pushed (`github.event.before` to the new head, for a push
+  to `dev` or a pull request update) and answers `code=true|false`. It must not diff the whole pull request against its
+  base: a pull request that contains any code change would then never skip (found on 2026-11-01, run 41286493831).
+  A new, reopened or ready-for-review pull request always runs. Only `openspec/`, `.claude/`,
   `docs/`, `*.md` and `LICENSE` count as non-code. `.github/`, `scripts/`, `gradle/` and every Gradle file count as
   code, and so does any doubt (no base, a git error, an empty diff). The three jobs use
   `needs: changes` and `if: needs.changes.outputs.run == 'true'`. A job skipped by its `if` reports Success, so the
   required checks of task 3.1 still pass; `paths-ignore` would leave them pending forever.
+- **Safety check.** Skipping on the new commits alone would let a docs-only commit turn green on top of a broken or
+  cancelled head. A docs-only change therefore skips only when the previous head's three jobs each concluded success or
+  skipped (`scripts/ci/previous-head-green.sh`, reading the check runs of that commit through `gh api`). Missing, running,
+  failed or cancelled runs, an API error, and a previous head that is no longer in the history all mean "run". A skipped
+  job counts as passed because it was skipped under this same rule, or because it was a draft, and
+  `ready_for_review` always runs.
 - **Drafts.** `run` is also false when the pull request is a draft. Work on a draft costs the `changes` job only.
 - **Timeouts.** 25 minutes for `checks` and `ios-tests` and 40 for `android-device-tests` (the normal run takes 10, 8 and
   23), so a stuck job stops early; a stuck macOS job is billed 10×.

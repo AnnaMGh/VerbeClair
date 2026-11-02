@@ -23,10 +23,13 @@
 
 - [x] 5.1 Write `scripts/ci/changed-code.sh` and `scripts/ci/changed-code-test.sh`. Verify: `bash scripts/ci/changed-code-test.sh` passes (docs-only, mixed, workflow, empty diff and bad base cases).
 - [x] 5.2 Edit `.github/workflows/ci.yml`: the `changes` job, `needs`/`if` on the three jobs, `ready_for_review` trigger, push to `dev` only, timeouts 25/25/40, `cache-read-only: false`. Verify: `actionlint` reports no errors and every `uses:` is still pinned to a SHA.
-- [ ] 5.3 Check a code change runs everything. Verify: the first push with these changes (it touches `ci.yml`) runs the `changes` job with `run=true` and all three jobs go green.
-- [ ] 5.4 Check a documentation-only commit is skipped. Verify: a commit touching only `openspec/` leaves the three jobs skipped (shown as passing) and the run costs about one minute.
+- [x] 5.3 Check a code change runs everything. Verify: the first push with these changes (it touches `ci.yml`) runs the `changes` job with `run=true` and all three jobs go green. Checked 2026-11-01 on run 41286493831 (`5191bf4`): green. That version diffed the whole PR against `dev`, so it could never skip (see 5.7).
+- [ ] 5.4 Check a documentation-only commit is skipped. Verify: a commit touching only `openspec/`, pushed on top of a head whose three jobs passed, leaves the three jobs skipped (shown as passing) and the run costs about one minute; the log shows `previous head ... green: true`.
 - [ ] 5.5 Check drafts. Verify: with the PR converted to draft, a push skips the three jobs; marking it ready starts a full run.
 - [ ] 5.6 Check the cache fits. Verify: after a re-run of the PR, `gh cache list` shows the Gradle caches of the PR, the AVD snapshot and `~/.konan` together under 10 GB, and the re-run restores the Gradle cache.
+
+- [x] 5.7 Change the gate to look at the pushed commits and to require a green previous head (design D8, safety check): add `scripts/ci/previous-head-green.sh`, its cases in `scripts/ci/changed-code-test.sh`, and the `changes` job steps. Verify: `bash scripts/ci/changed-code-test.sh` passes, `actionlint` is clean, and the script answers `true` for the check runs of `bc34661`, `5191bf4` and `f7dc0e5` and `false` for `7df130f` and `317b3ad` (done locally 2026-11-02).
+- [ ] 5.8 Check a docs-only commit after a failing head runs everything. Verify: when the previous head's run was cancelled or failed, the next `openspec/`-only commit runs all three jobs and the log shows `previous head ... green: false`.
 
 ## 4. Done gate
 

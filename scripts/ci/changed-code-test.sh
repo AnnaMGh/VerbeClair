@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Checks the decisions of changed-code.sh. Run: bash scripts/ci/changed-code-test.sh
+# Checks the decisions of changed-code.sh and previous-head-green.sh. Run: bash scripts/ci/changed-code-test.sh
 set -u
 cd "$(dirname "$0")"
 fail=0
@@ -20,4 +20,23 @@ for base in "" "0000000000000000000000000000000000000000" "no-such-ref"; do
   actual=$(./changed-code.sh "$base")
   if [ "$actual" = "code=true" ]; then echo "ok   base '$base'"; else echo "FAIL base '$base': $actual"; fail=1; fi
 done
+
+# previous-head-green.sh: the check runs of the previous head, as the GitHub API returns them
+green() { # name expected json
+  actual=$(printf '%s' "$3" | ./previous-head-green.sh)
+  if [ "$actual" = "$2" ]; then echo "ok   $1"; else echo "FAIL $1: expected $2, got $actual"; fail=1; fi
+}
+run() { printf '{"id":%s,"name":"%s","conclusion":%s}' "$1" "$2" "$3"; }
+C="Checks and unit tests"; I="iOS simulator tests"; A="Android device tests"
+green "all success"       true  "{\"check_runs\":[$(run 1 "$C" '"success"'),$(run 2 "$I" '"success"'),$(run 3 "$A" '"success"')]}"
+green "skipped passes"    true  "{\"check_runs\":[$(run 1 "$C" '"skipped"'),$(run 2 "$I" '"skipped"'),$(run 3 "$A" '"skipped"')]}"
+green "one failure"       false "{\"check_runs\":[$(run 1 "$C" '"success"'),$(run 2 "$I" '"failure"'),$(run 3 "$A" '"success"')]}"
+green "one cancelled"     false "{\"check_runs\":[$(run 1 "$C" '"success"'),$(run 2 "$I" '"success"'),$(run 3 "$A" '"cancelled"')]}"
+green "one still running" false "{\"check_runs\":[$(run 1 "$C" '"success"'),$(run 2 "$I" '"success"'),$(run 3 "$A" null)]}"
+green "one job missing"   false "{\"check_runs\":[$(run 1 "$C" '"success"'),$(run 2 "$I" '"success"')]}"
+green "rerun wins"        true  "{\"check_runs\":[$(run 1 "$C" '"failure"'),$(run 9 "$C" '"success"'),$(run 2 "$I" '"success"'),$(run 3 "$A" '"success"')]}"
+green "other check runs"  true  "{\"check_runs\":[$(run 5 "Changes" '"failure"'),$(run 1 "$C" '"success"'),$(run 2 "$I" '"success"'),$(run 3 "$A" '"success"')]}"
+green "no check runs"     false '{"check_runs":[]}'
+green "not json"          false 'garbage'
+green "empty input"       false ''
 exit $fail

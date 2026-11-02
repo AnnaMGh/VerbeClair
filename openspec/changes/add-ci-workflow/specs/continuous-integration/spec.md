@@ -37,9 +37,15 @@ or for a change whose files are all documentation (`openspec/`, `docs/`, `*.md`,
 (`.claude/`). Any other file, and any case where the changed files can't be determined, SHALL count as code. A skipped
 job SHALL report Success, so that required checks do not block the pull request.
 
-#### Scenario: Documentation-only commit
-- **WHEN** a commit that only changes files under `openspec/` is pushed to an open pull request
+#### Scenario: Documentation-only commit after a passing head
+- **WHEN** a commit that only changes files under `openspec/` is pushed to an open pull request, and the previous head's
+  three jobs passed or were skipped, even though the pull request as a whole changes code
 - **THEN** the three jobs are skipped, their checks show as passing, and only the change-detection job uses runner time
+
+#### Scenario: Documentation-only commit after a failing head
+- **WHEN** a commit that only changes files under `openspec/` is pushed, and any of the previous head's three jobs failed,
+  was cancelled, is still running or is missing
+- **THEN** the three jobs run, so documentation can't turn a broken head green
 
 #### Scenario: Workflow or script change
 - **WHEN** a commit changes `.github/workflows/ci.yml` or a file under `scripts/`
