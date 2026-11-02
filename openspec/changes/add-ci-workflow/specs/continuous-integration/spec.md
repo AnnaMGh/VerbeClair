@@ -102,6 +102,18 @@ CI SHALL run `./gradlew connectedAndroidDeviceTest` on an Android emulator, so t
 - **THEN** the Android device tests check fails, and the run shows the memory state and any out-of-memory kernel
   messages
 
+### Requirement: Pull request caches are removed
+The caches written by a pull request SHALL be deleted when the pull request is closed or merged, so that they don't
+push the repository over its cache limit and evict the caches of `dev`.
+
+#### Scenario: Pull request merged
+- **WHEN** a pull request is merged or closed
+- **THEN** every cache under its `refs/pull/<n>/merge` ref is deleted and the caches of `dev` are untouched
+
+#### Scenario: Pull request without caches
+- **WHEN** a pull request closes and wrote no caches (for example a draft or a documentation-only one)
+- **THEN** the cleanup finishes successfully without deleting anything
+
 ### Requirement: Secrets
 CI SHALL give the dataset token to Gradle only through the `FRENCH_VERBS_DATASET_TOKEN` repository secret, exposed as
 an environment variable, and SHALL NOT need a `local.properties` file. Secret values SHALL never be printed, written to

@@ -1,0 +1,32 @@
+name: Cleanup caches
+
+# A pull request's caches are scoped to its own ref (refs/pull/<n>/merge) and nothing else reads them after it closes.
+# They add up to about 2.5 GB per pull request against the 10 GB repository limit, so they are deleted on close.
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cleanup:
+    name: Delete pull request caches
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Delete the caches of this pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REF: refs/pull/${{ github.event.pull_request.number }}/merge
+        run: |
+          ids=$(gh cache list --repo "$REPO" --ref "$REF" --limit 100 --json id --jq '.[].id')
+          if [ -z "$ids" ]; then
+            echo "No caches for $REF"
+            exit 0
+          fi
+          for id in $ids; do
+            gh cache delete "$id" --repo "$REPO"
+          done

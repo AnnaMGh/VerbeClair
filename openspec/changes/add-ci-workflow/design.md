@@ -75,6 +75,10 @@ marking a draft ready would not start a run.
   scopes a pull request's caches to that pull request, so `dev` and `main` never read them, and a re-run of the same
   pull request starts warm. The runs on `dev` still seed the cache that new pull requests start from. The repository
   cache limit is 10 GB, and the three Gradle caches, the AVD snapshot and `~/.konan` must fit; check with `gh cache list`.
+  One pull request writes about 2.5 GB, and the caches of a merged pull request were still there after it closed (found
+  on 2026-11-02: 8.6 of 10 GB used with one merged PR). A second workflow, `.github/workflows/cleanup-caches.yml`,
+  therefore deletes `refs/pull/<n>/merge` caches when the pull request closes. It needs `actions: write` and runs no
+  third-party action.
 - **Kotlin/Native:** `actions/cache` on `~/.konan`, keyed by `gradle/libs.versions.toml` (it holds the Kotlin
   version). Only the `ios-tests` job needs it.
 - **Xcode:** in `ios-tests` only, the `macos-15` runner's default Xcode is used, with `DEVELOPER_DIR` set from `xcode-select -p` in a step.
