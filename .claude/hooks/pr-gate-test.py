@@ -52,7 +52,11 @@ CASES = [
      "gh pr create --base main --body-file - <<'EOF'\nuse --base dev later, it's fine\nEOF", 2),
     ("--base dev, then a body that says --base main",
      "gh pr create --base dev --body-file - <<'EOF'\nnot --base main\nEOF", 2),
-    ("--help", "gh pr create --help", 0),
+    # No help exemption: a -h / --help anywhere in the text (title, body, chained command) must not open the gate.
+    ("--help", "gh pr create --help", 2),
+    ("-h in the body", 'gh pr create --base dev --title t --body "run df -h first"', 2),
+    ("--help in the title", 'gh pr create --base dev --title "add --help flag"', 2),
+    ("-h in a chained command", "gh pr create --base dev && ls -h", 2),
     ("if/then", "if git push -u origin x; then gh pr create --base dev --title t; fi", 2),
     ("if/then, no base", "git push && if true; then gh pr create --title t; fi", 2),
     ("for/do", "for i in 1; do gh pr create --base dev; done", 2),

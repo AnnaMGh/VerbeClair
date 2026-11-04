@@ -27,7 +27,7 @@ parsed=$(printf '%s' "$command" | python3 -c '
 import re, sys
 
 text = sys.stdin.read().replace("\\\n", " ")
-if not re.search(r"\bgh\b[^\n]*\bpr\s+(?:create|new)\b", text) or re.search(r"(?:^|\s)(?:--help|-h)(?:\s|$)", text):
+if not re.search(r"\bgh\b[^\n]*\bpr\s+(?:create|new)\b", text):
     sys.exit(0)
 found = re.findall(r"(?:^|\s)(?:--base(?:=|\s+)|-B\s*=?\s*)[\"\x27`]?([^\s;&|()\"\x27`]+)", text)
 # Any mention of dev counts, so a later "--base main" in a body cannot hide the real base.
