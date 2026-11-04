@@ -37,7 +37,9 @@ per-artifact rules and the definition of done. If anything here disagrees with i
    you reviewed the diff. Always pass
    `--base` explicitly. The hook is a plain text match: any Bash command whose text contains `gh … pr create` or `gh … pr new` is
    treated as the PR command, however it is wrapped. That also catches text that only mentions it (a commit message,
-   an echo); reword it or run the real PR command. It does not cover `gh api` and it checks the checked-out `HEAD`, so create the PR from the branch it is for,
+   an echo); reword it or run the real PR command. The gate is skipped only when every `--base`/`-B` in the text is
+   exactly `main`; any other value (even an unrelated `-B`) is gated. A base built from quoted pieces
+   (`--base d"ev"`) is read as written and is a known gap. It does not cover `gh api` and it checks the checked-out `HEAD`, so create the PR from the branch it is for,
    without `--head`. It is a guardrail against forgetting, not a security boundary.
 
 ## Running builds and tests

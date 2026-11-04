@@ -60,6 +60,8 @@ CASES = [
     ("base from a variable, --base", 'gh pr create --base "$BASE"', 2),
     ("base origin/dev", "gh pr create --base origin/dev", 2),
     ("base from a substitution", "gh pr create --base $(git config x.base)", 2),
+    ("unrelated -B in a chained command, no --base", "git checkout -B feat && gh pr create --title t", 2),
+    ("grep -B in the body, no --base", 'gh pr create --title t --body "see grep -B 3 output"', 2),
     ("-h in a chained command", "gh pr create --base dev && ls -h", 2),
     ("if/then", "if git push -u origin x; then gh pr create --base dev --title t; fi", 2),
     ("if/then, no base", "git push && if true; then gh pr create --title t; fi", 2),
