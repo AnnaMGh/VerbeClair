@@ -38,3 +38,6 @@ __pycache__/
 # to defer — and they must be COMMITTED. Ignore them and every teammate is met
 # with findings the team already decided not to block on. Generated, and still
 # yours to keep.
+
+# PRISM writes *.prism-new next to a file it would otherwise overwrite; they are review leftovers, not source.
+*.prism-new
