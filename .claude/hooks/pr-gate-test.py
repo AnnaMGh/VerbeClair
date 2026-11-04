@@ -45,10 +45,13 @@ CASES = [
      "gh pr create --base dev --body \"$(cat <<'EOF'\nIt's done\nEOF\n)\"", 2),
     ("pr new alias, base dev", "gh pr new --base dev", 2),
     ("pr new alias, no base", "gh pr new", 2),
+    # Known false positives of a plain text match: a mention of the command is read as the command (no --base = deny).
     ("commit message that mentions the gate",
-     "git commit -F - <<'EOF'\nDon't let gh pr create through\nEOF", 0),
+     "git commit -F - <<'EOF'\nDon't let gh pr create through\nEOF", 2),
     ("heredoc body that mentions another base",
-     "gh pr create --base main --body-file - <<'EOF'\nuse --base dev later, it's fine\nEOF", 0),
+     "gh pr create --base main --body-file - <<'EOF'\nuse --base dev later, it's fine\nEOF", 2),
+    ("--base dev, then a body that says --base main",
+     "gh pr create --base dev --body-file - <<'EOF'\nnot --base main\nEOF", 2),
     ("--help", "gh pr create --help", 0),
     ("if/then", "if git push -u origin x; then gh pr create --base dev --title t; fi", 2),
     ("if/then, no base", "git push && if true; then gh pr create --title t; fi", 2),
@@ -61,12 +64,12 @@ CASES = [
     ("custom heredoc delimiter, command, VAR=",
      "cd /x && GH_REPO=a/b command gh pr create --base dev --body-file - <<'PR-BODY'\nit's done\nPR-BODY", 2),
     ("custom heredoc delimiter, mention only",
-     "git commit -F - <<'MSG-END'\nDon't let gh pr create through\nMSG-END", 0),
+     "git commit -F - <<'MSG-END'\nDon't let gh pr create through\nMSG-END", 2),
     ("if/then, base main", "if true; then gh pr create --base main --title t; fi", 0),
     ("base main", "gh pr create --base main --title t", 0),
     ("gh pr view", "echo hi\ngh pr view 3", 0),
     ("unrelated multi-line", "git status\ngit log --oneline", 0),
-    ("quoted mention", 'git commit -m "docs: mention gh pr create --base dev in text"', 0),
+    ("quoted mention", 'git commit -m "docs: mention gh pr create --base dev in text"', 2),
 ]
 
 

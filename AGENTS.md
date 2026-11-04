@@ -35,8 +35,9 @@ per-artifact rules and the definition of done. If anything here disagrees with i
    edits files that define agent or CI behaviour (`.claude/`, `.prism/`, `.github/`, `scripts/`, `AGENTS.md`,
    `CLAUDE.md`, `openspec/config.yaml`), `/verify` is not enough: the pass is recorded only after you say in chat that
    you reviewed the diff. Always pass
-   `--base` explicitly. The hook guards `gh pr create` and its alias `gh pr new` (also behind `bash -c`, `command`, a path or a brace group).
-   It does not cover `gh api` and it checks the checked-out `HEAD`, so create the PR from the branch it is for,
+   `--base` explicitly. The hook is a plain text match: any Bash command whose text contains `gh … pr create` or `gh … pr new` is
+   treated as the PR command, however it is wrapped. That also catches text that only mentions it (a commit message,
+   an echo); reword it or run the real PR command. It does not cover `gh api` and it checks the checked-out `HEAD`, so create the PR from the branch it is for,
    without `--head`. It is a guardrail against forgetting, not a security boundary.
 
 ## Running builds and tests
