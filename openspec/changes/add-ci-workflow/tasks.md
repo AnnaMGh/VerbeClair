@@ -31,6 +31,9 @@
 - [x] 5.7 Change the gate to look at the pushed commits and to require a green previous head (design D8, safety check): add `scripts/ci/previous-head-green.sh`, its cases in `scripts/ci/changed-code-test.sh`, and the `changes` job steps. Verify: `bash scripts/ci/changed-code-test.sh` passes, `actionlint` is clean, and the script answers `true` for the check runs of `bc34661`, `5191bf4` and `f7dc0e5` and `false` for `7df130f` and `317b3ad` (done locally 2026-11-02). On run 41417540143 (`edcae3f`) the `changes` log showed `ACTION: synchronize`, `BEFORE` = the previous head and `code=true`, and all three jobs went green.
 - [ ] 5.8 Check a docs-only commit after a failing head runs everything. Verify: when the previous head's run was cancelled or failed, the next `openspec/`-only commit runs all three jobs and the log shows `previous head ... green: false`.
 
+- [x] 5.9 Add `.github/workflows/cleanup-caches.yml` (design D3, spec "Pull request caches are removed"). Verify: `actionlint` is clean. The stale caches of PR #6 were deleted by hand with `gh cache delete --all --ref refs/pull/6/merge` (2026-11-02).
+- [ ] 5.10 Check the cleanup on a real pull request. Verify: after the first pull request closes with this workflow on `dev`, its run is green and `gh cache list` shows no `refs/pull/<n>/merge` entries while the `dev` caches remain.
+
 ## 4. Done gate
 
 - [x] 4.1 Run `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./gradlew build` and `./gradlew connectedAndroidDeviceTest` locally (no app code changes, so this confirms nothing regressed). Verify: both succeed locally and all three CI jobs are green on the PR into `dev`, with the outputs recorded.
