@@ -32,7 +32,9 @@ per-artifact rules and the definition of done. If anything here disagrees with i
    `.prism/verify/state/finalize-pass`; `.claude/hooks/pr-gate.sh` denies the PR if that is not the current
    `HEAD`, so a new commit means running it again. A change that touches no module (a hook, script, workflow or
    docs change) ends in `NOTHING_TO_FINALIZE` after `/verify` passes, and that records the pass too. Always pass
-   `--base` explicitly.
+   `--base` explicitly. The hook guards `gh pr create` (also behind `bash -c`, `command`, a path or a brace group).
+   It does not cover `gh api` and it checks the checked-out `HEAD`, so create the PR from the branch it is for,
+   without `--head`. It is a guardrail against forgetting, not a security boundary.
 
 ## Running builds and tests
 

@@ -21,49 +21,71 @@ except Exception:
 
 # base=<ref> when the command is `gh pr create`, empty otherwise.
 parsed=$(printf '%s' "$command" | python3 -c '
-import re, shlex, sys
-text = sys.stdin.read()
-# A newline separates commands just like `;`. shlex treats it as whitespace, so without this a command on the
-# second line of a multi-line call would never be looked at. Inside quotes the `;` stays part of the token.
-text = text.replace("\n", " ; ")
-lexer = shlex.shlex(text, posix=True, punctuation_chars=True)
-lexer.whitespace_split = True
-try:
-    tokens = list(lexer)
-except ValueError:
-    # Unbalanced quotes (an apostrophe in a heredoc body is enough). Do not let that open the gate: fall back to
-    # a plain text match and fail closed, so a missing --base denies.
-    if re.search(r"\bgh\b.*\bpr\s+create\b", text):
-        m = re.search(r"(?:--base[= ]|-B[= ]?)\s*([^\s;&|()\"]+)", text)
-        print("base=" + (m.group(1) if m else ""))
-    sys.exit(0)
-# Quoted text (a commit message, an echo) is one token, so only a real command can match. Split the
-# tokens into commands at the shell operators and look at the start of each.
-segments, current = [], []
-for tok in tokens:
-    if tok and set(tok) <= set(";&|()"):
-        segments.append(current)
-        current = []
-    else:
-        current.append(tok)
-segments.append(current)
-for seg in segments:
-    while seg and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", seg[0]):
-        seg = seg[1:]
-    if len(seg) < 3 or seg[0] != "gh":
-        continue
-    rest = [t for t in seg[1:] if not t.startswith("-")]
-    # `gh -R owner/repo pr create` leaves the repo value ahead of "pr", so look for the pair, not the start.
-    if not any(a == "pr" and b == "create" for a, b in zip(rest, rest[1:])):
-        continue
-    base = ""
-    for i, tok in enumerate(seg):
-        if tok in ("--base", "-B") and i + 1 < len(seg):
-            base = seg[i + 1]
-        elif tok.startswith("--base="):
-            base = tok.split("=", 1)[1]
-    print("base=" + base)
-    break
+import os, re, shlex, sys
+
+SHELLS = ("bash", "sh", "zsh", "dash")
+# Words that can stand in front of the program without changing which program runs.
+PREFIXES = ("{", "!", "time", "command", "exec", "env", "nohup")
+
+
+def scan(text, depth=0):
+    """Return the --base of a `gh pr create` found in text, "" when it has none, None when there is no such command."""
+    # A backslash before a newline continues the command. Any other newline separates commands like `;`: shlex
+    # treats it as whitespace, so without this a command on a later line would never be looked at. Inside quotes
+    # the `;` stays part of the token.
+    text = text.replace("\\\n", " ").replace("\n", " ; ")
+    lexer = shlex.shlex(text, posix=True, punctuation_chars=True)
+    lexer.whitespace_split = True
+    try:
+        tokens = list(lexer)
+    except ValueError:
+        # Unbalanced quotes (an apostrophe in a heredoc body is enough). Do not let that open the gate: fall back
+        # to a text match and fail closed, so a missing --base denies. \x27 is a single quote.
+        if not re.search(r"(?:^|[\s;&|({])(?:\S*/)?gh\s.*\bpr\s+create\b", text):
+            return None
+        found = re.findall(r"(?:^|\s)(?:--base(?:=|\s+)|-B\s*=?\s*)[\"\x27]?([^\s;&|()\"\x27]+)", text)
+        return found[-1] if found else ""
+    # Quoted text (a commit message, an echo) is one token, so only a real command can match. Split the
+    # tokens into commands at the shell operators and look at the start of each.
+    segments, current = [], []
+    for tok in tokens:
+        if tok and set(tok) <= set(";&|()"):
+            segments.append(current)
+            current = []
+        else:
+            current.append(tok)
+    segments.append(current)
+    for seg in segments:
+        while seg and (re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", seg[0]) or seg[0] in PREFIXES):
+            seg = seg[1:]
+        if not seg:
+            continue
+        program = os.path.basename(seg[0])
+        if program in SHELLS and "-c" in seg and depth < 3:
+            i = seg.index("-c")
+            inner = scan(seg[i + 1], depth + 1) if i + 1 < len(seg) else None
+            if inner is not None:
+                return inner
+            continue
+        if program != "gh" or len(seg) < 3:
+            continue
+        rest = [t for t in seg[1:] if not t.startswith("-")]
+        # `gh -R owner/repo pr create` leaves the repo value ahead of "pr", so look for the pair, not the start.
+        if not any(a == "pr" and b == "create" for a, b in zip(rest, rest[1:])):
+            continue
+        base = ""
+        for i, tok in enumerate(seg):
+            if tok in ("--base", "-B") and i + 1 < len(seg):
+                base = seg[i + 1]
+            elif tok.startswith("--base="):
+                base = tok.split("=", 1)[1]
+        return base
+    return None
+
+
+result = scan(sys.stdin.read())
+if result is not None:
+    print("base=" + result)
 ')
 
 [ -z "$parsed" ] && exit 0
