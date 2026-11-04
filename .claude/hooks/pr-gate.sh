@@ -30,8 +30,13 @@ text = sys.stdin.read().replace("\\\n", " ")
 if not re.search(r"\bgh\b[^\n]*\bpr\s+(?:create|new)\b", text):
     sys.exit(0)
 found = re.findall(r"(?:^|\s)(?:--base(?:=|\s+)|-B\s*=?\s*)[\"\x27`]?([^\s;&|()\"\x27`]+)", text)
-# Any mention of dev counts, so a later "--base main" in a body cannot hide the real base.
-print("base=" + ("dev" if "dev" in found else found[-1] if found else ""))
+# Fail closed: only a literal branch name that is not dev is exempt. Any dev, a variable ($B), a substitution or
+# origin/dev counts as dev, so a later "--base main" in a body cannot hide the real base.
+def is_dev(base):
+    return base.split("/")[-1] == "dev" or not re.fullmatch(r"[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*", base)
+
+
+print("base=" + ("dev" if any(is_dev(b) for b in found) else found[-1] if found else ""))
 ')
 
 [ -z "$parsed" ] && exit 0
