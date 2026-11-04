@@ -23,11 +23,19 @@ except Exception:
 parsed=$(printf '%s' "$command" | python3 -c '
 import re, shlex, sys
 text = sys.stdin.read()
+# A newline separates commands just like `;`. shlex treats it as whitespace, so without this a command on the
+# second line of a multi-line call would never be looked at. Inside quotes the `;` stays part of the token.
+text = text.replace("\n", " ; ")
 lexer = shlex.shlex(text, posix=True, punctuation_chars=True)
 lexer.whitespace_split = True
 try:
     tokens = list(lexer)
 except ValueError:
+    # Unbalanced quotes (an apostrophe in a heredoc body is enough). Do not let that open the gate: fall back to
+    # a plain text match and fail closed, so a missing --base denies.
+    if re.search(r"\bgh\b.*\bpr\s+create\b", text):
+        m = re.search(r"(?:--base[= ]|-B[= ]?)\s*([^\s;&|()\"]+)", text)
+        print("base=" + (m.group(1) if m else ""))
     sys.exit(0)
 # Quoted text (a commit message, an echo) is one token, so only a real command can match. Split the
 # tokens into commands at the shell operators and look at the start of each.

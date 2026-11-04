@@ -33,9 +33,20 @@ case "$action" in
         fi
         "$emulator" -avd "$avd" -port "$port" -no-snapshot-save -no-window -gpu swiftshader_indirect \
             -noaudio -no-boot-anim -camera-back none >"${TMPDIR:-/tmp}/$avd.log" 2>&1 &
+        pid=$!
         echo "starting $avd on $serial ..."
-        "$adb" -s "$serial" wait-for-device
+        # Give up if the emulator process dies (no such AVD, port taken) or does not boot in 5 minutes.
+        deadline=$(($(date +%s) + 300))
         until [ "$("$adb" -s "$serial" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]; do
+            if ! kill -0 "$pid" 2>/dev/null; then
+                echo "the emulator exited before booting; last lines of ${TMPDIR:-/tmp}/$avd.log:" >&2
+                tail -n 20 "${TMPDIR:-/tmp}/$avd.log" >&2
+                exit 1
+            fi
+            if [ "$(date +%s)" -ge "$deadline" ]; then
+                echo "$serial did not boot within 300 s; see ${TMPDIR:-/tmp}/$avd.log" >&2
+                exit 1
+            fi
             sleep 2
         done
         for scale in window_animation_scale transition_animation_scale animator_duration_scale; do

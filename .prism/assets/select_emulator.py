@@ -114,7 +114,7 @@ def main():
         if not avds:
             print(
                 f"No AVD starts with '{args.name_prefix}'. Create one named '{args.name_prefix}_...' "
-                f"(see scripts/emulator/verbeclair-emulator.sh).",
+                f"with `android emulator create`; scripts/emulator/verbeclair-emulator.sh starts it.",
                 file=sys.stderr,
             )
             return 1
