@@ -146,7 +146,9 @@ when a version-catalog, convention-plugin or root build file changed.
 
 An `ERROR` line instead of `SCOPE` → report it and stop; do not fall back to
 a narrower scope. Empty `MODULES` → emit `NOTHING_TO_FINALIZE` (Stage 8
-format) and stop.
+format) and stop. **VerbeClair:** first run Stage 6 (`/verify --base=<ref>`, same budget) once, because a change
+with no module can still hold hooks, scripts or workflows that need review; `NOTHING_TO_FINALIZE` is only
+the verdict when `/verify` returns `PASS` or `SKIPPED`, and `FIXES_REQUIRED` / `TESTS_FAILED` make it `BLOCKED`.
 
 Record both lists; every later stage refers back to them.
 
@@ -392,7 +394,9 @@ a dirty tree, say so and suggest `/git-commit` — the push gate is the
 authority on whether the work may leave the machine, and this skill should not
 be the thing that decides the work is committable.
 
-**Record the pass (VerbeClair).** On `READY_TO_PUSH` with a clean tree, write the commit that passed:
+**Record the pass (VerbeClair).** On `READY_TO_PUSH`, or on `NOTHING_TO_FINALIZE` after `/verify` returned
+`PASS` or `SKIPPED` (a change that touches no module, such as a hook, script, workflow or docs change), with a
+clean tree, write the commit that passed:
 
 ```bash
 git rev-parse HEAD > .prism/verify/state/finalize-pass
@@ -402,6 +406,11 @@ git rev-parse HEAD > .prism/verify/state/finalize-pass
 newer commit makes the pass stale. With a dirty tree write nothing and say: commit, then run `/finalize` again
 (the baseline read in Stage 2 will show the already-current modules as `ok`). Never write the file on
 `BLOCKED`, and never write it by hand.
+
+**Base ref (VerbeClair).** `baseBranch` is `dev`, which resolves to the *local* `dev` branch. When that is behind
+`origin/dev`, `scope.sh` sees other people's merged work as changed and widens to every module. Check
+`git rev-list --count dev..origin/dev` first; if it is not `0`, pass `--base=origin/dev` rather than spending
+device time on the wrong scope.
 
 ## Honesty contract
 

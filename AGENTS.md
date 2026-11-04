@@ -30,7 +30,9 @@ per-artifact rules and the definition of done. If anything here disagrees with i
 9. **`/finalize` before a PR to `dev`** — run `/finalize` and get `READY_TO_PUSH` (it ends in `/verify`)
    before `gh pr create --base dev`. It records the commit it passed in
    `.prism/verify/state/finalize-pass`; `.claude/hooks/pr-gate.sh` denies the PR if that is not the current
-   `HEAD`, so a new commit means running it again. Always pass `--base` explicitly.
+   `HEAD`, so a new commit means running it again. A change that touches no module (a hook, script, workflow or
+   docs change) ends in `NOTHING_TO_FINALIZE` after `/verify` passes, and that records the pass too. Always pass
+   `--base` explicitly.
 
 ## Running builds and tests
 
