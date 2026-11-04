@@ -50,6 +50,19 @@ CASES = [
     ("heredoc body that mentions another base",
      "gh pr create --base main --body-file - <<'EOF'\nuse --base dev later, it's fine\nEOF", 0),
     ("--help", "gh pr create --help", 0),
+    ("if/then", "if git push -u origin x; then gh pr create --base dev --title t; fi", 2),
+    ("if/then, no base", "git push && if true; then gh pr create --title t; fi", 2),
+    ("for/do", "for i in 1; do gh pr create --base dev; done", 2),
+    ("backticks", "url=`gh pr create --base dev`", 2),
+    ("sudo", "sudo gh pr create --base dev", 2),
+    ("timeout with a signal", "timeout -s KILL 60 gh pr create --base dev", 2),
+    ("custom heredoc delimiter, timeout, apostrophe",
+     "timeout 60 gh pr create --base dev --body-file - <<'PR-BODY'\nit's done\nPR-BODY", 2),
+    ("custom heredoc delimiter, command, VAR=",
+     "cd /x && GH_REPO=a/b command gh pr create --base dev --body-file - <<'PR-BODY'\nit's done\nPR-BODY", 2),
+    ("custom heredoc delimiter, mention only",
+     "git commit -F - <<'MSG-END'\nDon't let gh pr create through\nMSG-END", 0),
+    ("if/then, base main", "if true; then gh pr create --base main --title t; fi", 0),
     ("base main", "gh pr create --base main --title t", 0),
     ("gh pr view", "echo hi\ngh pr view 3", 0),
     ("unrelated multi-line", "git status\ngit log --oneline", 0),
@@ -57,18 +70,43 @@ CASES = [
 ]
 
 
-def run(command: str) -> int:
+def run(command: str, marker=None) -> int:
+    """marker: None = no marker file; "head" / "old" = the current / an older commit; a trailing "+nl" adds a newline."""
     with tempfile.TemporaryDirectory() as root:
+        git = ["git", "-C", root, "-c", "user.name=t", "-c", "user.email=t@t"]
         subprocess.run(["git", "init", "-q", root], check=True)
-        subprocess.run(["git", "-C", root, "-c", "user.name=t", "-c", "user.email=t@t",
-                        "commit", "-q", "--allow-empty", "-m", "x"], check=True)
+        subprocess.run(git + ["commit", "-q", "--allow-empty", "-m", "first"], check=True)
+        old = subprocess.run(git + ["rev-parse", "HEAD"], text=True, capture_output=True, check=True).stdout.strip()
+        subprocess.run(git + ["commit", "-q", "--allow-empty", "-m", "second"], check=True)
+        head = subprocess.run(git + ["rev-parse", "HEAD"], text=True, capture_output=True, check=True).stdout.strip()
+        if marker is not None:
+            state = os.path.join(root, ".prism", "verify", "state")
+            os.makedirs(state)
+            sha = old if marker.startswith("old") else head
+            with open(os.path.join(state, "finalize-pass"), "w") as f:
+                f.write(sha + ("\n" if marker.endswith("+nl") else ""))
         event = json.dumps({"tool_input": {"command": command}})
         result = subprocess.run(["sh", HOOK], input=event, text=True, capture_output=True,
                                 env={**os.environ, "CLAUDE_PROJECT_DIR": root})
         return result.returncode
 
 
+# The contract itself: a PR to dev is allowed only when the marker holds the current HEAD.
+MARKER_CASES = [
+    ("marker == HEAD", "gh pr create --base dev --title t", "head", 0),
+    ("marker == HEAD with a trailing newline", "gh pr create --base dev --title t", "head+nl", 0),
+    ("stale marker (older commit)", "gh pr create --base dev --title t", "old", 2),
+    ("stale marker with a newline", "gh pr create --base dev --title t", "old+nl", 2),
+    ("marker == HEAD, missing --base", "gh pr create --title t", "head", 2),
+    ("marker == HEAD, wrapped command", "timeout 60 gh pr create --base dev", "head", 0),
+]
+
 failed = 0
+for name, command, marker, want in MARKER_CASES:
+    got = run(command, marker)
+    ok = got == want
+    failed += not ok
+    print(f"{'ok  ' if ok else 'FAIL'} exit={got} (want {want})  {name}")
 for name, command, want in CASES:
     got = run(command)
     ok = got == want

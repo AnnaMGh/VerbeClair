@@ -400,7 +400,10 @@ be the thing that decides the work is committable.
 write the commit that passed. `SKIPPED` counts only when the diff holds no file that defines agent or CI behaviour:
 `.claude/**`, `.prism/**`, `.github/**`, `scripts/**`, `AGENTS.md`, `CLAUDE.md` and `openspec/config.yaml`. The skip
 checker skips every markdown-only diff, and those files are markdown or instructions that decide what gets reviewed,
-so a change to them is `BLOCKED` until the user has reviewed it:
+so the verdict for a change to them is `BLOCKED` with "needs the user's review of the diff" under `Remaining`. When the
+user then states in chat that they reviewed the diff, `/finalize` records the pass itself, on a clean tree, and the
+report says it was recorded on the user's review and not on `/verify`. The user's say-so is the only thing that lifts
+this block, and it is not carried over to a later commit. The record is written like this:
 
 ```bash
 git rev-parse HEAD > .prism/verify/state/finalize-pass

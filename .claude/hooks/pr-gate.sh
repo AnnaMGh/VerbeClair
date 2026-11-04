@@ -25,7 +25,8 @@ import os, re, shlex, sys
 
 SHELLS = ("bash", "sh", "zsh", "dash")
 # Words that can stand in front of the program without changing which program runs.
-PREFIXES = ("{", "!", "time", "command", "exec", "env", "nohup")
+PREFIXES = ("{", "!", "time", "command", "exec", "env", "nohup", "sudo",
+            "if", "then", "else", "elif", "while", "until", "do")
 
 
 def scan(text, depth=0):
@@ -36,7 +37,7 @@ def scan(text, depth=0):
     # A heredoc body is data, not commands: drop it (keeping the line that opens it) so an apostrophe or a mention
     # of the gate in a commit message neither breaks the parse nor reads as a command. \x27 is a single quote.
     text = re.sub(
-        r"(<<-?[ \t]*[\"\x27]?(\w+)[\"\x27]?[^\n]*)\n.*?\n[ \t]*\2[ \t]*(?=\n|$)", r"\1", text, flags=re.S
+        r"(<<-?[ \t]*[\"\x27]?([^\s\"\x27<>;&|()]+)[\"\x27]?[^\n]*)\n.*?\n[ \t]*\2[ \t]*(?=\n|$)", r"\1", text, flags=re.S
     )
     text = text.replace("\\\n", " ").replace("\n", " ; ")
     lexer = shlex.shlex(text, posix=True, punctuation_chars=True)
@@ -49,7 +50,7 @@ def scan(text, depth=0):
     except ValueError:
         # Unbalanced quotes (an apostrophe in a heredoc body is enough). Do not let that open the gate: fall back
         # to a text match and fail closed, so a missing --base denies. \x27 is a single quote.
-        if not re.search(r"(?:^|[;&|({])\s*(?:\S*/)?gh\s.*\bpr\s+(?:create|new)\b", text):
+        if not re.search(r"\bgh\s.*\bpr\s+(?:create|new)\b", text):
             return None
         found = re.findall(r"(?:^|\s)(?:--base(?:=|\s+)|-B\s*=?\s*)[\"\x27]?([^\s;&|()\"\x27]+)", text)
         return found[-1] if found else ""
@@ -64,12 +65,18 @@ def scan(text, depth=0):
             current.append(tok)
     segments.append(current)
     for seg in segments:
+        # A command substitution in backticks leaves the backtick on the first token.
+        seg = [t.lstrip("`") for t in seg[:1]] + seg[1:]
+        # ... and `VAR=`gh ...` would be dropped as an assignment together with the command inside it.
+        m = re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=`+(.*)", seg[0]) if seg else None
+        if m:
+            seg = ([m.group(1)] if m.group(1) else []) + seg[1:]
         while seg and (re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", seg[0]) or seg[0] in PREFIXES or seg[0] == "timeout"):
             if seg[0] == "timeout":
-                # `timeout [options] DURATION program ...`
+                # `timeout [options] DURATION program ...`; -s and -k take a value of their own.
                 seg = seg[1:]
                 while seg and seg[0].startswith("-"):
-                    seg = seg[1:]
+                    seg = seg[2:] if seg[0] in ("-s", "-k", "--signal", "--kill-after") else seg[1:]
                 if seg and re.fullmatch(r"[0-9.]+[smhd]?", seg[0]):
                     seg = seg[1:]
             else:
@@ -100,7 +107,7 @@ def scan(text, depth=0):
                 base = seg[i + 1]
             elif tok.startswith("--base="):
                 base = tok.split("=", 1)[1]
-        return base
+        return base.strip("`")
     return None
 
 
