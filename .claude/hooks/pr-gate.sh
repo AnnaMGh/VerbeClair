@@ -33,15 +33,23 @@ def scan(text, depth=0):
     # A backslash before a newline continues the command. Any other newline separates commands like `;`: shlex
     # treats it as whitespace, so without this a command on a later line would never be looked at. Inside quotes
     # the `;` stays part of the token.
+    # A heredoc body is data, not commands: drop it (keeping the line that opens it) so an apostrophe or a mention
+    # of the gate in a commit message neither breaks the parse nor reads as a command. \x27 is a single quote.
+    text = re.sub(
+        r"(<<-?[ \t]*[\"\x27]?(\w+)[\"\x27]?[^\n]*)\n.*?\n[ \t]*\2[ \t]*(?=\n|$)", r"\1", text, flags=re.S
+    )
     text = text.replace("\\\n", " ").replace("\n", " ; ")
     lexer = shlex.shlex(text, posix=True, punctuation_chars=True)
     lexer.whitespace_split = True
+    # shlex reads # as a comment up to the next newline, and every newline is now a ;, so a comment would hide
+    # the rest of the command. Comments are not stripped: an extra token in a segment only makes the match stricter.
+    lexer.commenters = ""
     try:
         tokens = list(lexer)
     except ValueError:
         # Unbalanced quotes (an apostrophe in a heredoc body is enough). Do not let that open the gate: fall back
         # to a text match and fail closed, so a missing --base denies. \x27 is a single quote.
-        if not re.search(r"(?:^|[\s;&|({])(?:\S*/)?gh\s.*\bpr\s+create\b", text):
+        if not re.search(r"(?:^|[;&|({])\s*(?:\S*/)?gh\s.*\bpr\s+(?:create|new)\b", text):
             return None
         found = re.findall(r"(?:^|\s)(?:--base(?:=|\s+)|-B\s*=?\s*)[\"\x27]?([^\s;&|()\"\x27]+)", text)
         return found[-1] if found else ""
@@ -56,22 +64,35 @@ def scan(text, depth=0):
             current.append(tok)
     segments.append(current)
     for seg in segments:
-        while seg and (re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", seg[0]) or seg[0] in PREFIXES):
-            seg = seg[1:]
+        while seg and (re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", seg[0]) or seg[0] in PREFIXES or seg[0] == "timeout"):
+            if seg[0] == "timeout":
+                # `timeout [options] DURATION program ...`
+                seg = seg[1:]
+                while seg and seg[0].startswith("-"):
+                    seg = seg[1:]
+                if seg and re.fullmatch(r"[0-9.]+[smhd]?", seg[0]):
+                    seg = seg[1:]
+            else:
+                seg = seg[1:]
         if not seg:
             continue
         program = os.path.basename(seg[0])
-        if program in SHELLS and "-c" in seg and depth < 3:
-            i = seg.index("-c")
+        # `-c`, or flags combined with it: -lc, -ec, -xc
+        flags = [i for i, t in enumerate(seg[1:], 1) if re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", t)]
+        if program in SHELLS and flags and depth < 3:
+            i = flags[0]
             inner = scan(seg[i + 1], depth + 1) if i + 1 < len(seg) else None
             if inner is not None:
                 return inner
             continue
         if program != "gh" or len(seg) < 3:
             continue
+        if "--help" in seg or "-h" in seg:
+            continue
         rest = [t for t in seg[1:] if not t.startswith("-")]
         # `gh -R owner/repo pr create` leaves the repo value ahead of "pr", so look for the pair, not the start.
-        if not any(a == "pr" and b == "create" for a, b in zip(rest, rest[1:])):
+        # `new` is the built-in alias of `create`.
+        if not any(a == "pr" and b in ("create", "new") for a, b in zip(rest, rest[1:])):
             continue
         base = ""
         for i, tok in enumerate(seg):

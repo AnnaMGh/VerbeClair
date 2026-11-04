@@ -148,7 +148,8 @@ An `ERROR` line instead of `SCOPE` → report it and stop; do not fall back to
 a narrower scope. Empty `MODULES` → emit `NOTHING_TO_FINALIZE` (Stage 8
 format) and stop. **VerbeClair:** first run Stage 6 (`/verify --base=<ref>`, same budget) once, because a change
 with no module can still hold hooks, scripts or workflows that need review; `NOTHING_TO_FINALIZE` is only
-the verdict when `/verify` returns `PASS` or `SKIPPED`, and `FIXES_REQUIRED` / `TESTS_FAILED` make it `BLOCKED`.
+the verdict when `/verify` returns `PASS`, or `SKIPPED` for a diff with no gate-defining file (see "Record the
+pass"), and `FIXES_REQUIRED` / `TESTS_FAILED` make it `BLOCKED`.
 
 Record both lists; every later stage refers back to them.
 
@@ -395,8 +396,11 @@ authority on whether the work may leave the machine, and this skill should not
 be the thing that decides the work is committable.
 
 **Record the pass (VerbeClair).** On `READY_TO_PUSH`, or on `NOTHING_TO_FINALIZE` after `/verify` returned
-`PASS` or `SKIPPED` (a change that touches no module, such as a hook, script, workflow or docs change), with a
-clean tree, write the commit that passed:
+`PASS` (a change that touches no module, such as a hook, script, workflow or docs change), with a clean tree,
+write the commit that passed. `SKIPPED` counts only when the diff holds no file that defines agent or CI behaviour:
+`.claude/**`, `.prism/**`, `.github/**`, `scripts/**`, `AGENTS.md`, `CLAUDE.md` and `openspec/config.yaml`. The skip
+checker skips every markdown-only diff, and those files are markdown or instructions that decide what gets reviewed,
+so a change to them is `BLOCKED` until the user has reviewed it:
 
 ```bash
 git rev-parse HEAD > .prism/verify/state/finalize-pass
