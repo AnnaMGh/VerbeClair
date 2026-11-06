@@ -12,7 +12,8 @@ than on manual runs.
 CI SHALL run on every pull request whose base branch is `dev` or `main` (when it is opened, updated, reopened or marked
 ready for review), and on every push to `dev`. It SHALL NOT run on pushes to `main` or to other branches unless they are
 part of such a pull request. When a newer commit arrives for the same pull request, the run in progress SHALL be cancelled.
-Runs on pushes to `dev` SHALL NOT be cancelled, so that each merge result keeps its own status.
+A run on a push to `dev` that has started SHALL NOT be cancelled by a newer push, so that the merge result being built
+keeps its own status. A `dev` run still waiting behind it MAY be replaced by a newer push.
 
 #### Scenario: Pull request into dev
 - **WHEN** a pull request from `feature/verb-list-screen` into `dev` is opened
@@ -24,7 +25,7 @@ Runs on pushes to `dev` SHALL NOT be cancelled, so that each merge result keeps 
 
 #### Scenario: Merge into dev
 - **WHEN** a pull request is merged into `dev`
-- **THEN** CI runs on the resulting `dev` commit
+- **THEN** CI runs on the resulting `dev` commit, unless a newer merge replaces a run that is still waiting for the one in progress
 
 #### Scenario: Merge into main
 - **WHEN** `dev` is merged into `main` through a pull request
