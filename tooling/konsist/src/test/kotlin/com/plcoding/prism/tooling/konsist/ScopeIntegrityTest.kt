@@ -71,6 +71,36 @@ class ScopeIntegrityTest {
         }
     }
 
+    /**
+     * Every module with Kotlin under a source set whose name ends in `Main` must
+     * reach the production scope, not just the overall one. (Kotlin nests block
+     * comments, so a glob such as src-slash-star-Main cannot be written here.)
+     *
+     * The overall check above passes when a module's `commonMain` is classified as
+     * test code, because the files are still in scope. Classification by a literal
+     * `main` source set did exactly that to every KMP module, and the production
+     * rules (layer purity, MVI contract, data layer) then read nothing.
+     */
+    @Test
+    fun `every module with Main source sets has production files in scope`() {
+        val modulesWithMain = consumerModulePaths().filter { hasKotlinUnderMainSourceSet(it) }
+        assertThat(modulesWithMain).isNotEmpty()
+
+        val productionPaths = ProjectScope.productionFiles.map { it.projectPath.forwardSlashed() }
+        val unclassified =
+            modulesWithMain.filterNot { modulePath ->
+                productionPaths.any { it.startsWith("/$modulePath/") }
+            }
+
+        if (unclassified.isNotEmpty()) {
+            throw AssertionError(
+                "${unclassified.size} module(s) hold Kotlin under src/*Main but none of it is " +
+                    "classified as production: ${unclassified.joinToString()}. The production " +
+                    "rules in this suite would pass over that code without reading it.",
+            )
+        }
+    }
+
     @Test
     fun `the scope excludes generated sources`() {
         val generated =
@@ -165,8 +195,18 @@ class ScopeIntegrityTest {
                     }.map { it.name }
             }.toSet()
 
+    private fun hasKotlinUnderMainSourceSet(modulePath: String): Boolean =
+        File(Konsist.projectRootPath, "$modulePath/src")
+            .listFiles { candidate: File -> candidate.isDirectory && candidate.name.endsWith(MAIN_SUFFIX) }
+            .orEmpty()
+            .any { sourceSet ->
+                sourceSet.walkTopDown().any { it.isFile && it.extension == KOTLIN_EXTENSION }
+            }
+
     private companion object {
         const val KOTLIN_EXTENSION = "kt"
+
+        const val MAIN_SUFFIX = "Main"
 
         val INCLUDE_PATTERN = Regex("""include\("([^"]+)"\)""")
 
