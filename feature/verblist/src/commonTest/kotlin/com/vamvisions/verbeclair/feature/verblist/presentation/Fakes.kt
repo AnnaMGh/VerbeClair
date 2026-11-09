@@ -5,6 +5,9 @@ import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import com.vamvisions.verbeclair.core.domain.favourite.FavouritesRepository
 import com.vamvisions.verbeclair.core.domain.preferences.ListPreferences
+import com.vamvisions.verbeclair.core.domain.result.DataError
+import com.vamvisions.verbeclair.core.domain.result.EmptyResult
+import com.vamvisions.verbeclair.core.domain.result.Result
 import com.vamvisions.verbeclair.core.domain.score.TestScoreRepository
 import com.vamvisions.verbeclair.core.domain.sync.DataSyncTrigger
 import com.vamvisions.verbeclair.core.domain.verb.ListChoices
@@ -44,8 +47,15 @@ class FakeVerbCatalog(var verbs: List<VerbListItem> = emptyList()) : VerbCatalog
     }
 }
 
-/** Favourites in memory; with `loaded = false` no slugs are emitted until [loaded] is set, like a slow database. */
-class FakeFavouritesRepository(initial: Set<String> = emptySet(), loaded: Boolean = true) : FavouritesRepository {
+/**
+ * Favourites in memory; with `loaded = false` no slugs are emitted until [loaded] is set, like a slow database,
+ * and with `failing = true` every change fails like a full disk and stores nothing.
+ */
+class FakeFavouritesRepository(
+    initial: Set<String> = emptySet(),
+    loaded: Boolean = true,
+    var failing: Boolean = false,
+) : FavouritesRepository {
     val slugs = MutableStateFlow(initial)
     val loaded = MutableStateFlow(loaded)
     val added = mutableListOf<String>()
@@ -56,14 +66,18 @@ class FakeFavouritesRepository(initial: Set<String> = emptySet(), loaded: Boolea
 
     override fun observeCount(): Flow<Int> = slugs.map { it.size }
 
-    override suspend fun add(slug: String) {
+    override suspend fun add(slug: String): EmptyResult<DataError.Local> {
+        if (failing) return Result.Error(DataError.Local.DISK_FULL)
         added += slug
         slugs.value += slug
+        return Result.Success(Unit)
     }
 
-    override suspend fun remove(slug: String) {
+    override suspend fun remove(slug: String): EmptyResult<DataError.Local> {
+        if (failing) return Result.Error(DataError.Local.DISK_FULL)
         removed += slug
         slugs.value -= slug
+        return Result.Success(Unit)
     }
 }
 

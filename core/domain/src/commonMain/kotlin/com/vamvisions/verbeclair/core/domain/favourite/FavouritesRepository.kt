@@ -1,5 +1,7 @@
 package com.vamvisions.verbeclair.core.domain.favourite
 
+import com.vamvisions.verbeclair.core.domain.result.DataError
+import com.vamvisions.verbeclair.core.domain.result.EmptyResult
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -11,7 +13,7 @@ interface FavouritesRepository {
 
     fun observeCount(): Flow<Int>
 
-    suspend fun add(slug: String)
+    suspend fun add(slug: String): EmptyResult<DataError.Local>
 
-    suspend fun remove(slug: String)
+    suspend fun remove(slug: String): EmptyResult<DataError.Local>
 }

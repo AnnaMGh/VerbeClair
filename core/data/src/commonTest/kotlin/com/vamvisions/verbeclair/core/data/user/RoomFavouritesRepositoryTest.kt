@@ -1,6 +1,7 @@
 package com.vamvisions.verbeclair.core.data.user
 
 import androidx.room.useReaderConnection
+import androidx.room.useWriterConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import app.cash.turbine.test
 import com.vamvisions.verbeclair.core.data.bundle.inMemoryUserDatabaseBuilder
@@ -9,6 +10,8 @@ import com.vamvisions.verbeclair.core.data.verb.RoomVerbCatalog
 import com.vamvisions.verbeclair.core.database.user.UserDatabase
 import com.vamvisions.verbeclair.core.database.verb.VerbDatabase
 import com.vamvisions.verbeclair.core.database.verb.entity.VerbEntity
+import com.vamvisions.verbeclair.core.domain.result.DataError
+import com.vamvisions.verbeclair.core.domain.result.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.first
@@ -91,6 +94,24 @@ class RoomFavouritesRepositoryTest {
                     }
                 }
             assertEquals(addedAt.toEpochMilliseconds(), stored)
+        }
+
+    @Test
+    fun changesSucceedWithAUnitResult() =
+        runTest {
+            assertEquals(Result.Success(Unit), repository.add("etre"))
+            assertEquals(Result.Success(Unit), repository.remove("etre"))
+        }
+
+    @Test
+    fun aFailingDatabaseGivesALocalErrorInsteadOfThrowing() =
+        runTest {
+            userDatabase.useWriterConnection { connection ->
+                connection.usePrepared("DROP TABLE favourites") { it.step() }
+            }
+
+            assertEquals(Result.Error(DataError.Local.UNKNOWN), repository.add("etre"))
+            assertEquals(Result.Error(DataError.Local.UNKNOWN), repository.remove("etre"))
         }
 
     @Test
