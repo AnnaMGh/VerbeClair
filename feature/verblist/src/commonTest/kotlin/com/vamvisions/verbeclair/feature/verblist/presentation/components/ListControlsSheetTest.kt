@@ -1,4 +1,4 @@
-package com.vamvisions.verbeclair.feature.verblist.presentation
+package com.vamvisions.verbeclair.feature.verblist.presentation.components
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,7 +16,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
 import com.vamvisions.verbeclair.core.designsystem.theme.VerbeClairTheme
 import com.vamvisions.verbeclair.core.domain.verb.ListChoices
-import com.vamvisions.verbeclair.feature.verblist.presentation.components.ListControlsContent
+import com.vamvisions.verbeclair.feature.verblist.presentation.reduce
 import kotlin.test.Test
 
 /** The list controls sheet (task 7.2), with its choices changed by the ViewModel's reducer. */

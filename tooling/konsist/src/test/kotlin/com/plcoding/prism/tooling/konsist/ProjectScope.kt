@@ -88,14 +88,15 @@ internal object ProjectScope {
     val files: List<KoFileDeclaration> by lazy { all.files }
 
     val productionFiles: List<KoFileDeclaration> by lazy {
-        files.filter { it.sourceSetName == MAIN_SOURCE_SET }
+        files.filter { it.sourceSetName.endsWith(PRODUCTION_SUFFIX) }
     }
 
     val testFiles: List<KoFileDeclaration> by lazy {
-        files.filterNot { it.sourceSetName == MAIN_SOURCE_SET }
+        files.filter { it.sourceSetName.endsWith(TEST_SUFFIX) }
     }
 
-    const val MAIN_SOURCE_SET = "main"
+    private const val PRODUCTION_SUFFIX = "Main"
+    private const val TEST_SUFFIX = "Test"
 
     /**
      * The root package this project's own code lives under -- the namespace
