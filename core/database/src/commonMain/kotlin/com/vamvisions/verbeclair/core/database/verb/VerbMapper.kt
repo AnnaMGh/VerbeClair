@@ -5,6 +5,11 @@ import com.vamvisions.verbeclair.core.database.dataset.MoodRecord
 import com.vamvisions.verbeclair.core.database.dataset.SynonymRecord
 import com.vamvisions.verbeclair.core.database.dataset.TenseRecord
 import com.vamvisions.verbeclair.core.database.dataset.VerbDetailsRecord
+import com.vamvisions.verbeclair.core.database.verb.entity.FormEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.FormSearchEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.SynonymEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.TranslationEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.VerbEntity
 import com.vamvisions.verbeclair.core.domain.verb.normalizeKey
 import com.vamvisions.verbeclair.core.domain.verb.sortKey
 

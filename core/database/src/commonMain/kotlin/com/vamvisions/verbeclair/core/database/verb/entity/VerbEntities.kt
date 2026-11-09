@@ -1,4 +1,4 @@
-package com.vamvisions.verbeclair.core.database.verb
+package com.vamvisions.verbeclair.core.database.verb.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -109,14 +109,3 @@ object MetadataKeys {
     /** The sync checkpoint (SY-2). After a bundled install it is the bundled `lastUpdatedAt` (A-1). */
     const val CHECKPOINT = "checkpoint"
 }
-
-/** One row of the paged list query (design D5). */
-data class VerbRow(
-    val slug: String,
-    val infinitive: String,
-    val group: String,
-    val reflexive: Boolean,
-    val auxiliary: String,
-    val frequency: Double,
-    @ColumnInfo(name = "matched_form") val matchedForm: String?,
-)

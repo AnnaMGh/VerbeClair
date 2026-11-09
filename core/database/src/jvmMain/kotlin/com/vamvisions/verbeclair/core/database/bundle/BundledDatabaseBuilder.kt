@@ -12,10 +12,10 @@ import com.vamvisions.verbeclair.core.database.dataset.DatasetFile
 import com.vamvisions.verbeclair.core.database.dataset.DatasetJson
 import com.vamvisions.verbeclair.core.database.dataset.VerbDetailsRecord
 import com.vamvisions.verbeclair.core.database.verb.BUNDLE_BUILD
-import com.vamvisions.verbeclair.core.database.verb.MetadataEntity
-import com.vamvisions.verbeclair.core.database.verb.MetadataKeys
 import com.vamvisions.verbeclair.core.database.verb.VERB_SCHEMA_VERSION
 import com.vamvisions.verbeclair.core.database.verb.VerbDatabase
+import com.vamvisions.verbeclair.core.database.verb.entity.MetadataEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.MetadataKeys
 import com.vamvisions.verbeclair.core.database.verb.toEntities
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking

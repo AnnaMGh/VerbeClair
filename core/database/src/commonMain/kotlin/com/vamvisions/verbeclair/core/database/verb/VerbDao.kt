@@ -8,6 +8,12 @@ import androidx.room.Query
 import androidx.room.RawQuery
 import androidx.room.RoomRawQuery
 import androidx.room.Transaction
+import com.vamvisions.verbeclair.core.database.verb.entity.FormEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.FormSearchEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.MetadataEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.SynonymEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.TranslationEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.VerbEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

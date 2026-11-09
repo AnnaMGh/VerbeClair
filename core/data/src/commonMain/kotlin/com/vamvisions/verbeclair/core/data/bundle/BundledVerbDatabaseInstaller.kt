@@ -5,7 +5,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.driver.bundled.SQLITE_OPEN_READWRITE
 import com.vamvisions.verbeclair.core.data.di.PlatformPaths
 import com.vamvisions.verbeclair.core.database.dataset.BundledMetadata
-import com.vamvisions.verbeclair.core.database.verb.MetadataKeys
+import com.vamvisions.verbeclair.core.database.verb.entity.MetadataKeys
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO

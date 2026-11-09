@@ -1,7 +1,7 @@
 package com.vamvisions.verbeclair.core.data.user
 
-import com.vamvisions.verbeclair.core.database.user.FavouriteEntity
 import com.vamvisions.verbeclair.core.database.user.UserDatabase
+import com.vamvisions.verbeclair.core.database.user.entity.FavouriteEntity
 import com.vamvisions.verbeclair.core.domain.favourite.FavouritesRepository
 import com.vamvisions.verbeclair.core.domain.verb.VerbCatalog
 import kotlinx.coroutines.ExperimentalCoroutinesApi

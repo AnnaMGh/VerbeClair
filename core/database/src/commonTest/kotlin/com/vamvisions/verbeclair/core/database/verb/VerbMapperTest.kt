@@ -4,6 +4,8 @@ import com.vamvisions.verbeclair.core.database.dataset.DatasetJson
 import com.vamvisions.verbeclair.core.database.dataset.VerbDetailsRecord
 import com.vamvisions.verbeclair.core.database.fixture.DatasetFixtures
 import com.vamvisions.verbeclair.core.database.inMemoryVerbDatabase
+import com.vamvisions.verbeclair.core.database.verb.entity.TranslationEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.VerbEntity
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement

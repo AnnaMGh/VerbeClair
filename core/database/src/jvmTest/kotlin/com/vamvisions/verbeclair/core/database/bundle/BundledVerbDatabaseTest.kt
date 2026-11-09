@@ -11,9 +11,9 @@ import com.vamvisions.verbeclair.core.database.dataset.BundledMetadata
 import com.vamvisions.verbeclair.core.database.dataset.DatasetJson
 import com.vamvisions.verbeclair.core.database.inMemoryVerbDatabase
 import com.vamvisions.verbeclair.core.database.verb.BUNDLE_BUILD
-import com.vamvisions.verbeclair.core.database.verb.MetadataKeys
 import com.vamvisions.verbeclair.core.database.verb.VERB_SCHEMA_VERSION
 import com.vamvisions.verbeclair.core.database.verb.VerbDatabase
+import com.vamvisions.verbeclair.core.database.verb.entity.MetadataKeys
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import java.io.File

@@ -2,10 +2,10 @@ package com.vamvisions.verbeclair.core.data.user
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.vamvisions.verbeclair.core.data.bundle.inMemoryUserDatabaseBuilder
-import com.vamvisions.verbeclair.core.database.user.AttemptLineEntity
-import com.vamvisions.verbeclair.core.database.user.SelectedTense
-import com.vamvisions.verbeclair.core.database.user.TestAttemptEntity
 import com.vamvisions.verbeclair.core.database.user.UserDatabase
+import com.vamvisions.verbeclair.core.database.user.entity.AttemptLineEntity
+import com.vamvisions.verbeclair.core.database.user.entity.SelectedTense
+import com.vamvisions.verbeclair.core.database.user.entity.TestAttemptEntity
 import com.vamvisions.verbeclair.core.domain.score.AttemptKind
 import com.vamvisions.verbeclair.core.domain.score.LineResult
 import kotlinx.coroutines.Dispatchers

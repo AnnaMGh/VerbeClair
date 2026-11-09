@@ -8,7 +8,7 @@ import com.vamvisions.verbeclair.core.data.bundle.inMemoryVerbDatabaseBuilder
 import com.vamvisions.verbeclair.core.data.verb.RoomVerbCatalog
 import com.vamvisions.verbeclair.core.database.user.UserDatabase
 import com.vamvisions.verbeclair.core.database.verb.VerbDatabase
-import com.vamvisions.verbeclair.core.database.verb.VerbEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.VerbEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.first

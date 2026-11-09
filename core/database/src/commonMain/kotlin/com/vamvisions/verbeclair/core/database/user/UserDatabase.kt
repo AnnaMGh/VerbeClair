@@ -11,6 +11,10 @@ import androidx.room.RoomDatabaseConstructor
 import androidx.room.Transaction
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import com.vamvisions.verbeclair.core.database.user.entity.AttemptLineEntity
+import com.vamvisions.verbeclair.core.database.user.entity.FavouriteEntity
+import com.vamvisions.verbeclair.core.database.user.entity.SelectedTense
+import com.vamvisions.verbeclair.core.database.user.entity.TestAttemptEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
