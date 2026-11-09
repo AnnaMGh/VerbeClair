@@ -38,8 +38,7 @@ class ListControlsSheetTest {
     private fun ComposeUiTest.chip(label: String) = onNode(hasText(label) and hasClickAction()).performScrollTo()
 
     /** The Reflexive filter chip, which comes before the Group by option of the same name. */
-    private fun ComposeUiTest.filterChip(label: String) =
-        onAllNodes(hasText(label) and hasClickAction())[0].performScrollTo()
+    private fun ComposeUiTest.filterChip(label: String) = onAllNodes(hasText(label) and hasClickAction())[0].performScrollTo()
 
     @Test
     fun filterChipsAreMultiSelectWithinACategory() =

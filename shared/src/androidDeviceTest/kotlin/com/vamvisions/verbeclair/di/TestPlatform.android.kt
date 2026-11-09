@@ -14,8 +14,7 @@ actual fun KoinApplication.withTestPlatform() {
 
 // Not the cache directory: the system empties it when storage runs low, as the 156 MB verb
 // database install can cause on an emulator.
-actual fun createTestDirectory(): String =
-    Files.createTempDirectory(targetContext.filesDir.toPath(), "koin-graph").toFile().absolutePath
+actual fun createTestDirectory(): String = Files.createTempDirectory(targetContext.filesDir.toPath(), "koin-graph").toFile().absolutePath
 
 actual fun deleteTestDirectory(path: String) {
     File(path).deleteRecursively()
