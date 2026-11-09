@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vamvisions.verbeclair.core.designsystem.generated.resources.Res
 import com.vamvisions.verbeclair.core.designsystem.generated.resources.search_clear
@@ -95,4 +97,40 @@ fun VerbeClairSearchBar(
             }
         },
     )
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=5-45
+@Preview(widthDp = 260)
+@Composable
+private fun SearchBarEmptyLightPreview() {
+    ComponentPreview(darkTheme = false) {
+        VerbeClairSearchBar(query = "", onQueryChange = {}, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=5-45
+@Preview(widthDp = 260)
+@Composable
+private fun SearchBarEmptyDarkPreview() {
+    ComponentPreview(darkTheme = true) {
+        VerbeClairSearchBar(query = "", onQueryChange = {}, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=5-55
+@Preview(widthDp = 260)
+@Composable
+private fun SearchBarFilledLightPreview() {
+    ComponentPreview(darkTheme = false) {
+        VerbeClairSearchBar(query = "su", onQueryChange = {}, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=5-55
+@Preview(widthDp = 260)
+@Composable
+private fun SearchBarFilledDarkPreview() {
+    ComponentPreview(darkTheme = true) {
+        VerbeClairSearchBar(query = "su", onQueryChange = {}, modifier = Modifier.fillMaxWidth())
+    }
 }

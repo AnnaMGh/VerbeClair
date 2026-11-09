@@ -151,6 +151,8 @@ prism:
     active: false
   PreviewMustBePrivate:
     active: false
+  PreviewInSameFileAsComposable:
+    active: false
   PreviewFunctionNaming:
     active: false
   PreviewMustWrapInTheme:
