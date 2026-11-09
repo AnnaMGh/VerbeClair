@@ -348,7 +348,7 @@ prism:
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   PreviewInSameFileAsComposable:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   PreviewFunctionNaming:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
