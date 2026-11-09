@@ -13,7 +13,7 @@ import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 
 /**
  * Reports a `Dispatchers.setMain(...)` call in a test class that declares no
- * `@AfterEach`/`@After` teardown calling `Dispatchers.resetMain()`.
+ * `@AfterEach`/`@After`/`@AfterTest` teardown calling `Dispatchers.resetMain()`.
  *
  * A replaced main dispatcher outlives the test that installed it, so a missing
  * reset leaks into every test that runs after it in the same JVM. The teardown
@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 class DispatchersSetMainWithoutReset(config: Config) :
     Rule(
         config,
-        "A test class that calls Dispatchers.setMain must reset it in an @AfterEach/@After teardown.",
+        "A test class that calls Dispatchers.setMain must reset it in an @AfterEach/@After/@AfterTest teardown.",
     ) {
     override fun visitDotQualifiedExpression(expression: KtDotQualifiedExpression) {
         super.visitDotQualifiedExpression(expression)
@@ -37,7 +37,7 @@ class DispatchersSetMainWithoutReset(config: Config) :
         report(
             Finding(
                 Entity.from(expression),
-                "Add an @AfterEach (or @After) function calling Dispatchers.resetMain() " +
+                "Add an @AfterEach (or @After, @AfterTest) function calling Dispatchers.resetMain() " +
                     "to this class, so the replaced main dispatcher does not leak into other tests.",
             ),
         )
@@ -62,6 +62,6 @@ class DispatchersSetMainWithoutReset(config: Config) :
         const val DISPATCHERS = "Dispatchers"
         const val SET_MAIN = "setMain"
         const val RESET_MAIN = "resetMain"
-        val TEARDOWN_ANNOTATIONS = setOf("AfterEach", "After")
+        val TEARDOWN_ANNOTATIONS = setOf("AfterEach", "After", "AfterTest")
     }
 }
