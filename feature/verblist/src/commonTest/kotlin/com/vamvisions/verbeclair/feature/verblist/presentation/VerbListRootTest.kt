@@ -59,6 +59,29 @@ class VerbListRootTest {
         }
 
     @Test
+    fun aFailedFavouriteChangeShowsTheSnackbar() =
+        runComposeUiTest {
+            val failing = FakeFavouritesRepository(failing = true)
+            setContent {
+                VerbeClairTheme {
+                    VerbListRoot(
+                        onVerbClick = {},
+                        onTestClick = {},
+                        viewModel = verbListViewModel(database, failing),
+                        layout = WindowLayout.Compact,
+                    )
+                }
+            }
+            waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("verb00")).fetchSemanticsNodes().isNotEmpty() }
+
+            onAllNodes(hasContentDescription("Add to favourites"))[0].performClick()
+
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodes(hasText("Couldn’t update favourites. Try again.")).fetchSemanticsNodes().isNotEmpty()
+            }
+        }
+
+    @Test
     fun tapsAndTheLayoutReachTheScreen() =
         runComposeUiTest {
             val opened = mutableListOf<String>()

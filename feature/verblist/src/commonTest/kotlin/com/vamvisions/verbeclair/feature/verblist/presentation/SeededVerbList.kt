@@ -23,10 +23,10 @@ fun seededVerbDatabase(): VerbDatabase =
         .also { runBlocking { seed(it) } }
 
 /** The real ViewModel over [database], with fakes for the user data. */
-fun verbListViewModel(database: VerbDatabase) =
+fun verbListViewModel(database: VerbDatabase, favourites: FakeFavouritesRepository = FakeFavouritesRepository()) =
     VerbListViewModel(
         catalog = RoomVerbCatalog(database),
-        favourites = FakeFavouritesRepository(),
+        favourites = favourites,
         scores = FakeTestScoreRepository(),
         preferences = FakeListPreferences(),
         syncTrigger = FakeDataSyncTrigger(),

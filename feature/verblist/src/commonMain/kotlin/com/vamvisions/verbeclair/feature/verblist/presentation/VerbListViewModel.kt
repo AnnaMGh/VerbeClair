@@ -8,6 +8,7 @@ import androidx.paging.insertSeparators
 import androidx.paging.map
 import com.vamvisions.verbeclair.core.domain.favourite.FavouritesRepository
 import com.vamvisions.verbeclair.core.domain.preferences.ListPreferences
+import com.vamvisions.verbeclair.core.domain.result.onFailure
 import com.vamvisions.verbeclair.core.domain.score.TestScoreRepository
 import com.vamvisions.verbeclair.core.domain.sync.DataSyncTrigger
 import com.vamvisions.verbeclair.core.domain.verb.ListChoices
@@ -17,6 +18,7 @@ import com.vamvisions.verbeclair.core.domain.verb.VerbCatalog
 import com.vamvisions.verbeclair.core.domain.verb.VerbListItem
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,6 +33,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -50,6 +53,9 @@ class VerbListViewModel(
 
     private val _state = MutableStateFlow(VerbListState())
     val state: StateFlow<VerbListState> = _state.asStateFlow()
+
+    private val _events = Channel<VerbListEvent>(Channel.BUFFERED)
+    val events: Flow<VerbListEvent> = _events.receiveAsFlow()
 
     /** Choices and tab are restored before the first query, so the list never loads twice at start-up. */
     private val restored = MutableStateFlow(false)
@@ -186,7 +192,9 @@ class VerbListViewModel(
 
     private fun toggleFavourite(slug: String) {
         viewModelScope.launch {
-            if (slug in favouriteSlugs.value.orEmpty()) favourites.remove(slug) else favourites.add(slug)
+            // The favourites flow re-emits on success, so the star updates by itself.
+            val result = if (slug in favouriteSlugs.value.orEmpty()) favourites.remove(slug) else favourites.add(slug)
+            result.onFailure { _events.send(VerbListEvent.FavouriteUpdateFailed) }
         }
     }
 

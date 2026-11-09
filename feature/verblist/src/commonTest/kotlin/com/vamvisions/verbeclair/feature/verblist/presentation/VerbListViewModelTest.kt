@@ -246,6 +246,35 @@ class VerbListViewModelTest {
         }
 
     @Test
+    fun aFailedFavouriteChangeEmitsAnEventAndKeepsTheStar() =
+        runTest {
+            favourites.failing = true
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onAction(VerbListAction.OnToggleFavourite("aller"))
+
+                assertEquals(VerbListEvent.FavouriteUpdateFailed, awaitItem())
+            }
+            assertEquals(0, viewModel.state.value.favouritesCount)
+        }
+
+    @Test
+    fun aSuccessfulFavouriteChangeEmitsNoEvent() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onAction(VerbListAction.OnToggleFavourite("aller"))
+                advanceUntilIdle()
+
+                expectNoEvents()
+            }
+        }
+
+    @Test
     fun emptyDatabaseRequestsOneSync() =
         runTest {
             catalog.empty.value = true
