@@ -28,8 +28,18 @@
 - [ ] 5.1 Confirm Notion N-16 is present in the requirements page and cited in `proposal.md`; verify by fetching the page and finding the row
 - [ ] 5.2 Run `openspec validate fix-kmp-static-analysis --strict`; verify it reports no errors
 
-## 6. Done gate
+## 6. Typed results and the favourite failure message
 
-- [ ] 6.1 From the repository root with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`, run `./gradlew build` and `./gradlew jacocoCoverageVerification`; verify both pass for every module
-- [ ] 6.2 Run the Android device tests on the VerbeClair emulator, `ANDROID_SERIAL=emulator-5574 ./gradlew connectedAndroidDeviceTest`; verify they pass (note the known flaky `AppKoinGraphTest` if it fails and re-run it alone before concluding)
-- [ ] 6.3 Open the pull request into `dev`, wait for the three CI jobs, and verify all pass before asking the user to approve the merge
+- [x] 6.1 Add N-17 to the Notion requirements page; verify by fetching the page and finding the row
+- [x] 6.2 Add `Result`, `EmptyResult`, `DataError` and their helpers to `:core:domain` and return `EmptyResult<DataError.Local>` from `FavouritesRepository.add` and `remove` (the Room implementation catches `SQLiteException`); verify with `RoomFavouritesRepositoryTest`, including a test that drops the table and gets `DataError.Local.UNKNOWN`
+- [x] 6.3 Add `VerbeClairSnackbar` (Figma 7:144) with a light and a dark `@Preview`, each preceded by the Figma URL; verify with `./gradlew :core:designsystem:detekt` and a preview render compared with the Figma frame
+- [x] 6.4 Emit `VerbListEvent.FavouriteUpdateFailed` from `VerbListViewModel` and show the snackbar in `VerbListRoot` through `ObserveAsEvents`, with the message in the English, French and Romanian strings; verify with `VerbListViewModelTest` (event on failure, none on success) and `VerbListRootTest.aFailedFavouriteChangeShowsTheSnackbar`
+- [x] 6.7 Add the detekt rule `PreviewInSameFileAsComposable` with tests, activate it in `detekt.yml`, and merge every `*Previews.kt` into the file it previews; verify `./gradlew build` passes, no `*Previews.kt` is left, and a temporary separate preview file makes `:core:designsystem:detekt` fail
+- [ ] 6.5 Add the failure message to the Notion requirements next to L-13; verify by fetching the page and finding it
+- [ ] 6.6 Compare the snackbar on phone portrait, phone landscape and tablet, in light and dark, with Figma; verify with `android-preview-figma-verify`
+
+## 7. Done gate
+
+- [ ] 7.1 From the repository root with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`, run `./gradlew build` and `./gradlew jacocoCoverageVerification`; verify both pass for every module
+- [ ] 7.2 Run the Android device tests on the VerbeClair emulator, `ANDROID_SERIAL=emulator-5574 ./gradlew connectedAndroidDeviceTest`; verify they pass (note the known flaky `AppKoinGraphTest` if it fails and re-run it alone before concluding)
+- [ ] 7.3 Open the pull request into `dev`, wait for the three CI jobs, and verify all pass before asking the user to approve the merge

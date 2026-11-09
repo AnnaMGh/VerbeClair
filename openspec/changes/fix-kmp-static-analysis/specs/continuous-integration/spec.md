@@ -24,6 +24,10 @@ The check fails if any task fails.
 - **WHEN** a class in `commonMain` breaks an architecture rule, for example a ViewModel without a public state flow
 - **THEN** the checks and unit tests check fails and its log names the class and the rule
 
+#### Scenario: Preview in a separate file
+- **WHEN** a `@Preview` is declared in a file that does not declare the composable it previews, for example a `*Previews.kt` file
+- **THEN** the checks and unit tests check fails and its log names the preview
+
 #### Scenario: Test-only rule in a multiplatform test source set
 - **WHEN** a test in `commonTest` breaks a rule meant for test code, for example a banned mocking library
 - **THEN** the checks and unit tests check fails, in the same way as for a test in `androidHostTest`
