@@ -574,21 +574,6 @@ private fun ScreenPreview(darkTheme: Boolean, content: @Composable () -> Unit) {
 
 private val GroupedChoices = PreviewData.groupedChoices
 
-/** The list controls sheet as drawn by [components.ListControlsSheet], without the modal window. */
-@Composable
-private fun SheetFrame(choices: ListChoices) {
-    val radius = VerbeClairTheme.radius.xl
-    Column(
-        Modifier.fillMaxWidth().background(
-            MaterialTheme.colorScheme.surfaceContainerLow,
-            RoundedCornerShape(topStart = radius, topEnd = radius),
-        ),
-    ) {
-        BottomSheetHandle(Modifier.fillMaxWidth())
-        ListControlsContent(choices = choices, onAction = {})
-    }
-}
-
 // Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=10-2
 @Preview(widthDp = 393, heightDp = 728)
 @Composable
@@ -682,24 +667,6 @@ private fun L03GroupedDarkPreview() {
             onVerbClick = {},
             onTestClick = {},
         )
-    }
-}
-
-// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=10-405
-@Preview(widthDp = 393)
-@Composable
-private fun L04ListControlsSheetLightPreview() {
-    ScreenPreview(darkTheme = false) {
-        SheetFrame(choices = ListChoices(filters = GroupedChoices.filters))
-    }
-}
-
-// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=13-985
-@Preview(widthDp = 393)
-@Composable
-private fun L04ListControlsSheetDarkPreview() {
-    ScreenPreview(darkTheme = true) {
-        SheetFrame(choices = ListChoices(filters = GroupedChoices.filters))
     }
 }
 
@@ -1060,23 +1027,5 @@ private fun L03GroupedRomanianPreview() {
             onVerbClick = {},
             onTestClick = {},
         )
-    }
-}
-
-// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=10-405
-@Preview(widthDp = 393, locale = "fr")
-@Composable
-private fun L04ListControlsSheetFrenchPreview() {
-    ScreenPreview(darkTheme = false) {
-        SheetFrame(choices = ListChoices(filters = GroupedChoices.filters))
-    }
-}
-
-// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=10-405
-@Preview(widthDp = 393, locale = "ro")
-@Composable
-private fun L04ListControlsSheetRomanianPreview() {
-    ScreenPreview(darkTheme = false) {
-        SheetFrame(choices = ListChoices(filters = GroupedChoices.filters))
     }
 }

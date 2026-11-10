@@ -1,7 +1,9 @@
 package com.vamvisions.verbeclair.feature.verblist.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -20,6 +22,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vamvisions.verbeclair.core.designsystem.component.BottomSheetHandle
 import com.vamvisions.verbeclair.core.designsystem.component.ButtonStyle
@@ -41,6 +44,7 @@ import com.vamvisions.verbeclair.feature.verblist.generated.resources.sheet_grou
 import com.vamvisions.verbeclair.feature.verblist.generated.resources.sheet_reset
 import com.vamvisions.verbeclair.feature.verblist.generated.resources.sheet_sort
 import com.vamvisions.verbeclair.feature.verblist.generated.resources.sheet_title
+import com.vamvisions.verbeclair.feature.verblist.presentation.PreviewData
 import com.vamvisions.verbeclair.feature.verblist.presentation.VerbListAction
 import com.vamvisions.verbeclair.feature.verblist.presentation.label
 import com.vamvisions.verbeclair.feature.verblist.presentation.reflexiveChipLabel
@@ -195,4 +199,52 @@ private fun ChipField(label: String, chips: @Composable () -> Unit) {
         )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(spacing.space8)) { chips() }
     }
+}
+
+// Sheet previews, one per Figma state (design D13). The sheet is drawn without its modal window.
+
+@Composable
+private fun SheetFrame(darkTheme: Boolean, content: @Composable ColumnScope.() -> Unit) {
+    VerbeClairTheme(darkTheme = darkTheme) {
+        val radius = VerbeClairTheme.radius.xl
+        Column(
+            Modifier.fillMaxWidth().background(
+                MaterialTheme.colorScheme.surfaceContainerLow,
+                RoundedCornerShape(topStart = radius, topEnd = radius),
+            ),
+        ) {
+            BottomSheetHandle(Modifier.fillMaxWidth())
+            content()
+        }
+    }
+}
+
+private val SheetPreviewChoices = ListChoices(filters = PreviewData.groupedChoices.filters)
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=10-405
+@Preview(widthDp = 393)
+@Composable
+private fun L04ListControlsSheetLightPreview() {
+    SheetFrame(darkTheme = false) { ListControlsContent(choices = SheetPreviewChoices, onAction = {}) }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=13-985
+@Preview(widthDp = 393)
+@Composable
+private fun L04ListControlsSheetDarkPreview() {
+    SheetFrame(darkTheme = true) { ListControlsContent(choices = SheetPreviewChoices, onAction = {}) }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=10-405
+@Preview(widthDp = 393, locale = "fr")
+@Composable
+private fun L04ListControlsSheetFrenchPreview() {
+    SheetFrame(darkTheme = false) { ListControlsContent(choices = SheetPreviewChoices, onAction = {}) }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=10-405
+@Preview(widthDp = 393, locale = "ro")
+@Composable
+private fun L04ListControlsSheetRomanianPreview() {
+    SheetFrame(darkTheme = false) { ListControlsContent(choices = SheetPreviewChoices, onAction = {}) }
 }
