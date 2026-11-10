@@ -38,7 +38,8 @@ The check fails if any task fails.
 The checks and unit tests job SHALL verify the line coverage of the unit tests of every module that has a JVM or Android
 host test target against that module's floor, and SHALL fail if any module is below its floor. A floor starts at the
 coverage measured when it is introduced and SHALL only be raised, never lowered, unless the pull request states the
-reason. The target for every module is 80 %. A module that has no JVM or Android host test target is exempt, and the
+reason. The target for every module is 80 %. A module that has no JVM or Android host test target is exempt, as are the `:tooling:*` build-tooling
+modules (plain Kotlin/JVM, outside the app and removed by the next change), and the
 exempt modules SHALL be listed where the floors are defined, so that an exemption is visible and not accidental.
 
 #### Scenario: Module at or above its floor

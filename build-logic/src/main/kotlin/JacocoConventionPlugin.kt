@@ -156,7 +156,10 @@ class JacocoConventionPlugin : Plugin<Project> {
         /** The coverage every module is working towards; floors rise to it and never fall. */
         const val TARGET_PERCENT = 80
 
-        /** Modules without a JVM or Android host test target, so there is no unit-test coverage to measure. */
+        /**
+         * Modules with no unit-test coverage to measure: no JVM or Android host test target, or `:tooling:*`
+         * build tooling, which the spec exempts by name.
+         */
         val EXEMPT =
             mapOf(
                 ":core:designsystem" to "Compose UI only; tested as device tests, no jvm() or host test target",
