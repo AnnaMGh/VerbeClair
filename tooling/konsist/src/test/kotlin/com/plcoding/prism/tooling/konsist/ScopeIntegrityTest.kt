@@ -197,14 +197,16 @@ class ScopeIntegrityTest {
 
     private fun hasKotlinUnderMainSourceSet(modulePath: String): Boolean =
         File(Konsist.projectRootPath, "$modulePath/src")
-            .listFiles { candidate: File -> candidate.isDirectory && candidate.name.endsWith(MAIN_SUFFIX) }
-            .orEmpty()
+            .listFiles { candidate: File ->
+                candidate.isDirectory && (candidate.name == PLAIN_MAIN || candidate.name.endsWith(MAIN_SUFFIX))
+            }.orEmpty()
             .any { sourceSet ->
                 sourceSet.walkTopDown().any { it.isFile && it.extension == KOTLIN_EXTENSION }
             }
 
     private companion object {
         const val KOTLIN_EXTENSION = "kt"
+        const val PLAIN_MAIN = "main"
 
         const val MAIN_SUFFIX = "Main"
 

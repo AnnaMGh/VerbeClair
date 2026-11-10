@@ -88,15 +88,19 @@ internal object ProjectScope {
     val files: List<KoFileDeclaration> by lazy { all.files }
 
     val productionFiles: List<KoFileDeclaration> by lazy {
-        files.filter { it.sourceSetName.endsWith(PRODUCTION_SUFFIX) }
+        files.filter { it.sourceSetName == PLAIN_PRODUCTION || it.sourceSetName.endsWith(PRODUCTION_SUFFIX) }
     }
 
     val testFiles: List<KoFileDeclaration> by lazy {
-        files.filter { it.sourceSetName.endsWith(TEST_SUFFIX) }
+        files.filter { it.sourceSetName == PLAIN_TEST || it.sourceSetName.endsWith(TEST_SUFFIX) }
     }
 
     private const val PRODUCTION_SUFFIX = "Main"
     private const val TEST_SUFFIX = "Test"
+
+    // A plain Android or JVM module names its source sets `main` and `test`, with no target prefix.
+    private const val PLAIN_PRODUCTION = "main"
+    private const val PLAIN_TEST = "test"
 
     /**
      * The root package this project's own code lives under -- the namespace
