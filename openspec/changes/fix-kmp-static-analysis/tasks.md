@@ -40,6 +40,6 @@
 
 ## 7. Done gate
 
-- [ ] 7.1 From the repository root with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`, run `./gradlew build` and `./gradlew jacocoCoverageVerification`; verify both pass for every module
-- [ ] 7.2 Run the Android device tests on the VerbeClair emulator, `ANDROID_SERIAL=emulator-5574 ./gradlew connectedAndroidDeviceTest`; verify they pass (note the known flaky `AppKoinGraphTest` if it fails and re-run it alone before concluding)
+- [x] 7.1 From the repository root with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`, run `./gradlew build` and `./gradlew jacocoCoverageVerification`; verify both pass for every module
+- [x] 7.2 Run the Android device tests on the VerbeClair emulator, `ANDROID_SERIAL=emulator-5574 ./gradlew connectedAndroidDeviceTest`; verify they pass (note the known flaky `AppKoinGraphTest` if it fails and re-run it alone before concluding)
 - [ ] 7.3 Open the pull request into `dev`, wait for the three CI jobs, and verify all pass before asking the user to approve the merge
