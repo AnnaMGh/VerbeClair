@@ -261,6 +261,22 @@ class VerbListViewModelTest {
         }
 
     @Test
+    fun aFailedRemovalEmitsAnEventAndKeepsTheStarFilled() =
+        runTest {
+            favourites.slugs.value = setOf("aller")
+            favourites.failing = true
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onAction(VerbListAction.OnToggleFavourite("aller"))
+
+                assertEquals(VerbListEvent.FavouriteUpdateFailed, awaitItem())
+            }
+            assertEquals(1, viewModel.state.value.favouritesCount)
+        }
+
+    @Test
     fun aSuccessfulFavouriteChangeEmitsNoEvent() =
         runTest {
             val viewModel = viewModel()

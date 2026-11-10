@@ -165,6 +165,8 @@ class JacocoConventionPlugin : Plugin<Project> {
                 ":core:data" to
                     "wraps Room and DataStore for the platforms; tested as device tests, no jvm() or host test target",
                 ":core:presentation" to "only commonMain and commonTest; no jvm() or host test target",
+                ":feature:verblist" to
+                    "only commonMain, commonTest and device tests; no jvm() or host test target",
             )
 
         const val REPORT_FILE = "reports/jacoco/coverage.xml"
