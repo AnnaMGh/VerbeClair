@@ -159,14 +159,16 @@ class JacocoConventionPlugin : Plugin<Project> {
         /** Modules without a JVM or Android host test target, so there is no unit-test coverage to measure. */
         val EXEMPT =
             mapOf(
-                ":shared" to
-                    "composition root; its tests are device tests, and a jvm() target would need one on four dependencies",
                 ":core:designsystem" to "Compose UI only; tested as device tests, no jvm() or host test target",
                 ":core:data" to
                     "wraps Room and DataStore for the platforms; tested as device tests, no jvm() or host test target",
                 ":core:presentation" to "only commonMain and commonTest; no jvm() or host test target",
                 ":feature:verblist" to
                     "only commonMain, commonTest and device tests; no jvm() or host test target",
+                ":tooling:prism-rules" to
+                    "kotlin.jvm build tooling; this plugin measures multiplatform modules only, so it is not wired yet",
+                ":tooling:konsist" to
+                    "kotlin.jvm build tooling; this plugin measures multiplatform modules only, so it is not wired yet",
             )
 
         const val REPORT_FILE = "reports/jacoco/coverage.xml"
