@@ -12,6 +12,10 @@ plugins {
     id("prism.jacoco")
 }
 
+coverageFloor {
+    linePercent = 58
+}
+
 kotlin {
     iosArm64()
     iosSimulatorArm64()

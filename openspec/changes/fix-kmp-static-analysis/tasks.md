@@ -18,10 +18,10 @@
 
 ## 4. Coverage ratchet
 
-- [ ] 4.1 Bring over the report logic from `chore/prism-kmp-support` (`git checkout chore/prism-kmp-support -- build-logic/src/main/kotlin/JacocoConventionPlugin.kt`) and verify `./gradlew :core:domain:jacocoXmlReport` writes `build/reports/jacoco/coverage.xml`
-- [ ] 4.2 Add `jacocoCoverageVerification` (line counter, minimum from the module's floor) to the plugin, with the 80 % target as one constant and the exempt modules listed once with a reason each; verify the task exists in `:core:domain` and `:core:database` and not in an exempt module
-- [ ] 4.3 Set floors from today's measurement, rounded down: `:core:database` 58, `:core:domain` 44; verify `./gradlew :core:database:jacocoCoverageVerification :core:domain:jacocoCoverageVerification` passes, and fails when a floor is temporarily set above the measured value (then revert)
-- [ ] 4.4 Add a `jacocoCoverageVerification` step to the checks and unit tests job in `.github/workflows/ci.yml`, after `./gradlew build`; verify the workflow file is valid and the step is present in the job
+- [x] 4.1 Bring over the report logic from `chore/prism-kmp-support` (`git checkout chore/prism-kmp-support -- build-logic/src/main/kotlin/JacocoConventionPlugin.kt`) and verify `./gradlew :core:domain:jacocoXmlReport` writes `build/reports/jacoco/coverage.xml`
+- [x] 4.2 Add `jacocoCoverageVerification` (line counter, minimum from the module's floor) to the plugin, with the 80 % target as one constant and the exempt modules listed once with a reason each; verify the task exists in `:core:domain` and `:core:database` and not in an exempt module
+- [x] 4.3 Set floors from today's measurement, rounded down: `:core:database` 58, `:core:domain` 43 (measured 43.4 % after the favourites work added code; 44 was the earlier figure); verify `./gradlew :core:database:jacocoCoverageVerification :core:domain:jacocoCoverageVerification` passes, and fails when a floor is temporarily set above the measured value (then revert)
+- [x] 4.4 Add a `jacocoCoverageVerification` step to the checks and unit tests job in `.github/workflows/ci.yml`, after `./gradlew build`; verify the workflow file is valid and the step is present in the job
 
 ## 5. Specs and requirement trace
 

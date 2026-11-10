@@ -95,6 +95,13 @@ jobs:
         env:
           FRENCH_VERBS_DATASET_TOKEN: ${{ secrets.FRENCH_VERBS_DATASET_TOKEN }}
 
+      # Separate from the build, so a coverage drop is told apart from a failing test. Floors are in each module's
+      # build file (`coverageFloor`); lowering one needs a reason in the pull request.
+      - name: Coverage floors
+        run: ./gradlew jacocoCoverageVerification --stacktrace
+        env:
+          FRENCH_VERBS_DATASET_TOKEN: ${{ secrets.FRENCH_VERBS_DATASET_TOKEN }}
+
       - name: Upload test reports
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
