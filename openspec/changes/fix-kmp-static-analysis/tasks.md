@@ -13,8 +13,8 @@
 
 ## 3. ktlint runs in `check`
 
-- [ ] 3.1 Make each module's `check` depend on its `ktlintCheck` in the ktlint convention plugin; verify with `./gradlew :core:domain:check --dry-run` that `ktlintCheck` is in the task graph
-- [ ] 3.2 Verify a formatting violation fails `./gradlew build` (introduce one, confirm the failure names file, line and rule, then revert)
+- [x] 3.1 Make each module's `check` depend on its `ktlintCheck` in the ktlint convention plugin; verify with `./gradlew :core:domain:check --dry-run` that `ktlintCheck` is in the task graph
+- [x] 3.2 Verify a formatting violation fails `./gradlew build` (introduce one, confirm the failure names file, line and rule, then revert)
 
 ## 4. Coverage ratchet
 

@@ -15,7 +15,8 @@ import java.io.File
  * catalog, and two tasks run it over the project's own Kotlin sources:
  *
  *  - `ktlintCheck` — read-only, fails the build on any violation. This is what
- *    the root `staticAnalysis` aggregate depends on.
+ *    the root `staticAnalysis` aggregate depends on, and so does the module's
+ *    own `check`, which makes `build` fail on a formatting violation.
  *  - `ktlintFormat` — the same scan with `--format`, autocorrecting in place.
  *
  * Neither task passes a rule id or a rule-configuration flag: the whole rule
@@ -65,23 +66,30 @@ class KtlintConventionPlugin : Plugin<Project> {
             val modulePath = path
             val observed = PrismScope.observes(project, modulePath, "ktlint")
 
-            tasks.register<JavaExec>("ktlintCheck") {
-                group = "verification"
-                description = "Checks Kotlin sources in this project against the root .editorconfig rule set."
-                classpath = configurations.getByName(KTLINT_CONFIGURATION)
-                mainClass.set(KTLINT_MAIN_CLASS)
-                workingDir = projectDir
-                args = SOURCE_PATTERNS + REPORTING_ARGS
-                // Resolved at EXECUTION time, not configuration time: the
-                // baseline is usually written by prismKtlintBaseline in the
-                // same invocation that then checks against it.
-                argumentProviders.add {
-                    if (baselineFile.isFile) listOf("--baseline=$BASELINE_FILE") else emptyList()
+            val ktlintCheck =
+                tasks.register<JavaExec>("ktlintCheck") {
+                    group = "verification"
+                    description = "Checks Kotlin sources in this project against the root .editorconfig rule set."
+                    classpath = configurations.getByName(KTLINT_CONFIGURATION)
+                    mainClass.set(KTLINT_MAIN_CLASS)
+                    workingDir = projectDir
+                    args = SOURCE_PATTERNS + REPORTING_ARGS
+                    // Resolved at EXECUTION time, not configuration time: the
+                    // baseline is usually written by prismKtlintBaseline in the
+                    // same invocation that then checks against it.
+                    argumentProviders.add {
+                        if (baselineFile.isFile) listOf("--baseline=$BASELINE_FILE") else emptyList()
+                    }
+                    // OBSERVE RUNS THE ENGINE AND DOES NOT FAIL THE BUILD. Every
+                    // violation is still printed; only the exit status changes.
+                    isIgnoreExitValue = observed
                 }
-                // OBSERVE RUNS THE ENGINE AND DOES NOT FAIL THE BUILD. Every
-                // violation is still printed; only the exit status changes.
-                isIgnoreExitValue = observed
-            }
+
+            // `check` -- and so `build` -- runs ktlint, as detekt's plugin already does
+            // for detekt. `check` is registered by whichever base, JVM or Kotlin
+            // Multiplatform plugin the module applies, in any order relative to this
+            // one, so it is matched by name rather than looked up.
+            tasks.matching { task -> task.name == "check" }.configureEach { dependsOn(ktlintCheck) }
 
             // Seeding is its own task and is never wired into staticAnalysis --
             // a gate that could write its own baseline would be an escape hatch
