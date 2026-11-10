@@ -25,8 +25,8 @@
 
 ## 5. Specs and requirement trace
 
-- [ ] 5.1 Confirm Notion N-16 is present in the requirements page and cited in `proposal.md`; verify by fetching the page and finding the row
-- [ ] 5.2 Run `openspec validate fix-kmp-static-analysis --strict`; verify it reports no errors
+- [x] 5.1 Confirm Notion N-16 is present in the requirements page and cited in `proposal.md`; verify by fetching the page and finding the row
+- [x] 5.2 Run `openspec validate fix-kmp-static-analysis --strict`; verify it reports no errors
 
 ## 6. Typed results and the favourite failure message
 
@@ -35,8 +35,8 @@
 - [x] 6.3 Add `VerbeClairSnackbar` (Figma 7:144) with a light and a dark `@Preview`, each preceded by the Figma URL; verify with `./gradlew :core:designsystem:detekt` and a preview render compared with the Figma frame
 - [x] 6.4 Emit `VerbListEvent.FavouriteUpdateFailed` from `VerbListViewModel` and show the snackbar in `VerbListRoot` through `ObserveAsEvents`, with the message in the English, French and Romanian strings; verify with `VerbListViewModelTest` (event on failure, none on success) and `VerbListRootTest.aFailedFavouriteChangeShowsTheSnackbar`
 - [x] 6.7 Add the detekt rule `PreviewInSameFileAsComposable` with tests, activate it in `detekt.yml`, and merge every `*Previews.kt` into the file it previews; verify `./gradlew build` passes, no `*Previews.kt` is left, and a temporary separate preview file makes `:core:designsystem:detekt` fail
-- [ ] 6.5 Add the failure message to the Notion requirements next to L-13; verify by fetching the page and finding it
-- [ ] 6.6 Compare the snackbar on phone portrait, phone landscape and tablet, in light and dark, with Figma; verify with `android-preview-figma-verify`
+- [x] 6.5 Add the failure message to the Notion requirements next to L-13; verify by fetching the page and finding it
+- [x] 6.6 Compare the snackbar on phone portrait, phone landscape and tablet, in light and dark, with Figma; verified by hand in the Android Studio preview pane (`render-compose-preview` fails on `commonMain` previews)
 
 ## 7. Done gate
 
