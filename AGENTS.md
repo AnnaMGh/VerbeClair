@@ -44,7 +44,7 @@ per-artifact rules and the definition of done. If anything here disagrees with i
 
    **Order for a change made with OpenSpec:** finish the tasks, run the tests and `./gradlew build` (this ticks the
    done-gate task) and commit → archive the change and commit it (`chore(openspec): archive <change>`) → `/finalize` →
-   fix and commit until it ends in `READY_TO_PUSH` → open the PR to `dev`. Archive before `/finalize`, not
+   fix and commit until it records a pass (`READY_TO_PUSH`, or `NOTHING_TO_FINALIZE` / your diff review in chat, as above) → open the PR to `dev`. Archive before `/finalize`, not
    after: the archive is a commit, so one made after the pass would make it stale. The PR then ships the archived
    change and the synced specs. `/finalize` is an extra review gate and does not replace the build and tests; if it
    forces code fixes, re-run them and edit the archived change only when its artifacts became wrong.

@@ -102,7 +102,7 @@ operations:
   archive:
     guidance:
       - "Archive only after confirming, with command output, that all tests pass and `./gradlew build` succeeds for every affected module. That output is what lets the done-gate task be ticked before the archive."
-      - "Order: finish the tasks and commit, archive and commit (`chore(openspec): archive <change>`), THEN run `/finalize` until READY_TO_PUSH, then open the PR to `dev`. Never archive after the `/finalize` pass: the archive commit makes the pass stale."
+      - "Order: finish the tasks and commit, archive and commit (`chore(openspec): archive <change>`), THEN run `/finalize` until it records a pass (READY_TO_PUSH, or NOTHING_TO_FINALIZE / the user's diff review in chat, as AGENTS.md item 9 describes), then open the PR to `dev`. Never archive after the `/finalize` pass: the archive commit makes the pass stale."
       - "`/finalize` is a second, independent review gate. It does not replace running `./gradlew build` and the tests."
       - "If `/finalize` forces code fixes, re-run the tests and build, and edit the archived change only when its artifacts became wrong."
       - "Confirm every component/screen has a Figma-linked @Preview for each state before archiving."
