@@ -162,6 +162,7 @@ class JacocoConventionPlugin : Plugin<Project> {
          */
         val EXEMPT =
             mapOf(
+                ":androidApp" to "application entry point with only main sources; no jvm() or host test target",
                 ":core:designsystem" to "Compose UI only; tested as device tests, no jvm() or host test target",
                 ":core:data" to
                     "wraps Room and DataStore for the platforms; tested as device tests, no jvm() or host test target",

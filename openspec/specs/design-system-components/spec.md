@@ -312,4 +312,4 @@ needs one.
 
 #### Scenario: Previews
 - **WHEN** the component previews are opened
-- **THEN** the snackbar has a light and a dark preview, each preceded by the Figma URL of node 7:144
+- **THEN** the snackbar has a light and a dark preview, each preceded by the Figma URL of the frame it shows: node 169:226 ("Snackbar · Favourite update failed"), an instance of node 7:144
