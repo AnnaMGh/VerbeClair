@@ -33,8 +33,8 @@ per-artifact rules and the definition of done. If anything here disagrees with i
    `HEAD`, so a new commit means running it again. A change that touches no module (a hook, script, workflow or
    docs change) ends in `NOTHING_TO_FINALIZE` after `/verify` passes, and that records the pass too. If the change
    edits files that define agent or CI behaviour (`.claude/`, `.prism/`, `.github/`, `scripts/`, `AGENTS.md`,
-   `CLAUDE.md`, `openspec/config.yaml`), `/verify` is not enough: the pass is recorded only after you say in chat that
-   you reviewed the diff. Always pass
+   `CLAUDE.md`, `openspec/config.yaml`), `/verify` is not enough: the pass is recorded only after the user says in chat that
+   they reviewed the diff (an agent cannot give this review itself). Always pass
    `--base` explicitly. The hook is a plain text match: any Bash command whose text contains `gh … pr create` or `gh … pr new` is
    treated as the PR command, however it is wrapped. That also catches text that only mentions it (a commit message,
    an echo); reword it or run the real PR command. The gate is skipped only when every `--base`/`-B` in the text is
@@ -44,7 +44,7 @@ per-artifact rules and the definition of done. If anything here disagrees with i
 
    **Order for a change made with OpenSpec:** finish the tasks, run the tests and `./gradlew build` (this ticks the
    done-gate task) and commit → archive the change and commit it (`chore(openspec): archive <change>`) → `/finalize` →
-   fix and commit until it records a pass (`READY_TO_PUSH`, or `NOTHING_TO_FINALIZE` / your diff review in chat, as above) → open the PR to `dev`. Archive before `/finalize`, not
+   fix and commit until it records a pass (`READY_TO_PUSH`, or `NOTHING_TO_FINALIZE` / the user's diff review in chat, as above) → open the PR to `dev`. Archive before `/finalize`, not
    after: the archive is a commit, so one made after the pass would make it stale. The PR then ships the archived
    change and the synced specs. `/finalize` is an extra review gate and does not replace the build and tests; if it
    forces code fixes, re-run them and edit the archived change only when its artifacts became wrong.
