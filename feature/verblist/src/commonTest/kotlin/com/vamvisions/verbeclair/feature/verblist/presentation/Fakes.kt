@@ -82,7 +82,13 @@ class FakeFavouritesRepository(
 }
 
 class FakeTestScoreRepository(private val scores: Map<String, Int> = emptyMap()) : TestScoreRepository {
-    override fun observeScores(slugs: Set<String>): Flow<Map<String, Int>> = flowOf(scores.filterKeys { it in slugs })
+    /** The slugs of every call, in order. */
+    val requested = mutableListOf<Set<String>>()
+
+    override fun observeScores(slugs: Set<String>): Flow<Map<String, Int>> {
+        requested += slugs
+        return flowOf(scores.filterKeys { it in slugs })
+    }
 }
 
 class FakeListPreferences(choices: ListChoices = ListChoices.Default, tab: ListTab = ListTab.ALL) : ListPreferences {
