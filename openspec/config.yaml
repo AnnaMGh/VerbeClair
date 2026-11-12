@@ -86,7 +86,7 @@ rules:
     - "Every component and screen task must include one @Preview per Figma state, with all states covered."
     - "Each @Preview must be preceded by a comment with the Figma URL of that exact state, e.g. `// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/...?node-id=<state-node-id>`."
     - "Include preview/verification tasks for phone portrait, phone landscape, tablet, light and dark mode."
-    - "The final task of every change is the done gate: all tests pass and `./gradlew build` passes for every affected module (or the whole project from the root)."
+    - "The final task of every change is the done gate: all tests pass and `./gradlew build` passes for every affected module (or the whole project from the root). It is proven by `/finalize` after the archive commit."
 
 # Per-operation guidance
 operations:
@@ -101,5 +101,7 @@ operations:
       - "Do not mark a task complete until all tests pass and `./gradlew build` passes for every affected module, including dependent modules."
   archive:
     guidance:
-      - "Archive only after confirming, with command output, that all tests pass and `./gradlew build` succeeds for every affected module."
+      - "Archive once every task is done and committed, then commit the archive (`chore(openspec): archive <change>`) BEFORE running `/finalize`; the archive commit must not come after the pass, or it makes the pass stale."
+      - "Tests and `./gradlew build` for every affected module are proven by `/finalize` (READY_TO_PUSH) after the archive commit, before the PR to `dev`. Do not open the PR without it."
+      - "If `/finalize` forces code fixes, edit the archived change only when its artifacts became wrong."
       - "Confirm every component/screen has a Figma-linked @Preview for each state before archiving."

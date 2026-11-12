@@ -42,6 +42,12 @@ per-artifact rules and the definition of done. If anything here disagrees with i
    (`--base d"ev"`) is read as written and is a known gap. It does not cover `gh api` and it checks the checked-out `HEAD`, so create the PR from the branch it is for,
    without `--head`. It is a guardrail against forgetting, not a security boundary.
 
+   **Order for a change made with OpenSpec:** finish the tasks and commit → archive the change and commit it
+   (`chore(openspec): archive <change>`) → `/finalize` → fix and commit until it ends in `READY_TO_PUSH` → `gh pr create
+   --base dev`. Archive before `/finalize`, not after: the archive is a commit, so one made after the pass would make it
+   stale. The PR then ships the archived change and the synced specs. `/finalize`, not the archive step, is what proves
+   tests and build; if it forces code fixes, edit the archived change only when its artifacts became wrong.
+
 ## Running builds and tests
 
 - **iOS needs Xcode, set per command.** If `xcode-select -p` points at
