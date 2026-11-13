@@ -97,6 +97,18 @@ class VerbMapperTest {
     }
 
     @Test
+    fun anInfinitiveFoundOnlyInTheInfinitifIsSearchable() {
+        // `aller` as an infinitive also appears in the futur proche, which is not searchable.
+        assertTrue("aller" in searchForms(DatasetFixtures.aller))
+    }
+
+    @Test
+    fun aSubjonctifSpellingFoundInNoOtherTenseIsSearchable() {
+        // `aille` is only the subjonctif présent of aller; `sois` would also be an impératif.
+        assertTrue("aille" in searchForms(DatasetFixtures.aller))
+    }
+
+    @Test
     fun aFormKeepsItsSpokenTextThroughTheEntities() {
         val spoken =
             FormRecord(
