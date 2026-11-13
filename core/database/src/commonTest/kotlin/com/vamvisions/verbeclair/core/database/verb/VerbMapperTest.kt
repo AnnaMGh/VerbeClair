@@ -97,6 +97,33 @@ class VerbMapperTest {
     }
 
     @Test
+    fun aFormKeepsItsSpokenTextThroughTheEntities() {
+        val spoken =
+            FormRecord(
+                person = "FIRST_SINGULAR",
+                conjugation = listOf("zorbe"),
+                root = null,
+                suffix = null,
+                auxiliary = null,
+                semiAuxiliary = null,
+                infinitivePreposition = null,
+                reflexivePronoun = null,
+                conjunction = null,
+                preposition = null,
+                pronoun = null,
+                spokenText = "zorb",
+            )
+        val verb =
+            record(DatasetFixtures.parler).copy(
+                mood = listOf(MoodRecord("INDICATIF", "Indicatif", listOf(TenseRecord("PRESENT", "Présent", listOf(spoken))))),
+            )
+        val entities = verb.toEntities()
+
+        assertEquals(listOf("zorb"), entities.forms.map { it.spokenText })
+        assertEquals(verb, entities.toRecord())
+    }
+
+    @Test
     fun etreSimpleFormsAreSearchable() {
         val entities = record(DatasetFixtures.etre).toEntities()
         assertEquals("etre", entities.verb.infinitiveKey)
