@@ -1,6 +1,7 @@
 package com.plcoding.prism.tooling.konsist
 
 import assertk.assertThat
+import assertk.assertions.containsAll
 import assertk.assertions.isEmpty
 import assertk.assertions.isNotEmpty
 import com.lemonappdev.konsist.api.Konsist
@@ -145,6 +146,41 @@ class ScopeIntegrityTest {
     }
 
     /**
+     * The check above iterates `EXCLUDED_ROOTS`, so removing a root from it also removes
+     * that root's check. Pin the framework's and the harness's directories by name.
+     */
+    @Test
+    fun `the excluded roots name the framework and harness directories`() {
+        assertThat(ProjectScope.EXCLUDED_ROOTS).containsAll(".prism", ".claude")
+    }
+
+    /**
+     * Test source sets must not be classified as production: every production rule would
+     * then grade test code, and the module check above would still pass because each
+     * module also has `*Test` source sets.
+     */
+    @Test
+    fun `no test source set is classified as production`() {
+        val misclassified =
+            ProjectScope.productionFiles
+                .filter { it.sourceSetName == PLAIN_TEST || it.sourceSetName.endsWith(TEST_SUFFIX) }
+                .map { it.projectPath }
+
+        assertThat(misclassified).isEmpty()
+    }
+
+    /** The framework's own two modules are sliced out of the scope, not just listed. */
+    @Test
+    fun `the scope holds no source of the framework's own modules`() {
+        val leaked =
+            ProjectScope.files
+                .map { it.projectPath.forwardSlashed() }
+                .filter { path -> FRAMEWORK_MODULES.any { path.contains("/$it/") } }
+
+        assertThat(leaked).isEmpty()
+    }
+
+    /**
      * The DIRECTORY each declared module lives in.
      *
      * A Gradle project path is not always its directory. `settings.gradle.kts` may
@@ -209,6 +245,11 @@ class ScopeIntegrityTest {
         const val PLAIN_MAIN = "main"
 
         const val MAIN_SUFFIX = "Main"
+        const val PLAIN_TEST = "test"
+        const val TEST_SUFFIX = "Test"
+
+        /** Spelled out, not read from `ProjectScope`, so emptying its list cannot empty this check too. */
+        val FRAMEWORK_MODULES = listOf("tooling/prism-rules", "tooling/konsist")
 
         val INCLUDE_PATTERN = Regex("""include\("([^"]+)"\)""")
 
