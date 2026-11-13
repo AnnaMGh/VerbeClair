@@ -151,7 +151,24 @@ class ScopeIntegrityTest {
      */
     @Test
     fun `the excluded roots name the framework and harness directories`() {
-        assertThat(ProjectScope.EXCLUDED_ROOTS).containsAll(".prism", ".claude")
+        assertThat(ProjectScope.EXCLUDED_ROOTS).containsAll(".prism", ".claude", "prism-setup")
+    }
+
+    /**
+     * The mirror of the production check: test files must be classified as test, and the
+     * classification must reach something. A suffix that matched nothing would leave every
+     * test rule reading an empty list.
+     */
+    @Test
+    fun `test source sets are classified as test and production ones are not`() {
+        assertThat(ProjectScope.testFiles).isNotEmpty()
+
+        val misclassified =
+            ProjectScope.testFiles
+                .filter { it.sourceSetName.endsWith(MAIN_SUFFIX) || it.sourceSetName == PLAIN_MAIN }
+                .map { it.projectPath }
+
+        assertThat(misclassified).isEmpty()
     }
 
     /**
