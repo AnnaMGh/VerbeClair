@@ -163,6 +163,18 @@ class VerbMapperTest {
     }
 
     @Test
+    fun aSpellingKeepsTheFormPositionOfItsFirstPlace() {
+        val entities = record(DatasetFixtures.terminer).toEntities()
+        val present = entities.forms.first { it.moodCode == "INDICATIF" && it.tenseCode == "PRESENT" }
+        val base = present.moodPos * 10_000 + present.tensePos * 100
+
+        // `termines` is the second person of the indicatif présent, after `termine` (first person).
+        assertEquals(base, entities.formSearch.single { it.form == "termine" }.displayOrder)
+        assertEquals(base + 1, entities.formSearch.single { it.form == "termines" }.displayOrder)
+        assertEquals(base + 3, entities.formSearch.single { it.form == "terminons" }.displayOrder)
+    }
+
+    @Test
     fun rowsReadInAnyOrderRebuildTheSameRecord() {
         val original = record(DatasetFixtures.terminer)
         val entities = original.toEntities()
