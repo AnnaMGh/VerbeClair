@@ -1,6 +1,9 @@
 package com.vamvisions.verbeclair.core.database.verb
 
 import com.vamvisions.verbeclair.core.database.dataset.DatasetJson
+import com.vamvisions.verbeclair.core.database.dataset.FormRecord
+import com.vamvisions.verbeclair.core.database.dataset.MoodRecord
+import com.vamvisions.verbeclair.core.database.dataset.TenseRecord
 import com.vamvisions.verbeclair.core.database.dataset.VerbDetailsRecord
 import com.vamvisions.verbeclair.core.database.fixture.DatasetFixtures
 import com.vamvisions.verbeclair.core.database.inMemoryVerbDatabase
@@ -51,6 +54,46 @@ class VerbMapperTest {
             entities.synonyms.take(4).map { it.synonymSlug },
         )
         assertEquals("clôturer", entities.synonyms[3].synonymInfinitive)
+    }
+
+    @Test
+    fun synonymsKeepTheirPositionsInDatasetOrder() {
+        val synonyms = record(DatasetFixtures.terminer).toEntities().synonyms
+
+        assertTrue(synonyms.isNotEmpty(), "the fixture has synonyms")
+        assertEquals(synonyms.indices.toList(), synonyms.map { it.position })
+    }
+
+    @Test
+    fun anImperativeSpellingFoundInNoOtherTenseIsSearchable() {
+        val imperative =
+            FormRecord(
+                person = "SECOND_SINGULAR",
+                conjugation = listOf("zorbe"),
+                root = null,
+                suffix = null,
+                auxiliary = null,
+                semiAuxiliary = null,
+                infinitivePreposition = null,
+                reflexivePronoun = null,
+                conjunction = null,
+                preposition = null,
+                pronoun = null,
+                spokenText = null,
+            )
+        val verb =
+            record(DatasetFixtures.parler).copy(
+                mood = listOf(MoodRecord("IMPERATIF", "Impératif", listOf(TenseRecord("PRESENT", "Présent", listOf(imperative))))),
+            )
+
+        assertEquals(
+            setOf("zorbe"),
+            verb
+                .toEntities()
+                .formSearch
+                .map { it.form }
+                .toSet(),
+        )
     }
 
     @Test
