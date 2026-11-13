@@ -139,6 +139,39 @@ class DispatchersSetMainWithoutResetTest {
     }
 
     @Test
+    fun `does not report another call on Dispatchers`() {
+        val code =
+            """
+            class SampleViewModelTest {
+                fun setUp() {
+                    Dispatchers.shutdown()
+                }
+            }
+            """.trimIndent()
+
+        assertThat(rule.lint(code)).isEmpty()
+    }
+
+    @Test
+    fun `reports setMain when only a function without a teardown annotation resets it`() {
+        val code =
+            """
+            class SampleViewModelTest {
+                @BeforeEach
+                fun setUp() {
+                    Dispatchers.setMain(UnconfinedTestDispatcher())
+                }
+
+                fun tearDown() {
+                    Dispatchers.resetMain()
+                }
+            }
+            """.trimIndent()
+
+        assertThat(rule.lint(code)).hasSize(1)
+    }
+
+    @Test
     fun `fires in test sources and is excluded from main sources`(
         @TempDir root: Path,
     ) {

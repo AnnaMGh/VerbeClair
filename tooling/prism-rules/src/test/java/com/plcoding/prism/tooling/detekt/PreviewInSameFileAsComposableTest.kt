@@ -129,6 +129,24 @@ class PreviewInSameFileAsComposableTest {
     }
 
     @Test
+    fun `reports a preview that calls only a plain function of its file`() {
+        val findings =
+            rule.lint(
+                """
+                fun Chip() {}
+
+                @Preview
+                @Composable
+                private fun ChipPreview() {
+                    Chip()
+                }
+                """.trimIndent(),
+            )
+
+        assertThat(findings).hasSize(1)
+    }
+
+    @Test
     fun `does not report a composable that is no preview`() {
         val findings =
             rule.lint(
