@@ -25,23 +25,23 @@ complexity:
   # would only scatter the dispatch.
   CyclomaticComplexMethod:
     ignoreSingleWhenExpression: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   LongMethod:
-    excludes: ['**/test/**', '**/androidTest/**', '**/presentation/**', '**/designsystem/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/presentation/**', '**/designsystem/**']
   LongParameterList:
-    excludes: ['**/test/**', '**/androidTest/**', '**/presentation/**', '**/designsystem/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/presentation/**', '**/designsystem/**']
   # A DTO mapper file is one private function per payload type, which is cohesion
   # rather than a file doing too much; the internal surface is what the threshold
   # is really about.
   TooManyFunctions:
-    excludes: ['**/test/**', '**/androidTest/**', '**/presentation/**', '**/designsystem/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/presentation/**', '**/designsystem/**']
     ignorePrivate: true
 
 empty-blocks:
   # An interface method implemented with an empty body is the normal shape of a
   # test double, not a defect.
   EmptyFunctionBlock:
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
 
 exceptions:
   # These two fire at the layer edges where an external throw is caught and
@@ -60,20 +60,32 @@ exceptions:
   #   excludes:
   #     - '**/test/**'
   #     - '**/androidTest/**'
+  #     - '**/commonTest/**'
+  #     - '**/iosTest/**'
+  #     - '**/androidHostTest/**'
+  #     - '**/androidDeviceTest/**'
   #     - '**/data/networking/SafeCall.kt'
   TooGenericExceptionCaught:
     excludes:
       - '**/test/**'
       - '**/androidTest/**'
+      - '**/commonTest/**'
+      - '**/iosTest/**'
+      - '**/androidHostTest/**'
+      - '**/androidDeviceTest/**'
   InstanceOfCheckForException:
     excludes:
       - '**/test/**'
       - '**/androidTest/**'
+      - '**/commonTest/**'
+      - '**/iosTest/**'
+      - '**/androidHostTest/**'
+      - '**/androidDeviceTest/**'
 
 coroutines:
   GlobalCoroutineUsage:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
 
   # Fires only in the type-resolving tasks. The exemption this list is for is a
   # CPU-bound utility that pins its own work to Dispatchers.Default by design,
@@ -86,6 +98,10 @@ coroutines:
     excludes:
       - '**/test/**'
       - '**/androidTest/**'
+      - '**/commonTest/**'
+      - '**/iosTest/**'
+      - '**/androidHostTest/**'
+      - '**/androidDeviceTest/**'
 
 naming:
   # Composables are PascalCase by the Compose naming convention. Without this the
@@ -104,7 +120,7 @@ naming:
   # answered with six files that exist only to satisfy it. It stays active
   # everywhere else, where it caught a real mismatch.
   MatchingDeclarationName:
-    excludes: ['**/test/**', '**/androidTest/**', '**/designsystem/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/designsystem/**']
 
 style:
   # ktlint owns these three. Running them here would double-report the same line.
@@ -116,12 +132,12 @@ style:
     active: false
 
   DestructuringDeclarationWithTooManyEntries:
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
 
   # A test asserting the equals contract has to call equals(null) -- `== null`
   # would test something else entirely.
   EqualsNullCall:
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
 
   # The two stacks the constitution names as forbidden. Both are clean today;
   # these entries cost no code and stop the door from opening.
@@ -145,6 +161,10 @@ style:
     excludes:
       - '**/test/**'
       - '**/androidTest/**'
+      - '**/commonTest/**'
+      - '**/iosTest/**'
+      - '**/androidHostTest/**'
+      - '**/androidDeviceTest/**'
       - '**/theme/**'
 
   # Guard clauses are the idiom for validating input and returning a typed error,
@@ -155,7 +175,7 @@ style:
   ReturnCount:
     max: 3
     excludeGuardClauses: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
 
   # A private @Preview has no call site by design, and that is not dead code.
   # detekt 2.0 split UnusedPrivateMember by declaration kind; the preview
@@ -195,7 +215,7 @@ Compose:
 
   # A test harness composable is scaffolding, not a reusable component.
   ModifierMissing:
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
 
 # The project-specific rule set, supplied by :tooling:prism-rules. Its bundled
 # config declares only the rule names so that validation can see them; whether a
@@ -209,135 +229,135 @@ prism:
   # ---------------------------------------------------------------------------
   NonAtomicStateFlowAssignment:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   SingleLetterIdentifier:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   NoConsoleLogging:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   IconContentDescription:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   IconButtonHardcodedSize:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   # --- Regression guards. These find nothing today; that is the point. They hold
   # --- the line when an agent, or a hurried afternoon, is writing the code.
   NoOpenClassInMain:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   NoPublicMutableFlow:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   NoRunBlockingInMain:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   NoNotNullAssertion:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   # The @Preview exemption is inside the rule, not here: detekt applies
   # ignoreAnnotated outside the rule, where its own tests cannot reach it.
   HardcodedUserFacingString:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   NoBareIconClickable:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   NoComposableModifierExtension:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   CallbackFlowRequiresAwaitClose:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   # Resolution-backed (RequiresAnalysisApi): runs only in the type-resolving
   # detekt tasks, where the compile classpath is available. A generic catch in
   # a suspending context must rethrow CancellationException or call
   # ensureActive() before any other handling.
   SuspendGenericCatchSwallowsCancellation:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   SealedHierarchyOfOnlyObjectsShouldBeEnum:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   NoImplSuffix:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   NoResultListOfErrors:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   SharedFlowRequiresExplicitBuffer:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   OneShotFlowBuilder:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   CustomScopeRequiresSupervisorJob:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   CollectAsStateWithoutLifecycle:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   UniqueWorkNameIsSnakeCase:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   StartForegroundViaServiceCompat:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   DispatchersSetMainWithoutReset:
     active: true
-    includes: ['**/test/**', '**/androidTest/**']
+    includes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   InMemoryRoomNotClosed:
     active: true
-    includes: ['**/test/**', '**/androidTest/**']
+    includes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   AdaptiveLayoutOwnsNoState:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   KoinModuleNaming:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   PreferConstructorReferenceKoinDefinition:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   HttpClientMustAcceptEngine:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   NoSharedPreferencesForTokens:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   ThreadSleepOrEspressoIdleInTest:
     active: true
-    includes: ['**/test/**', '**/androidTest/**']
+    includes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   ReflectionInTest:
     active: true
-    includes: ['**/test/**', '**/androidTest/**']
+    includes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   ModifierParameterDefaultIsModifier:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   ModifierParameterAfterRequiredParameters:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   ComposableSlotParameterAfterModifier:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   NoPreviewParameterAnnotation:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   PreviewMustBePrivate:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   PreviewFunctionNaming:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   # ktlint never inserts blank lines, so readable grouping has to be demanded
   # here. The rule flags the wall; the author picks the group boundaries.
   CrammedBlockBody:
     active: true
     maxRunLength: 5
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   ClassBodyMissingLeadingBlankLine:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
 
   # ---------------------------------------------------------------------------
   # PALETTE RULES — group switch PALETTE_RULES_ACTIVE (currently false)
@@ -373,12 +393,12 @@ prism:
   # exclusion is the whole difference between defining and consuming.
   ThemeColorDirectUse:
     active: false
-    excludes: ['**/test/**', '**/androidTest/**', '**/theme/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/theme/**']
     # The declaration holding your raw colours: object, class or data class.
     paletteObject: 'none'
   UnwiredThemeColor:
     active: false
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
     paletteObject: 'none'
     # The class carrying your extended colour tokens, usually beside the palette.
     extendedTokenHolder: 'none'
@@ -421,17 +441,17 @@ prism:
     active: true
     # YOUR theme composable -- the one every preview must wrap its content in.
     themeName: 'VerbeClairTheme'
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   # Hex literals belong in the theme package, where they are the token definitions.
   RawColorLiteral:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/theme/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/theme/**']
   # The theme package is where the locals behind your theme's tokens are built
   # (spacing, elevation, shapes), so the exclusion is the sanctioned creation site.
   # Adjust the path to wherever your design system declares them.
   NoCustomCompositionLocal:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/theme/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/theme/**']
 
   # ---------------------------------------------------------------------------
   # MVI PRESENTATION RULES -- 11 rules, always active
@@ -475,7 +495,7 @@ prism:
   # ---------------------------------------------------------------------------
   TextFieldStateInViewModel:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   # Scoped by nothing but its own subject: a LaunchedEffect that collects a
   # flow. It used to carry `includes: ['**/*Root.kt']`, which was BOTH a naming
   # convention this repository may not use AND strictly weaker than the rule's
@@ -485,40 +505,40 @@ prism:
   # all.
   ObserveAsEventsRequired:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   StateInViewModelRequiresWhileSubscribed:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   # Scoped by NAME, not by path. The rule only looks at a class whose name ends
   # in `State`, so a `includes: '**/presentation/**'` on top of that excluded
   # nothing extra and silently excluded everything in a repository that keeps
   # its state classes somewhere else.
   StableAnnotationOnUnstableState:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   # Same: the rule already requires an @Composable taking a `*State` parameter,
   # and already skips functions named `*Screen` and `*Root`.
   ScreenStateOnlyInScreenComposable:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   RootAndScreenInSameFile:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   KoinViewModelOnlyInRoot:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   ObserveAsEventsOnlyInRoot:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   RootComposableMustDefaultViewModel:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   EventChannelExposedAsReceiveAsFlow:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   ScreenComposableParameterOrder:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
 
   # ---------------------------------------------------------------------------
   # MODULE-PATH RULES -- 6 rules, always active
@@ -567,16 +587,16 @@ prism:
   # The file wrapping the raw Ktor verbs has to call them directly.
   KtorCallMustUseSafeCall:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/SafeCall.kt']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/SafeCall.kt']
   # The typealias declaration file is the one place Result<Unit, E> is spelled out.
   EmptyResultOverResultUnit:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/Result.kt']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/Result.kt']
   # The typealias declaration file is the one place ListenableWorker.Result may
   # be spelled out.
   WorkerResultTypealiasRequired:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/WorkerResult.kt']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/WorkerResult.kt']
   # The module that wires the navigation graphs legitimately touches every
   # feature's routes. `app` is the Android convention for it; this is the one
   # glob here that names a directory, because "the module that wires everything"
@@ -584,16 +604,16 @@ prism:
   # something else.
   NoCrossFeatureRouteImport:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/app/src/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/app/src/**']
   # The Application class is the one sanctioned startKoin site, wherever it lives.
   StartKoinOnlyInAppModule:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/*Application.kt', '**/*App.kt']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/*Application.kt', '**/*App.kt']
   # HttpClientFactory is where the shared client is built; enumerated per file,
   # never a directory glob, so a second construction site still fails.
   HttpClientConstructionOutsideFactory:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/HttpClientFactory.kt']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/HttpClientFactory.kt']
 
   # ---------------------------------------------------------------------------
   # NAVIGATION RULES -- 3 rules, always active
@@ -627,13 +647,13 @@ prism:
   # ---------------------------------------------------------------------------
   RouteMustBeSerializable:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   RouteMustBeDataObjectOrDataClass:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   NavGraphBuilderExtensionNaming:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
 
   # ---------------------------------------------------------------------------
   # TEST-STACK RULES -- 7 rules, always active
@@ -680,16 +700,16 @@ prism:
     includes: ['**/androidTest/**']
   NonAssertKAssertion:
     active: true
-    includes: ['**/test/**', '**/androidTest/**']
+    includes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   MockingLibraryInTest:
     active: true
-    includes: ['**/test/**', '**/androidTest/**']
+    includes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   RobolectricInTest:
     active: true
-    includes: ['**/test/**', '**/androidTest/**']
+    includes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   JvmComposeTestRule:
     active: true
-    includes: ['**/test/**', '**/androidTest/**']
+    includes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   RoomInJvmUnitTest:
     active: true
     includes: ['**/test/**']

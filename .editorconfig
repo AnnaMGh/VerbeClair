@@ -22,6 +22,6 @@ ktlint_standard_no-blank-lines-in-chained-method-calls = disabled
 [*.kts]
 ktlint_standard_filename = disabled
 
-[**src/{test,androidTest}/**/*.kt]
+[**src/{test,androidTest,commonTest,iosTest,androidHostTest,androidDeviceTest}/**/*.kt]
 max_line_length = 140
 ktlint_ignore_back_ticked_identifier = true
