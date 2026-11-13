@@ -74,16 +74,12 @@ class JacocoConventionPlugin : Plugin<Project> {
         // A module with both a JVM and an Android target compiles commonMain twice, to two class
         // trees with the same class names. JaCoCo refuses two classes of one name, and merging them
         // would report whichever compilation the tests did not run on as uncovered. So the report
-        // measures one variant: the first whose tests wrote execution data.
+        // measures one variant: the first whose test task the module declares. It is chosen from the
+        // declared tasks and never from files on disk: the configuration cache resolves this before any
+        // test has run, so a check for the execution data file would find none on a fresh build and the
+        // coverage tasks would be skipped, passing without measuring anything.
         val variant =
-            provider {
-                VARIANTS.firstOrNull { candidate ->
-                    coverageDir
-                        .get()
-                        .file(candidate.execFile)
-                        .asFile.isFile
-                }
-            }
+            provider { VARIANTS.firstOrNull { candidate -> tasks.names.contains(candidate.testTask) } }
 
         // Names, not task references: the Android host-test task is registered after this plugin
         // is applied, and a module only has the tasks of the targets it declares.
@@ -150,7 +146,11 @@ class JacocoConventionPlugin : Plugin<Project> {
         }
     }
 
-    private class Variant(val execFile: String, val classesDir: String)
+    private class Variant(
+        val testTask: String,
+        val execFile: String,
+        val classesDir: String,
+    )
 
     private companion object {
         /** The coverage every module is working towards; floors rise to it and never fall. */
@@ -179,8 +179,12 @@ class JacocoConventionPlugin : Plugin<Project> {
 
         val VARIANTS =
             listOf(
-                Variant(execFile = "jvmTest.exec", classesDir = "classes/kotlin/jvm/main"),
-                Variant(execFile = "testAndroidHostTest.exec", classesDir = "classes/kotlin/android/main"),
+                Variant(testTask = "jvmTest", execFile = "jvmTest.exec", classesDir = "classes/kotlin/jvm/main"),
+                Variant(
+                    testTask = "testAndroidHostTest",
+                    execFile = "testAndroidHostTest.exec",
+                    classesDir = "classes/kotlin/android/main",
+                ),
             )
 
         val TEST_TASKS = listOf("jvmTest", "testAndroidHostTest")
