@@ -76,19 +76,34 @@ class KtlintConventionPlugin : Plugin<Project> {
             // one, so it is matched by name rather than looked up.
             tasks.matching { task -> task.name == "check" }.configureEach { dependsOn(ktlintCheck) }
 
-            tasks.register("ktlintToolingClasspath") {
-                group = "verification"
-                description = "Writes the resolved ktlint CLI classpath so tooling can run it without Gradle."
-                val classpath: FileCollection = configurations.getByName(KTLINT_CONFIGURATION)
-                val classpathFile = layout.buildDirectory.file(CLASSPATH_FILE)
-                inputs.files(classpath)
-                outputs.file(classpathFile)
-                doLast {
-                    val output = classpathFile.get().asFile
-                    output.parentFile.mkdirs()
-                    output.writeText(classpath.joinToString(File.pathSeparator) { it.absolutePath })
+            val ktlintToolingClasspath =
+                tasks.register("ktlintToolingClasspath") {
+                    group = "verification"
+                    description = "Writes the resolved ktlint CLI classpath so tooling can run it without Gradle."
+                    val classpath: FileCollection = configurations.getByName(KTLINT_CONFIGURATION)
+                    val classpathFile = layout.buildDirectory.file(CLASSPATH_FILE)
+                    inputs.files(classpath)
+                    outputs.file(classpathFile)
+                    doLast {
+                        val output = classpathFile.get().asFile
+                        output.parentFile.mkdirs()
+                        output.writeText(classpath.joinToString(File.pathSeparator) { it.absolutePath })
+                    }
+                }
+
+            // build-logic is an included build, so its own sources are invisible to the
+            // projects loop of every gate. The root project's ktlintCheck therefore also
+            // runs the included build's, or the convention plugins that define the gates
+            // would be the one thing the gates never read.
+            if (this == rootProject) {
+                gradle.includedBuilds.firstOrNull { it.name == "build-logic" }?.let { buildLogic ->
+                    ktlintCheck.configure { dependsOn(buildLogic.task(":ktlintCheck")) }
                 }
             }
+
+            // The per-edit format hook reads this file, so every gate that runs ktlint also
+            // writes it; otherwise it is missing after a clean or on a fresh clone.
+            ktlintCheck.configure { dependsOn(ktlintToolingClasspath) }
 
             tasks.register<JavaExec>("ktlintFormat") {
                 group = "formatting"

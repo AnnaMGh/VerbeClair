@@ -11,14 +11,20 @@ import org.gradle.kotlin.dsl.project
  * Wires detekt into whichever project applies this plugin.
  *
  * The gate runs the plugin's plain `detekt` task — syntax-only, no type
- * resolution — against the single rule set in the root `detekt.yml`. No rule is
+ * resolution — and the type-resolving main-source tasks (`detektDebug` on Android
+ * application modules, `detektMain` on Kotlin/JVM modules) against the single rule set in the root `detekt.yml`. The plain task skips
+ * every rule that needs the Analysis API, so without the type-resolving tasks
+ * those rules would be active in `detekt.yml` and never run. Kotlin Multiplatform
+ * modules are not covered by the type-resolving tasks yet: their variants also
+ * analyse generated KSP and Compose resource code and report findings of their own.
+ * No rule is
  * enabled, disabled, or parameterised here: the configuration file is the only
  * surface, mirroring how `.editorconfig` is the only surface for ktlint.
  *
  * The detekt version is pinned exactly in `libs.versions.toml`. While the
  * pinned line is a 2.0 pre-release, a version bump is its own commit, gated by
- * the `:tooling:detekt-rules` suite and a zero-finding `staticAnalysis` run,
- * and reverted if either fails.
+ * the `:tooling:detekt-rules` suite and a zero-finding `./gradlew detekt check`
+ * run, and reverted if either fails.
  *
  * Third-party and project-specific rule sets are added to the `detektPlugins`
  * configuration so that every module picks them up without repeating itself.
@@ -76,6 +82,13 @@ class DetektConventionPlugin : Plugin<Project> {
                 baseline.set(layout.projectDirectory.file(BASELINE_FILE))
             }
 
+            // Matched by name because the Android, JVM and Kotlin Multiplatform plugins
+            // each register their own variants, in any order relative to this plugin.
+            // `check` already runs the plain `detekt` task; this adds the ones that
+            // resolve types.
+            val typeResolving = tasks.matching { task -> task.name in TYPE_RESOLVING_TASKS }
+            tasks.matching { task -> task.name == "check" }.configureEach { dependsOn(typeResolving) }
+
             dependencies.add(DETEKT_PLUGINS_CONFIGURATION, libs.findLibrary("compose-rules-detekt").get())
             dependencies.add(DETEKT_PLUGINS_CONFIGURATION, dependencies.project(RULES_PROJECT))
         }
@@ -85,5 +98,6 @@ class DetektConventionPlugin : Plugin<Project> {
         const val DETEKT_PLUGINS_CONFIGURATION = "detektPlugins"
         const val RULES_PROJECT = ":tooling:detekt-rules"
         const val BASELINE_FILE = "detekt.baseline.xml"
+        val TYPE_RESOLVING_TASKS = setOf("detektDebug", "detektMain")
     }
 }

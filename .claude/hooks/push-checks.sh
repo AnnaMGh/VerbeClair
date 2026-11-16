@@ -33,13 +33,17 @@ verdict=$(printf '%s' "$command" | python3 -c '
 import re, sys
 
 text = sys.stdin.read().replace("\\\n", " ")
-push = re.search(r"(?:^|[\s;&|(`])git(?:\s+(?:-[Cc]\s+\S+|-\S+))*\s+push\b[^\n;&|]*", text)
-if not push:
-    print(0)
-    sys.exit(0)
-args = push.group(0)
-skip = re.search(r"(?:^|\s)(?:--delete|-d|--dry-run|-n)(?:\s|$)", args) or re.search(r"\s:\S", args)
-print(0 if skip else 1)
+# A trailing shell comment is not part of the push arguments.
+text = re.sub(r"(?m)\s#.*$", "", text)
+pushes = re.finditer(r"(?:^|[\s;&|(`])git(?:\s+(?:-[Cc]\s+\S+|-\S+))*\s+push\b[^\n;&|]*", text)
+# Every push in the command is looked at: check it when ANY of them is a real push.
+verdict = 0
+for push in pushes:
+    args = push.group(0)
+    skip = re.search(r"(?:^|\s)(?:--delete|-d|--dry-run|-n)(?:\s|$)", args) or re.search(r"\s:\S", args)
+    if not skip:
+        verdict = 1
+print(verdict)
 ')
 [ "$verdict" = 1 ] || exit 0
 

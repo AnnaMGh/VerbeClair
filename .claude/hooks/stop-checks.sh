@@ -8,8 +8,10 @@
 # stop of a turn and true on the stops that follow a block, so a false value starts a fresh count. The counter lives in
 # .claude/state/ (gitignored), one file per session. The fourth stop is allowed and the remaining failure is reported.
 #
-# "Changed" means: uncommitted changes, plus commits made since the previous stop of this session (the HEAD recorded
-# at that stop). On the first stop of a session only uncommitted changes are seen.
+# "Changed" means: uncommitted changes, plus commits made since the last stop of this session that was clean (the HEAD
+# recorded then). The recorded HEAD advances only when the checks passed or nothing relevant changed, so a failure in
+# committed work is never forgotten after one block. On the first stop of a session there is no recorded HEAD, so the
+# commits since the merge-base with origin/dev (or dev) count as changed.
 set -u
 
 root=${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}
@@ -41,7 +43,10 @@ last_head="$state_dir/stop-head-$session"
 
 head=$(git -C "$root" rev-parse HEAD 2>/dev/null || true)
 previous=$(cat "$last_head" 2>/dev/null || true)
-[ -n "$head" ] && printf '%s\n' "$head" >"$last_head"
+if [ -z "$previous" ]; then
+    previous=$(git -C "$root" merge-base HEAD origin/dev 2>/dev/null || git -C "$root" merge-base HEAD dev 2>/dev/null || true)
+fi
+record_head() { [ -n "$head" ] && printf '%s\n' "$head" >"$last_head"; }
 
 changed=$(
     {
@@ -55,6 +60,7 @@ changed=$(
 relevant=$(printf '%s\n' "$changed" | grep -E '(\.kt|\.kts|\.gradle|detekt\.yml|\.editorconfig|libs\.versions\.toml|gradle\.properties)$')
 if [ -z "$relevant" ]; then
     rm -f "$counter"
+    record_head
     exit 0
 fi
 
@@ -70,6 +76,7 @@ status=$?
 
 if [ "$status" -eq 0 ]; then
     rm -f "$counter"
+    record_head
     exit 0
 fi
 
