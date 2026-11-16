@@ -42,7 +42,19 @@ def strip_comments(source):
     quote = None
     in_comment = False
     previous = " "
+    escaped = False
     for char in source:
+        if escaped:
+            # The character after a backslash is literal (outside single quotes), so an escaped quote opens nothing.
+            escaped = False
+            out.append(char)
+            previous = char
+            continue
+        if char == chr(92) and quote != chr(39) and not in_comment:
+            escaped = True
+            out.append(char)
+            previous = char
+            continue
         if in_comment:
             if char == "\n":
                 in_comment = False
@@ -69,10 +81,18 @@ pushes = re.finditer(r"(?:^|[\s;&|(`])git(?:\s+(?:-[Cc]\s+\S+|-\S+))*\s+push\b[^
 # Every push in the command is looked at: check it when ANY of them is a real push.
 verdict = 0
 for push in pushes:
-    args = push.group(0)
-    skip = re.search(r"(?:^|\s)(?:--delete|-d|--dry-run|-n)(?:\s|$)", args) or re.search(r"\s:\S", args)
-    if not skip:
-        verdict = 1
+    args = re.split(r"\bpush\b", push.group(0), maxsplit=1)[1]
+    tokens = args.split()
+    flags = [token for token in tokens if token.startswith("-")]
+    if "--dry-run" in flags or "-n" in flags:
+        continue
+    # The first non-flag word is the remote; the rest are refspecs. Only a push whose every refspec deletes a branch
+    # is skipped: `git push origin feat :old` still pushes feat.
+    refspecs = [token for token in tokens if not token.startswith("-")][1:]
+    deletes = "--delete" in flags or "-d" in flags
+    if refspecs and (deletes or all(token.startswith(":") for token in refspecs)):
+        continue
+    verdict = 1
 print(verdict)
 ')
 [ "$verdict" = 1 ] || exit 0
