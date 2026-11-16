@@ -22,11 +22,17 @@ fun <T> ObserveAsEvents(events: Flow<T>, onEvent: suspend (T) -> Unit) {
     val currentOnEvent by rememberUpdatedState(onEvent)
     LaunchedEffect(events, lifecycleOwner.lifecycle) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            // Main.immediate runs each event on the main thread without a dispatch hop, so the collector
-            // cannot be cancelled (STOPPED) between taking an event off the channel and handling it.
-            withContext(Dispatchers.Main.immediate) {
-                events.collect { currentOnEvent(it) }
-            }
+            collectOnMainImmediate(events) { currentOnEvent(it) }
         }
+    }
+}
+
+/**
+ * Main.immediate runs each event on the main thread without a dispatch hop, so the collector cannot be
+ * cancelled (STOPPED) between taking an event off the channel and handling it.
+ */
+private suspend fun <T> collectOnMainImmediate(events: Flow<T>, onEvent: suspend (T) -> Unit) {
+    withContext(Dispatchers.Main.immediate) {
+        events.collect { onEvent(it) }
     }
 }
