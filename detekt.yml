@@ -506,9 +506,10 @@ prism:
   # place, went unreported. An `includes:` that matches nothing is the one glob
   # failure that reads as success, so this direction gets no repository shape at
   # all.
+  # The helper itself is the one place that must collect inside a LaunchedEffect.
   ObserveAsEventsRequired:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
+    excludes: ['**/event/ObserveAsEvents.kt', '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
   StateInViewModelRequiresWhileSubscribed:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
