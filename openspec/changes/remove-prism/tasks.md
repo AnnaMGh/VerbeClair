@@ -21,7 +21,7 @@
 
 ## 4. Hooks and the new `/finalize`
 
-- [ ] 4.1 Add `.claude/hooks/ktlint-format.sh` (PostToolUse `Edit|Write`) and register it; verify a mis-indented `.kt` edit is reformatted, a wildcard import is reported, a Markdown edit is ignored, and a missing classpath file exits 0
+- [x] 4.1 Add `.claude/hooks/ktlint-format.sh` (PostToolUse `Edit|Write`) and register it; verify a mis-indented `.kt` edit is reformatted, a wildcard import is reported, a Markdown edit is ignored, and a missing classpath file exits 0
 - [ ] 4.2 Add `.claude/hooks/stop-checks.sh` (Stop) with the `stop_hook_active` guard, a counter capped at three blocks, and the relevant-files filter; verify a detekt violation blocks the stop, the fourth stop is allowed, and a Markdown-only change runs nothing
 - [ ] 4.3 Measure how long the stop checks take; if the iOS simulator tasks make them too slow, exclude them there and verify CI still runs them
 - [ ] 4.4 Change `pr-gate.sh` to read the marker from `.claude/state/finalize-pass`, reword the denial to ask the developer to run `/finalize`, and add `.claude/state/` to `.gitignore`; verify the updated `pr-gate-test.py` covers pass, no pass, stale pass, missing base and `--base main`, and passes
