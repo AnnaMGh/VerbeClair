@@ -27,8 +27,8 @@
   - Measured: a change in `:core:domain` ran detekt, ktlint, Konsist and every module's `check` (iOS simulator tests included) in 43 s; unchanged inputs take 7 s. Nothing is excluded.
 - [x] 4.4 Change `pr-gate.sh` to read the marker from `.claude/state/finalize-pass`, reword the denial to ask the developer to run `/finalize`, and add `.claude/state/` to `.gitignore`; verify the updated `pr-gate-test.py` covers pass, no pass, stale pass, missing base and `--base main`, and passes
 - [x] 4.5 Register `pr-gate.sh` as the only PreToolUse Bash hook and verify no hook is registered for `git push`
-- [ ] 4.6 Rewrite `.claude/skills/finalize/SKILL.md` with `disable-model-invocation: true`: detekt, Konsist, `build`, `jacocoCoverageVerification`, `scripts/emulator/verbeclair-emulator.sh start phone`, `ANDROID_SERIAL=emulator-5574 ./gradlew connectedAndroidDeviceTest`, `/verify`, then write `HEAD` to the marker only if all passed; verify a run with a failing check leaves the marker unchanged and a passing run writes the current commit
-- [ ] 4.7 Verify the agent cannot invoke `/finalize` and that a terminal `git push` and PR command are not blocked by any hook
+- [x] 4.6 Rewrite `.claude/skills/finalize/SKILL.md` with `disable-model-invocation: true`: detekt, Konsist, `build`, `jacocoCoverageVerification`, `scripts/emulator/verbeclair-emulator.sh start phone`, `ANDROID_SERIAL=emulator-5574 ./gradlew connectedAndroidDeviceTest`, `/verify`, then write `HEAD` to the marker only if all passed; verify a run with a failing check leaves the marker unchanged and a passing run writes the current commit
+- [x] 4.7 Verify the agent cannot invoke `/finalize` and that a terminal `git push` and PR command are not blocked by any hook
 
 ## 5. Docs, memory and requirement
 
