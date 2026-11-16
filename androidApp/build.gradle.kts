@@ -3,9 +3,9 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
-    id("prism.ktlint")
-    id("prism.detekt")
-    id("prism.jacoco")
+    id("verbeclair.ktlint")
+    id("verbeclair.detekt")
+    id("verbeclair.jacoco")
 }
 
 kotlin {

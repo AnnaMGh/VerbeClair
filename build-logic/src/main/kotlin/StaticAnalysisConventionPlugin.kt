@@ -28,7 +28,7 @@ import java.io.File
  *
  * The consumer applies it to their root project and nothing else:
  *
- *     plugins { id("prism.static-analysis") }
+ *     plugins { id("verbeclair.static-analysis") }
  */
 class StaticAnalysisConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -259,12 +259,12 @@ class StaticAnalysisConventionPlugin : Plugin<Project> {
         const val KTLINT_CONFIGURATION = "ktlint"
         const val BUILD_LOGIC = "build-logic"
         const val BUILD_LOGIC_KTLINT_PROPERTY = "prism.buildLogic.ktlintTask"
-        const val KTLINT_PLUGIN_ID = "prism.ktlint"
-        const val DETEKT_PLUGIN_ID = "prism.detekt"
+        const val KTLINT_PLUGIN_ID = "verbeclair.ktlint"
+        const val DETEKT_PLUGIN_ID = "verbeclair.detekt"
         const val ANDROID_BASE_PLUGIN_ID = "com.android.base"
         const val KOTLIN_JVM_PLUGIN_ID = "org.jetbrains.kotlin.jvm"
         const val KONSIST_PROJECT = ":tooling:konsist"
         const val KONSIST_SCOPE_SOURCE =
-            "src/test/kotlin/com/plcoding/prism/tooling/konsist/ProjectScope.kt"
+            "src/test/kotlin/com/vamvisions/verbeclair/konsist/ProjectScope.kt"
     }
 }

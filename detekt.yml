@@ -217,10 +217,10 @@ Compose:
   ModifierMissing:
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/iosTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**']
 
-# The project-specific rule set, supplied by :tooling:prism-rules. Its bundled
+# The project-specific rule set, supplied by :tooling:detekt-rules. Its bundled
 # config declares only the rule names so that validation can see them; whether a
 # rule is on, and what it skips, is decided here.
-prism:
+verbeclair:
   # ---------------------------------------------------------------------------
   # Rules that hold everywhere. No layout, no library and no naming convention
   # is assumed; they are about the language and the platform. Nothing below this

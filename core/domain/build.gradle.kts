@@ -3,9 +3,9 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidMultiplatformLibrary)
-    id("prism.ktlint")
-    id("prism.detekt")
-    id("prism.jacoco")
+    id("verbeclair.ktlint")
+    id("verbeclair.detekt")
+    id("verbeclair.jacoco")
 }
 
 coverageFloor {

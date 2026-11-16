@@ -7,8 +7,8 @@ plugins {
     id("org.jetbrains.kotlin.jvm")
     // Coverage is opted into explicitly here, because nothing else applies it
     // any more: prism.jacoco used to ride in on the deleted convention plugins.
-    id("prism.jacoco")
-    id("prism.ktlint")
+    id("verbeclair.jacoco")
+    id("verbeclair.ktlint")
 }
 
 dependencies {

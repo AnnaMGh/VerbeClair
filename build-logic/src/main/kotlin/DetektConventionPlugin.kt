@@ -18,7 +18,7 @@ import org.gradle.kotlin.dsl.project
  *
  * The detekt version is pinned exactly in `libs.versions.toml`. While the
  * pinned line is a 2.0 pre-release, a version bump is its own commit, gated by
- * the `:tooling:prism-rules` suite and a zero-finding `staticAnalysis` run,
+ * the `:tooling:detekt-rules` suite and a zero-finding `staticAnalysis` run,
  * and reverted if either fails.
  *
  * Third-party and project-specific rule sets are added to the `detektPlugins`
@@ -120,7 +120,7 @@ class DetektConventionPlugin : Plugin<Project> {
 
     private companion object {
         const val DETEKT_PLUGINS_CONFIGURATION = "detektPlugins"
-        const val RULES_PROJECT = ":tooling:prism-rules"
+        const val RULES_PROJECT = ":tooling:detekt-rules"
         const val BASELINE_FILE = "detekt.baseline.xml"
         const val BASELINE_FRAGMENT_DIR = "prism/baseline"
     }
