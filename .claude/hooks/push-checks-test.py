@@ -94,6 +94,8 @@ CASES = [
     ("dry run, then a real push", "git push --dry-run && git push -u origin feat", {}, 0, 4, None),
     ("branch delete, then a real push", "git push origin :old; git push origin feat", {}, 0, 4, None),
     ("dry run named only in a trailing comment", "git push origin feat # --dry-run", {}, 0, 4, None),
+    ("quoted # in a commit message, then a real push", 'git commit -m "Closes #42" && git push origin x', {}, 0, 4, None),
+    ("single-quoted # before a real push", "git commit -m 'wip #3' ; git push -u origin feat", {}, 0, 4, None),
     ("same HEAD already passed", PUSH, {"prior_pass": True}, 0, 0, None),
     ("second push of the same HEAD runs the checks once", PUSH, {"twice": True}, 0, 4, None),
     ("not a push: git status", "git status", {}, 0, 0, None),

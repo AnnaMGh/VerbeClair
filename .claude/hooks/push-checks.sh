@@ -33,8 +33,38 @@ verdict=$(printf '%s' "$command" | python3 -c '
 import re, sys
 
 text = sys.stdin.read().replace("\\\n", " ")
+
+
+def strip_comments(source):
+    # A shell comment starts at an unquoted `#` that follows whitespace and runs to the end of the line. A `#` inside
+    # quotes (a commit message such as "Closes #42") is text, not a comment.
+    out = []
+    quote = None
+    in_comment = False
+    previous = " "
+    for char in source:
+        if in_comment:
+            if char == "\n":
+                in_comment = False
+                out.append(char)
+            previous = char
+            continue
+        if quote:
+            if char == quote:
+                quote = None
+        elif char in ("\"", chr(39)):
+            quote = char
+        elif char == "#" and previous.isspace():
+            in_comment = True
+            previous = char
+            continue
+        out.append(char)
+        previous = char
+    return "".join(out)
+
+
 # A trailing shell comment is not part of the push arguments.
-text = re.sub(r"(?m)\s#.*$", "", text)
+text = strip_comments(text)
 pushes = re.finditer(r"(?:^|[\s;&|(`])git(?:\s+(?:-[Cc]\s+\S+|-\S+))*\s+push\b[^\n;&|]*", text)
 # Every push in the command is looked at: check it when ANY of them is a real push.
 verdict = 0
