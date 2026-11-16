@@ -101,6 +101,7 @@ def run(command: str, marker=None) -> int:
         event = json.dumps({"tool_input": {"command": command}})
         result = subprocess.run(["sh", HOOK], input=event, text=True, capture_output=True,
                                 env={**os.environ, "CLAUDE_PROJECT_DIR": root})
+        run.stdout = result.stdout
         return result.returncode
 
 
@@ -117,12 +118,17 @@ MARKER_CASES = [
 failed = 0
 for name, command, marker, want in MARKER_CASES:
     got = run(command, marker)
-    ok = got == want
+    # An allowed PR carries the /verify and Figma reminder as hook context; a denial prints nothing on stdout.
+    reminded = "/verify" in run.stdout and "Figma" in run.stdout
+    ok = got == want and reminded == (want == 0)
     failed += not ok
     print(f"{'ok  ' if ok else 'FAIL'} exit={got} (want {want})  {name}")
 for name, command, want in CASES:
     got = run(command)
-    ok = got == want
+    is_pr = "pr create" in command or "pr new" in command
+    # Only an allowed PR command (base main here) is reminded; other commands and denials print nothing.
+    reminded = bool(run.stdout.strip())
+    ok = got == want and reminded == (want == 0 and is_pr)
     failed += not ok
     print(f"{'ok  ' if ok else 'FAIL'} exit={got} (want {want})  {name}")
 sys.exit(1 if failed else 0)

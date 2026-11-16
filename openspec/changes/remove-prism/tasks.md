@@ -31,11 +31,12 @@
 - [x] 4.7 Verify the agent cannot invoke `/finalize` and that a terminal `git push` and PR command are not blocked by any hook (Claude hooks only apply to the agent's own tool calls)
 - [x] 4.8 Add `.claude/hooks/push-checks.sh` (PreToolUse `Bash`, `git push`) and `push-checks-test.py`; verify with stubbed Gradle and emulator scripts that a failing coverage floor, a failing iOS simulator test (emulator never started) and a failing device test deny the push, a pass records `.claude/state/push-pass`, and that a Markdown-only push, a deletion, a dry run and a repeated `HEAD` run nothing
 - [x] 4.9 Register it after `pr-gate.sh` with a one-hour timeout; verify the settings file is valid JSON and `jacocoCoverageVerification` runs for real from the repository root
+- [x] 4.10 Make `pr-gate.sh` remind the agent to run `/verify` and compare changed screens with Figma whenever it lets a PR through; verify `pr-gate-test.py` checks the reminder is printed for every allowed PR and never for a denial or another command
 
 ## 5. Docs, memory and requirement
 
 - [x] 5.1 Rewrite AGENTS.md rule 9 for the new `/finalize` and state the agent must never write the marker by hand, replace the PRISM emulator paragraph with one naming `/finalize`, and describe the three hooks and CI as the PR gate; verify no `prism` text remains in AGENTS.md and CLAUDE.md
-- [ ] 5.2 Show the user the reworded Notion N-16 text and, once approved, update the N-16 row; verify by fetching the page
+- [x] 5.2 Show the user the reworded Notion N-16 text and, once approved, update the N-16 row; verify by fetching the page
 - [x] 5.3 Update the memory files `prism-kmp-plan`, `prism-concepts`, `verbeclair-emulators`, `remove-prism-plan` and `MEMORY.md`; verify each index line matches its file
 
 ## 6. Done gate

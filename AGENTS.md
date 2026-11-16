@@ -38,7 +38,8 @@ per-artifact rules and the definition of done. If anything here disagrees with i
    Gradle files (it blocks at most three times in a row), `push-checks.sh` runs the coverage floors, the iOS simulator
    tests and the device tests on `emulator-5574` before the agent's `git push` (it needs no `/finalize` pass, skips pushes with no Kotlin or
    Gradle change, and remembers a passed `HEAD` in `.claude/state/push-pass`), and `pr-gate.sh` denies the agent's PR
-   to `dev` without a pass. None of them touches a `git` or `gh` command the developer types in a terminal, and no git
+   to `dev` without a pass; when it lets a PR through it reminds the agent to run `/verify` and to compare every
+   changed screen with its Figma frame, and to say in the PR description what was checked. None of them touches a `git` or `gh` command the developer types in a terminal, and no git
    hook is installed.
    `pr-gate.sh` is a plain text match: any Bash command whose text contains `gh … pr create` or `gh … pr new` is
    treated as the PR command, however it is wrapped. That also catches text that only mentions it (a commit message,

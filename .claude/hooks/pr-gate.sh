@@ -47,13 +47,25 @@ if [ -z "$base" ]; then
     exit 2
 fi
 
-[ "$base" = dev ] || exit 0
+# Allowed: hand the agent a reminder as context (stdout JSON, exit 0). It is not a decision, so the PR still goes ahead.
+remind() {
+    python3 -c '
+import json
+print(json.dumps({"hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "additionalContext": "Reminder before this PR is opened: run /verify on the diff, and compare every changed screen "
+                         "with its Figma frame. Say in the PR description what was checked."}}))
+'
+    exit 0
+}
+
+[ "$base" = dev ] || remind
 
 head=$(git -C "$root" rev-parse HEAD 2>/dev/null || true)
 passed=$(cat "$marker" 2>/dev/null || true)
 
 if [ -n "$head" ] && [ "$head" = "$passed" ]; then
-    exit 0
+    remind
 fi
 
 printf 'PR DENIED — /finalize has not passed on this commit.\n\n' >&2

@@ -140,9 +140,14 @@ always state its base branch explicitly. When denied, the agent SHALL be told to
 - **WHEN** the agent opens a pull request without stating the base branch
 - **THEN** the command is denied and the message says to use `dev`
 
+#### Scenario: Reminder when the pull request is allowed
+- **WHEN** the agent opens a pull request that is allowed, whether to `dev` with a pass or to `main`
+- **THEN** the agent is reminded to run `/verify` and to compare every changed screen with its Figma frame, and the
+  pull request is still created
+
 #### Scenario: Other commands
 - **WHEN** the agent runs any command that does not open a pull request
-- **THEN** this requirement does not affect it
+- **THEN** this requirement does not affect it and no reminder is given
 
 ### Requirement: The developer is never blocked
 None of these checks SHALL block, delay or alter a `git` or `gh` command the developer types in their own terminal,
