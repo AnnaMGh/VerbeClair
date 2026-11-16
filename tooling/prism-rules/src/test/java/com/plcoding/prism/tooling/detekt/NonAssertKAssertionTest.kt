@@ -35,6 +35,12 @@ class NonAssertKAssertionTest {
     }
 
     @Test
+    fun `reports a jupiter Assertions class import and star import`() {
+        assertThat(rule.lint("import org.junit.jupiter.api.Assertions\n\nclass Sample")).hasSize(1)
+        assertThat(rule.lint("import org.junit.jupiter.api.Assertions.*\n\nclass Sample")).hasSize(1)
+    }
+
+    @Test
     fun `reports a jupiter fail import`() {
         assertThat(rule.lint("import org.junit.jupiter.api.fail\n\nclass Sample")).hasSize(1)
     }
