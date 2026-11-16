@@ -33,10 +33,13 @@ per-artifact rules and the definition of done. If anything here disagrees with i
    `.claude/state/finalize-pass` (gitignored). **The agent must never write that file by hand.** When a PR to `dev` is
    due and there is no pass for the current `HEAD`, ask the developer to run `/finalize`, then open the PR with
    `gh pr create --base dev`. A new commit makes the pass stale, so it has to run again.
-   Three Claude-only hooks and CI make up the gate: `ktlint-format.sh` formats each edited Kotlin file,
+   Four Claude-only hooks and CI make up the gate: `ktlint-format.sh` formats each edited Kotlin file,
    `stop-checks.sh` runs detekt, ktlint, Konsist and the unit tests when the agent stops after changing Kotlin or
-   Gradle files (it blocks at most three times in a row), and `pr-gate.sh` denies the agent's PR to `dev` without a
-   pass. None of them touches a `git` or `gh` command the developer types in a terminal, and no git hook is installed.
+   Gradle files (it blocks at most three times in a row), `push-checks.sh` runs the coverage floors and the device
+   tests on `emulator-5574` before the agent's `git push` (it needs no `/finalize` pass, skips pushes with no Kotlin or
+   Gradle change, and remembers a passed `HEAD` in `.claude/state/push-pass`), and `pr-gate.sh` denies the agent's PR
+   to `dev` without a pass. None of them touches a `git` or `gh` command the developer types in a terminal, and no git
+   hook is installed.
    `pr-gate.sh` is a plain text match: any Bash command whose text contains `gh … pr create` or `gh … pr new` is
    treated as the PR command, however it is wrapped. That also catches text that only mentions it (a commit message,
    an echo); write such text with Edit/Write, or run the real PR command. Always pass `--base` explicitly: the gate is

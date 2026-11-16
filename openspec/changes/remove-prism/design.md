@@ -12,7 +12,7 @@ without PRISM, so CI is unaffected.
 
 **Goals:**
 - No PRISM code, name or state left; the same rules keep enforcing through VerbeClair-named Gradle plugins.
-- Three Claude-only hooks plus a developer-only `/finalize` as specified in `agent-quality-gates`.
+- Four Claude-only hooks plus a developer-only `/finalize` as specified in `agent-quality-gates`.
 - Reuse what works: `pr-gate.sh` and its tests, `scripts/emulator/verbeclair-emulator.sh`, the existing engines.
 
 **Non-Goals:**
@@ -34,7 +34,7 @@ without PRISM, so CI is unaffected.
    `ANDROID_SERIAL=emulator-5574 ./gradlew connectedAndroidDeviceTest`, then `/verify`. It stops at the first failure
    and never writes the marker unless all pass. iOS tasks use `DEVELOPER_DIR` per command, never `xcode-select`.
 4. **Hooks are POSIX sh in `.claude/hooks/`:** `ktlint-format.sh` (PostToolUse `Edit|Write`) and `stop-checks.sh`
-   (Stop), next to `pr-gate.sh` (PreToolUse `Bash`). The format hook needs the ktlint CLI classpath, so the ktlint
+   (Stop), next to `pr-gate.sh` and `push-checks.sh` (both PreToolUse `Bash`). The format hook needs the ktlint CLI classpath, so the ktlint
    convention plugin gets a task that writes `build/ktlint/cli-classpath.txt` (moved from PRISM's plugin). Alternative:
    run `./gradlew ktlintFormat` per edit; rejected as too slow per edit.
 5. **Stop hook loop guard:** read `stop_hook_active` and keep a counter file per session; allow the stop after three
@@ -51,11 +51,20 @@ without PRISM, so CI is unaffected.
    one that names `/finalize`; the `agent-quality-gates` spec is the behavior contract. Notion N-16 is reworded after
    the user approves the text.
 
+9. **`push-checks.sh` gates the agent's `git push`, not its pull request.** It runs `jacocoCoverageVerification`, then
+   starts the phone emulator and runs `ANDROID_SERIAL=emulator-5574 ./gradlew connectedAndroidDeviceTest`, and denies
+   the push on a failure with a trimmed report. It is a plain text match on `git push` like `pr-gate.sh`. It skips
+   branch deletions and dry runs, pushes whose commits (against the upstream, else `origin/dev`) change no Kotlin,
+   Gradle, detekt or editorconfig file, and a `HEAD` already recorded in `.claude/state/push-pass` (gitignored), so a
+   retried push does not repeat the run. It does not read the `/finalize` marker: the two gates are independent.
+   Alternative: only run these checks in `/finalize`; rejected by the user, who wants the agent's push checked too.
+
 ## Risks / Trade-offs
 
 - [The pass marker can be written by hand] → documented as forbidden in AGENTS.md; CI remains the real gate.
 - [Text match in `pr-gate.sh` also catches commands that only mention PR creation] → known and accepted; the denial
   explains it, and the agent writes such text with Edit/Write.
+- [The push hook can take minutes: emulator boot plus device tests] → skipped for pushes with no Kotlin or Gradle change and for a `HEAD` that already passed; the hook timeout is one hour.
 - [Stop hook slows every turn that touches Kotlin] → runs only on relevant changes, loop-capped at three blocks.
 - [Rename touches many files] → one mechanical commit, verified by a green `./gradlew build` and a `grep` for
   "prism" before moving on.

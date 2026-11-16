@@ -48,6 +48,40 @@ the agent can never be stuck in a loop.
 - **WHEN** the agent has been blocked three times in a row for the same turn
 - **THEN** the fourth stop is allowed and the remaining failure is reported
 
+### Requirement: Check coverage and device tests before the agent pushes
+When the agent pushes commits that change Kotlin, Gradle, detekt or editorconfig files, the project SHALL first run the
+JaCoCo coverage floor checks and the Android instrumented tests on the project's own emulator, and SHALL deny the push
+with a trimmed failure report when either fails. A pass SHALL be remembered for the commit it ran on and SHALL NOT
+be committed. The check SHALL NOT use or modify an emulator of another project.
+
+#### Scenario: Coverage floor not met
+- **WHEN** the agent pushes and a module is below its coverage floor
+- **THEN** the push is denied and the report names the module and the floor
+
+#### Scenario: Instrumented test fails
+- **WHEN** the agent pushes and an Android instrumented test fails
+- **THEN** the push is denied and the report names the failing test
+
+#### Scenario: All checks pass
+- **WHEN** the agent pushes and the coverage floors and the instrumented tests pass
+- **THEN** the push goes ahead and the commit is recorded as checked
+
+#### Scenario: Same commit pushed again
+- **WHEN** the agent pushes a commit that was already recorded as checked
+- **THEN** no check runs and the push goes ahead
+
+#### Scenario: Nothing relevant pushed
+- **WHEN** the agent pushes commits that change no Kotlin, Gradle, detekt or editorconfig file
+- **THEN** no check runs
+
+#### Scenario: Branch deletion or dry run
+- **WHEN** the agent deletes a remote branch or runs a push with `--dry-run`
+- **THEN** no check runs
+
+#### Scenario: Other project's emulator is connected
+- **WHEN** another project's emulator is running while the agent pushes
+- **THEN** the instrumented tests run only on the VerbeClair emulator
+
 ### Requirement: Only the developer can run `/finalize`
 The project SHALL provide a `/finalize` skill that runs detekt, the Konsist tests, the full build, the coverage floor
 check, the Android instrumented tests on the project's own emulator, and the `/verify` review. The agent SHALL NOT be
@@ -119,9 +153,9 @@ and no git hook SHALL be installed to enforce these checks.
 - **WHEN** the developer runs the pull request command in a terminal with a stale pass
 - **THEN** the pull request is created
 
-#### Scenario: Agent pushes a work branch
-- **WHEN** the agent runs `git push` for its work branch without a recorded pass
-- **THEN** the push is not blocked
+#### Scenario: Agent pushes a work branch without a /finalize pass
+- **WHEN** the agent runs `git push` for its work branch with no `/finalize` pass recorded
+- **THEN** the push is not blocked for that reason; only the coverage and instrumented-test check can deny it
 
 ### Requirement: No PRISM remains
 The repository SHALL NOT contain PRISM tooling, configuration, launchers, hooks, skills or naming, and the static

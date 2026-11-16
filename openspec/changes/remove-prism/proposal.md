@@ -13,9 +13,9 @@ has per-module floors with a target of 80 %, and four automatic agent checks run
 stop, before a push, before a pull request). CI stays the gate for everyone; the agent checks never block a person's
 own pushes or pull requests.
 
-**Open point:** N-16 lists a check "before the agent pushes". This change moves the slow checks into the developer's
-`/finalize` and gates only the agent's pull request on its pass, so N-16 needs rewording (text to be approved by the
-user before Notion is edited).
+**Open point:** N-16 describes four agent checks, one of them a reminder to compare changed screens with Figma that
+this change does not carry over. N-16 needs rewording for the checks that exist now (text to be approved by the user
+before Notion is edited).
 
 ## What Changes
 
@@ -31,11 +31,13 @@ user before Notion is edited).
   `META-INF/services` provider. The custom rules are kept.
 - Delete PRISM-only Gradle code (`StaticAnalysisConventionPlugin`, `PrismScope`, `scope.json` reads,
   `prismKtlintBaseline`). Move the ktlint classpath task into the ktlint plugin, because the format hook needs it.
-- Add three POSIX-sh hooks in `.claude/hooks/`, active only for Claude's own tool calls (no git `pre-push` hook):
+- Add four POSIX-sh hooks in `.claude/hooks/`, active only for Claude's own tool calls (no git `pre-push` hook):
   1. after `Edit`/`Write` of a Kotlin file: ktlint formats that file;
   2. at stop: detekt, Konsist, build and JVM unit tests, loop-guarded;
-  3. before Claude opens a pull request: denied unless `/finalize` passed for the current commit and `--base` is
-     given. Claude's own `git push` is not gated.
+  3. before Claude's `git push`: the JaCoCo coverage floors and the Android device tests on `emulator-5574`; the push
+     is denied when either fails. A pass is remembered per commit, and a push that carries no Kotlin or Gradle change
+     is not checked. It does not need a `/finalize` pass;
+  4. before Claude opens a pull request: denied unless `/finalize` passed for the current commit and `--base` is given.
 - A developer's own `git push` and pull request from a terminal are never checked or blocked.
 - Keep `/verify` as a plain diff review and strip `prism.yml` references from the agents `skip-checker`,
   `convention-reviewer` and `mutation-worker`.
@@ -44,7 +46,7 @@ user before Notion is edited).
 ## Capabilities
 
 ### New Capabilities
-- `agent-quality-gates`: the three Claude-only hooks, the developer-only `/finalize` and its pass marker, what lets
+- `agent-quality-gates`: the four Claude-only hooks, the developer-only `/finalize` and its pass marker, what lets
   the agent open a pull request, and that nothing blocks a person's own git or `gh` commands.
 
 ### Modified Capabilities
