@@ -1,2 +1,2 @@
 <?xml version="1.0" ?>
-<SmellBaseline><ManuallySuppressedIssues /><CurrentIssues><ID>NonAssertKAssertion:WindowLayoutTest.kt:import kotlin.test.Test</ID><ID>NonAssertKAssertion:WindowLayoutTest.kt:import kotlin.test.assertEquals</ID></CurrentIssues></SmellBaseline>
+<SmellBaseline><ManuallySuppressedIssues /><CurrentIssues><ID>NonAssertKAssertion:WindowLayoutTest.kt:import kotlin.test.assertEquals</ID></CurrentIssues></SmellBaseline>

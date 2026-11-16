@@ -50,6 +50,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.assertk)
         }
         getByName("androidDeviceTest").dependencies {
             implementation(libs.androidx.testRunner)
