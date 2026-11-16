@@ -7,9 +7,9 @@
 
 ## 2. Delete PRISM-only Gradle code
 
-- [ ] 2.1 Add a task to the ktlint convention plugin that writes `build/ktlint/cli-classpath.txt` (moved from PRISM's plugin); verify the file exists and lists the ktlint CLI jars after running it
-- [ ] 2.2 Delete `StaticAnalysisConventionPlugin`, `PrismScope`, the `scope.json` reads and `prismKtlintBaseline`, keeping the existing baselines suppressing today's findings; verify `./gradlew detekt ktlintCheck :tooling:konsist:test` pass
-- [ ] 2.3 Verify the full `./gradlew build` still passes and commit
+- [x] 2.1 Add a task to the ktlint convention plugin that writes `build/ktlint/cli-classpath.txt` (moved from PRISM's plugin); verify the file exists and lists the ktlint CLI jars after running it
+- [x] 2.2 Delete `StaticAnalysisConventionPlugin`, `PrismScope`, the `scope.json` reads and `prismKtlintBaseline`, keeping the existing baselines suppressing today's findings; verify `./gradlew detekt ktlintCheck :tooling:konsist:test` pass
+- [x] 2.3 Verify the full `./gradlew build` still passes and commit
 
 ## 3. Remove the PRISM layer
 

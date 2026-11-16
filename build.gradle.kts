@@ -10,5 +10,5 @@ plugins {
     alias(libs.plugins.kotlinSerialization) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.room) apply false
-    id("verbeclair.static-analysis")
+    id("verbeclair.ktlint")
 }

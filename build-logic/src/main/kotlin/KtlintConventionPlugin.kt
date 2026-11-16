@@ -2,6 +2,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.attributes.Bundling
+import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.JavaExec
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.named
@@ -15,20 +16,19 @@ import java.io.File
  * catalog, and two tasks run it over the project's own Kotlin sources:
  *
  *  - `ktlintCheck` — read-only, fails the build on any violation. This is what
- *    the root `staticAnalysis` aggregate depends on, and so does the module's
- *    own `check`, which makes `build` fail on a formatting violation.
+ *    the module's `check` depends on, which makes `build` fail on a formatting violation.
  *  - `ktlintFormat` — the same scan with `--format`, autocorrecting in place.
+ *  - `ktlintToolingClasspath` — writes the resolved CLI classpath to
+ *    `build/ktlint/cli-classpath.txt`, so the per-edit format hook can run ktlint
+ *    directly instead of paying for a Gradle invocation per edited file. The
+ *    shadowed variant is a single self-contained jar, which keeps that file to one line.
  *
  * Neither task passes a rule id or a rule-configuration flag: the whole rule
  * set lives in the root `.editorconfig` so that Gradle, the per-edit hook, and
  * the IDE all see the identical configuration.
  *
- * A BASELINE IS PASSED, AND IT IS PER MODULE. ktlint had no baseline at all
- * until this, which meant a repository with violations `ktlintFormat` cannot
- * autocorrect -- 54 of them on the measured install, 35 being `package-name`
- * -- could never reach a green gate 0 and therefore could never enforce.
- * detekt had an on-ramp and ktlint did not, so "install in observe and burn it
- * down" only ever worked for one of the two.
+ * A BASELINE IS PASSED, AND IT IS PER MODULE, so findings `ktlintFormat` cannot
+ * autocorrect stay suppressed while a new violation still fails the build.
  *
  * It is per module rather than one root file because ktlint records baseline
  * paths relative to its working directory, and every module runs with
@@ -38,8 +38,8 @@ import java.io.File
  * The baseline is passed ONLY when it already exists. `--baseline` pointed at
  * a missing file makes ktlint CREATE it and report success, so passing it
  * unconditionally would turn the first `ktlintCheck` on a dirty repository
- * into a silent, permanent amnesty. `prismKtlintBaseline` is the task that
- * creates one, deliberately and by name.
+ * into a silent, permanent amnesty. A baseline is created deliberately, with
+ * `ktlint --baseline=ktlint.baseline.xml` from the module directory.
  */
 class KtlintConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -56,16 +56,6 @@ class KtlintConventionPlugin : Plugin<Project> {
 
             val baselineFile = File(projectDir, BASELINE_FILE)
 
-            // Bound HERE, at project scope. Inside `tasks.register<JavaExec> {}`
-            // the receiver is the TASK, so a bare `path` there reads
-            // ":module:ktlintCheck" -- which matches no module in scope.json,
-            // falls back to the default, and silently enforces a module the
-            // consumer set to observe. Same trap as the one documented in
-            // StaticAnalysisConventionPlugin's subprojects loop, and it was
-            // walked into again here.
-            val modulePath = path
-            val observed = PrismScope.observes(project, modulePath, "ktlint")
-
             val ktlintCheck =
                 tasks.register<JavaExec>("ktlintCheck") {
                     group = "verification"
@@ -74,15 +64,10 @@ class KtlintConventionPlugin : Plugin<Project> {
                     mainClass.set(KTLINT_MAIN_CLASS)
                     workingDir = projectDir
                     args = SOURCE_PATTERNS + REPORTING_ARGS
-                    // Resolved at EXECUTION time, not configuration time: the
-                    // baseline is usually written by prismKtlintBaseline in the
-                    // same invocation that then checks against it.
+                    // Resolved at EXECUTION time, not configuration time.
                     argumentProviders.add {
                         if (baselineFile.isFile) listOf("--baseline=$BASELINE_FILE") else emptyList()
                     }
-                    // OBSERVE RUNS THE ENGINE AND DOES NOT FAIL THE BUILD. Every
-                    // violation is still printed; only the exit status changes.
-                    isIgnoreExitValue = observed
                 }
 
             // `check` -- and so `build` -- runs ktlint, as detekt's plugin already does
@@ -91,19 +76,18 @@ class KtlintConventionPlugin : Plugin<Project> {
             // one, so it is matched by name rather than looked up.
             tasks.matching { task -> task.name == "check" }.configureEach { dependsOn(ktlintCheck) }
 
-            // Seeding is its own task and is never wired into staticAnalysis --
-            // a gate that could write its own baseline would be an escape hatch
-            // with a task name.
-            tasks.register<JavaExec>("prismKtlintBaseline") {
+            tasks.register("ktlintToolingClasspath") {
                 group = "verification"
-                description = "Records this project's current ktlint violations in $BASELINE_FILE."
-                classpath = configurations.getByName(KTLINT_CONFIGURATION)
-                mainClass.set(KTLINT_MAIN_CLASS)
-                workingDir = projectDir
-                args = SOURCE_PATTERNS + REPORTING_ARGS + "--baseline=$BASELINE_FILE"
-                // ktlint exits non-zero while reporting the violations it is
-                // recording. That is the task succeeding, not failing.
-                isIgnoreExitValue = true
+                description = "Writes the resolved ktlint CLI classpath so tooling can run it without Gradle."
+                val classpath: FileCollection = configurations.getByName(KTLINT_CONFIGURATION)
+                val classpathFile = layout.buildDirectory.file(CLASSPATH_FILE)
+                inputs.files(classpath)
+                outputs.file(classpathFile)
+                doLast {
+                    val output = classpathFile.get().asFile
+                    output.parentFile.mkdirs()
+                    output.writeText(classpath.joinToString(File.pathSeparator) { it.absolutePath })
+                }
             }
 
             tasks.register<JavaExec>("ktlintFormat") {
@@ -124,6 +108,7 @@ class KtlintConventionPlugin : Plugin<Project> {
         const val KTLINT_CONFIGURATION = "ktlint"
         const val KTLINT_MAIN_CLASS = "com.pinterest.ktlint.Main"
         const val BASELINE_FILE = "ktlint.baseline.xml"
+        const val CLASSPATH_FILE = "ktlint/cli-classpath.txt"
 
         val SOURCE_PATTERNS =
             listOf(

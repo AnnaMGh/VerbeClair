@@ -58,10 +58,6 @@ gradlePlugin {
             id = "verbeclair.detekt"
             implementationClass = "DetektConventionPlugin"
         }
-        register("staticAnalysis") {
-            id = "verbeclair.static-analysis"
-            implementationClass = "StaticAnalysisConventionPlugin"
-        }
     }
 }
 
