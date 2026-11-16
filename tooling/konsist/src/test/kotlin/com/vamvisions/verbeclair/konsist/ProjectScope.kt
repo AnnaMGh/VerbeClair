@@ -14,59 +14,27 @@ import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
  */
 internal object ProjectScope {
     /**
-     * The directories whose Kotlin files are not the consumer's source.
+     * The directories whose Kotlin files are not the project's source.
      *
      * `scopeFromProject()` correctly excludes `build/` and the KSP output, but it
-     * walks every other directory in the repository -- including ones holding
-     * Kotlin that is tooling or documentation rather than project code. Those are
+     * walks every other directory in the repository, including ones that hold
+     * Kotlin belonging to the agent harness rather than to the app. `.claude` is
      * sliced out here once rather than exempted rule by rule.
-     *
-     * Expressed as a list of owned roots, not as one hardcoded path, because the
-     * engine no longer lives inside the harness's directory. When it moved, a
-     * single `/.claude/` exclusion stopped covering it, and the failure mode of
-     * that is silent in the dangerous direction: the scope *widens* to include
-     * the framework's own Gradle init scripts and rule sources, and the rules
-     * then report on code the consumer did not write and cannot fix.
-     *
-     * `.prism` is the framework's -- the engine, its assets, its state. `.claude`
-     * is a harness's. The harness side gains entries in Phase 4, when the
-     * remaining four adapters ship; each is a directory a harness owns inside the
-     * consumer's repository, and none of them is project source.
-     *
-     * `prism-setup` is the extraction staging directory, and it is here because
-     * of an ordering nobody would guess: setup runs `./gradlew staticAnalysis`
-     * at step 8 to prove the wiring works, and does not delete the staging
-     * directory until step 11. So the FIRST static-analysis run of every install
-     * sees a second, complete copy of the payload sitting in the repository root
-     * -- 152 declarations of it, on a project with two source files -- and
-     * reports on all of it. The consumer's first impression of the framework
-     * would be a wall of violations in files they had never opened.
      */
-    val EXCLUDED_ROOTS = listOf(".prism", ".claude", "prism-setup")
+    val EXCLUDED_ROOTS = listOf(".claude")
 
     /**
-     * PRISM's own two modules, sliced out for the same reason as `.prism`.
+     * The two tooling modules, sliced out for the same reason as `.claude`.
      *
-     * `tooling/detekt-rules` and `tooling/konsist` install as SOURCE, so konsist
-     * walks them like any other module -- and then grades the framework's 72 rule
-     * classes against the consumer's architecture. Measured on a bare app with
-     * two source files: 302 declarations in scope, 152 of them violating "module
-     * owns its package root", none of them written by the consumer.
-     *
-     * That is the failure EXCLUDED_ROOTS' own comment describes one directory
-     * earlier -- the scope widening to include the framework's sources, which
-     * then report on code the consumer did not write and cannot fix. It was
-     * invisible in the origin repository, where these two paths are mapped in
-     * MODULE_PACKAGE_ROOTS and every file in them matches.
-     *
-     * A consumer's OWN rules, added to these modules later, are excluded too.
-     * That is the accepted cost, and it is the same trade `prism-doctor` already
-     * makes when it leaves these two modules out of its detekt-reach count.
+     * `tooling/detekt-rules` and `tooling/konsist` are build tooling, not app
+     * code, so grading them against the app's architecture (for example "module
+     * owns its package root") would report on code the architecture rules were
+     * never meant for.
      */
-    val PRISM_OWNED_MODULES = listOf("tooling/detekt-rules", "tooling/konsist")
+    val TOOLING_MODULES = listOf("tooling/detekt-rules", "tooling/konsist")
 
     /**
-     * Is this path the framework's rather than the consumer's?
+     * Is this path outside the project's analysed source?
      *
      * A named function rather than a lambda inside `all`, so the predicate can be
      * tested DIRECTLY -- with no scope, no konsist parse and no consumer project.
@@ -78,7 +46,7 @@ internal object ProjectScope {
     fun isExcluded(path: String): Boolean {
         val normalised = path.forwardSlashed()
         return EXCLUDED_ROOTS.any { normalised.startsWith("/$it/") } ||
-            PRISM_OWNED_MODULES.any { normalised.startsWith("/$it/") }
+            TOOLING_MODULES.any { normalised.startsWith("/$it/") }
     }
 
     val all: KoScope by lazy {

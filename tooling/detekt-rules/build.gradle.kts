@@ -1,12 +1,9 @@
 plugins {
-    // Applied directly rather than through a PRISM convention plugin. This file
-    // installs into a CONSUMER's repository, where PRISM ships only the four
-    // verification plugins -- it does not ship, and must not impose, a way of
-    // configuring Kotlin/JVM modules. The consumer's own conventions are theirs.
+    // Applied directly rather than through a convention plugin: these are plain
+    // Kotlin/JVM tooling modules, not app modules.
     `java-library`
     id("org.jetbrains.kotlin.jvm")
-    // Coverage is opted into explicitly here, because nothing else applies it
-    // any more: prism.jacoco used to ride in on the deleted convention plugins.
+    // Coverage is opted into explicitly here, because nothing else applies it.
     id("verbeclair.jacoco")
     id("verbeclair.ktlint")
 }

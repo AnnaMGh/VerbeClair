@@ -71,7 +71,7 @@ class ThemeColorDirectUseTest {
 
     @Test
     fun `refuses a placeholder name, not only a blank one`() {
-        // THE MEASURED FAILURE. PRISM's convention is that a repository with no
+        // THE MEASURED FAILURE. The convention is that a repository with no
         // palette declaration switches the group off and gives the name the
         // inert value 'none'. An install wrote 'none' and left the rules ON.
         // The old guard was isNotBlank(), and 'none' is not blank -- so the rule

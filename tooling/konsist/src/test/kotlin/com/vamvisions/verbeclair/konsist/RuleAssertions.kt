@@ -15,15 +15,15 @@ import org.junit.jupiter.api.Assumptions.abort
  * failure is silent in the dangerous direction twice over:
  *
  *   - ProjectScope's slice stops excluding anything, so the scope widens to the
- *     framework's own rule sources, build-logic and the installer payload. On a
- *     26-module install, 308 of 314 declarations in scope were PRISM's rather
- *     than the consumer's;
+ *     tooling modules' rule sources and build-logic. On a
+ *     26-module install, 308 of 314 declarations in scope were tooling
+ *     sources rather than the app's;
  *   - and the two ScopeIntegrityTest cases written to catch exactly that still
  *     PASSED, because a filter that matches nothing also leaks nothing into the
  *     list they inspect.
  *
  * ProjectScope's own KDoc describes this failure -- "the scope *widens* to
- * include the framework's own Gradle init scripts and rule sources" -- and
+ * include the tooling modules' rule sources" -- and
  * expected it to arrive through a moved directory. It arrived through a path
  * separator instead.
  *
@@ -31,67 +31,6 @@ import org.junit.jupiter.api.Assumptions.abort
  * this module, and it is this one.
  */
 internal fun String.forwardSlashed(): String = replace('\\', '/')
-
-/**
- * Modules where konsist is set to `observe` in `.prism/scope.json`.
- *
- * Konsist is one module analysing the whole graph, so it cannot be made
- * non-blocking per module the way detekt and ktlint can -- there is one test
- * task and one exit status. Violations are therefore PARTITIONED instead: those
- * in enforced modules fail the test, those in observed modules are printed and
- * do not.
- *
- * The list arrives as a system property rather than by parsing scope.json here,
- * so that the Gradle-side reader stays the single interpreter of that file.
- * Empty property, or no property at all, means every module enforces -- the
- * same strict default as everywhere else.
- */
-private val OBSERVED_PREFIXES: List<String> =
-    System
-        .getProperty("prism.konsist.observe", "")
-        .split(",")
-        .map { it.trim() }
-        .filter { it.isNotEmpty() }
-        // A Gradle path becomes a directory prefix: colons become slashes,
-        // bounded by one at each end, which is the form konsist reports as
-        // projectPath. The TRAILING slash is load-bearing -- without it any
-        // module whose path is a prefix of a sibling's would swallow that
-        // sibling, and observing one module would silently observe the other.
-        .map { "/" + it.trim(':').replace(':', '/') + "/" }
-
-private fun KoBaseProvider.isObserved(): Boolean {
-    if (OBSERVED_PREFIXES.isEmpty()) return false
-    // Normalised, or on Windows no module ever matches an observe prefix and
-    // every module reads as ENFORCED -- a consumer who set konsist to observe
-    // would be blocked by it anyway, which is the opposite of what they asked
-    // for and produces no message explaining why.
-    val path = (this as? KoPathProvider)?.projectPath?.forwardSlashed() ?: return false
-    return OBSERVED_PREFIXES.any { path.startsWith(it) }
-}
-
-/**
- * Reports the violations in observed modules without failing.
- *
- * Printed, not swallowed. `observe` means the engine still tells you what it
- * found; a posture that hid findings would be indistinguishable from the rule
- * being off, and the entire reason posture is per module is so that a module
- * nobody has reached yet can still say how much work is in it.
- */
-private fun <T : KoBaseProvider> reportObserved(
-    rule: String,
-    requirement: String,
-    observed: List<T>,
-) {
-    if (observed.isEmpty()) return
-    println(
-        buildString {
-            appendLine("PRISM observe -- $rule: ${observed.size} violation(s), not blocking.")
-            appendLine("Requirement: $requirement")
-            observed.forEach { appendLine("  - ${describe(it)}") }
-            appendLine("Promote the module in .prism/scope.json when these are cleared.")
-        },
-    )
-}
 
 /**
  * Asserts [predicate] holds for every declaration in this subject set, naming each
@@ -116,8 +55,7 @@ internal fun <T : KoBaseProvider> List<T>.assertAll(
 ) {
     assertMatchesSomething(rule)
 
-    val (observed, blocking) = filterNot(predicate).partition { it.isObserved() }
-    reportObserved(rule, requirement, observed)
+    val blocking = filterNot(predicate)
     if (blocking.isEmpty()) return
 
     throw AssertionError(
@@ -166,8 +104,7 @@ internal fun <T : KoBaseProvider> List<T>.assertAllWhereApplicable(
         )
     }
 
-    val (observed, blocking) = filterNot(predicate).partition { it.isObserved() }
-    reportObserved(rule, requirement, observed)
+    val blocking = filterNot(predicate)
     if (blocking.isEmpty()) return
 
     throw AssertionError(

@@ -4,9 +4,9 @@ package com.vamvisions.verbeclair.detekt
  * The guard for rule parameters that name a declaration in the CONSUMER's
  * repository — a palette object, a theme composable, an extended-token holder.
  *
- * WHY A BLANK CHECK WAS NOT ENOUGH, MEASURED RATHER THAN IMAGINED. PRISM's own
+ * WHY A BLANK CHECK WAS NOT ENOUGH, MEASURED RATHER THAN IMAGINED. The
  * convention is that a repository lacking the shape switches the group off and
- * gives the names the inert value `'none'`. Two shipped documents promised that
+ * gives the names the inert value `'none'`. The documentation promised that
  * turning a rule back on without a real name would "fail loudly with the rule's
  * own message". It did not: the rules guarded with `isNotBlank()`, and `none`
  * is not blank.
@@ -43,15 +43,13 @@ internal fun requireConsumerName(
 ): String {
     check(value.trim().lowercase() !in CONSUMER_NAME_SENTINELS) {
         "$rule has '$key' set to \"$value\", which is a placeholder rather than a " +
-            "name. It must be the name of a declaration in YOUR repository, because " +
+            "name. It must be the name of a declaration in this repository, because " +
             "a name that matches nothing makes this rule report success over the " +
             "code it was pointed at.\n" +
             "  Either set '$key' under $rule in detekt.yml to a real declaration,\n" +
             "  or set every rule guarded by $switch to 'active: false' — which is " +
             "the correct answer when your repository genuinely has no such " +
-            "declaration.\n" +
-            "  See 'Changing things' in the PRISM documentation folder, under\n" +
-            "  'Adding or changing a group switch'."
+            "declaration."
     }
     return value
 }

@@ -41,6 +41,7 @@
 
 ## 6. Done gate
 
-- [ ] 6.1 Verify `grep -rIi prism . --exclude-dir=.git --exclude-dir=build --exclude-dir=archive` finds nothing, except text stating PRISM was removed
-- [ ] 6.2 Verify `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./gradlew build`, `./gradlew jacocoCoverageVerification` and `ANDROID_SERIAL=emulator-5574 ./gradlew connectedAndroidDeviceTest` all pass for every module
+- [x] 6.1 Verify `grep -rIi prism . --exclude-dir=.git --exclude-dir=build --exclude-dir=archive` finds nothing, except text stating PRISM was removed
+- [x] 6.2 Verify `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./gradlew build`, `./gradlew jacocoCoverageVerification` and `ANDROID_SERIAL=emulator-5574 ./gradlew connectedAndroidDeviceTest` all pass for every module
+  - Device tests ran on `emulator-5554`: the VerbeClair AVD was already running on the default port, so 5574 was not used.
 - [ ] 6.3 Run `/finalize` as the developer, then open the PR with `--base dev` for the user's approval; verify CI is green and never merge locally

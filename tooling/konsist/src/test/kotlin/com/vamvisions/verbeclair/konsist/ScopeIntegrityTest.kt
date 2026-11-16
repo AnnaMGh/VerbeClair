@@ -147,11 +147,11 @@ class ScopeIntegrityTest {
 
     /**
      * The check above iterates `EXCLUDED_ROOTS`, so removing a root from it also removes
-     * that root's check. Pin the framework's and the harness's directories by name.
+     * that root's check. Pin the harness's directory by name.
      */
     @Test
-    fun `the excluded roots name the framework and harness directories`() {
-        assertThat(ProjectScope.EXCLUDED_ROOTS).containsAll(".prism", ".claude", "prism-setup")
+    fun `the excluded roots name the harness directory`() {
+        assertThat(ProjectScope.EXCLUDED_ROOTS).containsAll(".claude")
     }
 
     /**
@@ -223,10 +223,10 @@ class ScopeIntegrityTest {
     }
 
     /**
-     * The declared modules MINUS PRISM's own two.
+     * The declared modules MINUS the two tooling modules.
      *
      * Both integrity checks are about the CONSUMER's project: does the scope
-     * reach everything they compile. PRISM's modules are deliberately sliced out
+     * reach everything they compile. The tooling modules are deliberately sliced out
      * of the scope, so asking the scope to cover them inverts the question and
      * fails on a correct install. On a greenfield app it failed in a way that
      * reads like a scope defect and is not one: the only `src/test` directory in
@@ -234,7 +234,7 @@ class ScopeIntegrityTest {
      * module left "the project uses a test source set the analyser cannot see" --
      * about a source set the consumer does not have.
      */
-    private fun consumerModulePaths(): List<String> = declaredModulePaths().filterNot { it in ProjectScope.PRISM_OWNED_MODULES }
+    private fun consumerModulePaths(): List<String> = declaredModulePaths().filterNot { it in ProjectScope.TOOLING_MODULES }
 
     /** Source-set directories under a consumer module that actually hold Kotlin. */
     private fun sourceSetsWithKotlinOnDisk(): Set<String> =

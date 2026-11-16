@@ -82,7 +82,7 @@ class DataLayerRulesTest {
                     "exception, a null or a boolean — so the caller cannot forget it. A " +
                     "function that genuinely cannot fail is exempted at the declaration " +
                     "with an annotation named LocalOnly, never by an exclusion in this " +
-                    "rule. PRISM DOES NOT SHIP THAT ANNOTATION: this rule matches it by " +
+                    "rule. THE PROJECT DOES NOT SHIP THAT ANNOTATION: this rule matches it by " +
                     "SIMPLE NAME, so declare your own in a module your data layer already " +
                     "depends on and put the reason in its KDoc — " +
                     "`annotation class LocalOnly` is the whole of it",

@@ -23,8 +23,8 @@ dependencies {
     // LibraryExtension and ApplicationExtension, so it needs the types to
     // compile -- but it reaches them only inside pluginManager.withPlugin
     // callbacks, which never fire in a project that has no AGP. Requiring AGP
-    // on the runtime classpath would make PRISM uninstallable in a pure
-    // Kotlin/JVM repository for the sake of a branch that would not execute.
+    // on the runtime classpath would make the plugins unusable in a pure
+    // Kotlin/JVM project for the sake of a branch that would not execute.
     // COORDINATES, NOT LIBRARY ALIASES, and a real install is why.
     //
     // A version catalog alias becomes a Kotlin accessor by splitting on -, _ and

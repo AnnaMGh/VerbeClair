@@ -13,13 +13,7 @@ package com.vamvisions.verbeclair.konsist
  * `StructureRulesTest` asserts this map's keys are exactly the modules declared
  * in `settings.gradle.kts`, so a new module cannot land without an entry here.
  *
- * GENERATED FILE — edit `ModulePackageRoots.kt.in`, not this. The consumer
- * entries are rendered from the target repository at install; re-render rather
- * than hand-edit when the module list changes, or the next render silently
- * reverts the edit.
- *
- * PRISM's own two tooling modules used to be listed here as literals. They are
- * not any more: `ProjectScope` slices them out of the scope entirely, so no file
+ * The two tooling modules are not listed here: `ProjectScope` slices them out of the scope entirely, so no file
  * from them ever reaches a rule that would consult this map, and an entry for a
  * module the scope cannot yield is a line that can only mislead.
  */
@@ -42,13 +36,11 @@ internal val MODULE_PACKAGE_ROOTS =
  *
  * A PATH PREFIX, NOT A MODULE NAME, and a real install is what settled it. This
  * used to be matched as `file.moduleName == "build-logic"`, which holds only when
- * the included build is a single flat project — the shape PRISM ships to a
- * repository that had no build-logic of its own. A repository that already has
- * one keeps it, and PRISM's four plugins land in a subproject beside theirs; the
- * module names are then `convention` and `prism`, the exemption matches neither,
- * and `module owns its package root` reports every convention plugin in the
- * repository — including PRISM's own five, which are in the default package
- * because Gradle requires it. Measured on a 26-module install: 21 of 206
- * declarations, none of them the consumer's application code.
+ * the included build is a single flat project — the shape of a
+ * repository whose build-logic is one project. A repository with several build-logic
+ * subprojects gets other module names, the exemption matches none of them, and
+ * `module owns its package root` reports every convention plugin, which sit in the
+ * default package because Gradle requires it. Measured on a 26-module install: 21 of
+ * 206 declarations, none of them application code.
  */
 internal const val INCLUDED_BUILD_PATH = "/build-logic/"

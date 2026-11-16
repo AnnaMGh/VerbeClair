@@ -190,7 +190,7 @@ Compose:
   PreviewNaming:
     active: true
 
-  # OFF because PRISM's own PreviewMustBePrivate says the same thing, with its
+  # OFF because the project's own PreviewMustBePrivate says the same thing, with its
   # own message and its own excludes. Both were firing, so one violation was
   # reported twice: a freshly generated Android project has 2 public previews
   # and produced 4 findings. Two rules for one concern does not catch more, it
@@ -375,10 +375,8 @@ verbeclair:
   #               is a set of top-level vals rather than an object, a class or
   #               a data class. Then both names take 'none'.
   #   set true    only with real names. A placeholder name ('none', 'n/a',
-  #               'TODO') beside an ACTIVE rule is REFUSED -- by render.py at
-  #               install, and by the rules themselves at runtime.
-  #   see         'Changing things' in the PRISM documentation folder,
-  #               'Adding or changing a group switch'
+  #               'TODO') beside an ACTIVE rule is REFUSED by the
+  #               rules themselves at runtime.
   #
   # WHY THESE TWO ARE NOT IN THE THEME GROUP. A wrong or placeholder name here
   # is a SILENT GREEN: the rule runs, its receiver comparison never matches,
@@ -389,8 +387,8 @@ verbeclair:
   # left on rather than lose the other three.
   #
   # SWITCHING THIS OFF DOES NOT MAKE RAW-COLOUR USE LEGAL. It means no rule in
-  # the set can express it. Record that in .prism/INSTALL-RECORD.md rather than
-  # letting the gap disappear.
+  # the set can express it. Note the gap in the change's design rather than
+  # letting it disappear.
   # ---------------------------------------------------------------------------
   # References inside the theme package are what BUILD the colour scheme, so the
   # exclusion is the whole difference between defining and consuming.
@@ -418,8 +416,6 @@ verbeclair:
   #   set false   when there is no theme composable AND no theme package. Then
   #               THEME_OBJECT takes 'none'.
   #   set true    only with a real name; a placeholder is REFUSED, as above.
-  #   see         'Changing things' in the PRISM documentation folder,
-  #               'Adding or changing a group switch'
   #
   # ONE OF THEM CANNOT GUESS A NAME. PreviewMustWrapInTheme reads THEME_OBJECT,
   # and a wrong name matches no call -- so every preview in the repository is
@@ -484,17 +480,11 @@ verbeclair:
   # CHECKED is now the same in every repository. What BLOCKS is yours to move.
   #
   # IF THESE FIRE EVERYWHERE
-  #   observe     set this engine to 'observe' for the module in
-  #               .prism/scope.json -- every finding is still reported, none of
-  #               them blocks. This is the right answer to 'this repository has
-  #               a lot of these'.
   #   baseline    records what exists TODAY; a NEW violation still fails. This
   #               is strictly better than the switch it replaces, which hid the
   #               new ones too.
   #   off         `active: false`, here, one rule at a time. Last resort: the
   #               rule never comes back, and neither does the check.
-  #   see         'Changing things' in the PRISM documentation folder,
-  #               'The three meanings of off'
   # ---------------------------------------------------------------------------
   TextFieldStateInViewModel:
     active: true
@@ -575,17 +565,11 @@ verbeclair:
   # CHECKED is now the same in every repository. What BLOCKS is yours to move.
   #
   # IF THESE FIRE EVERYWHERE
-  #   observe     set this engine to 'observe' for the module in
-  #               .prism/scope.json -- every finding is still reported, none of
-  #               them blocks. This is the right answer to 'this repository has
-  #               a lot of these'.
   #   baseline    records what exists TODAY; a NEW violation still fails. This
   #               is strictly better than the switch it replaces, which hid the
   #               new ones too.
   #   off         `active: false`, here, one rule at a time. Last resort: the
   #               rule never comes back, and neither does the check.
-  #   see         'Changing things' in the PRISM documentation folder,
-  #               'The three meanings of off'
   # ---------------------------------------------------------------------------
   # The file wrapping the raw Ktor verbs has to call them directly.
   KtorCallMustUseSafeCall:
@@ -636,17 +620,11 @@ verbeclair:
   # CHECKED is now the same in every repository. What BLOCKS is yours to move.
   #
   # IF THESE FIRE EVERYWHERE
-  #   observe     set this engine to 'observe' for the module in
-  #               .prism/scope.json -- every finding is still reported, none of
-  #               them blocks. This is the right answer to 'this repository has
-  #               a lot of these'.
   #   baseline    records what exists TODAY; a NEW violation still fails. This
   #               is strictly better than the switch it replaces, which hid the
   #               new ones too.
   #   off         `active: false`, here, one rule at a time. Last resort: the
   #               rule never comes back, and neither does the check.
-  #   see         'Changing things' in the PRISM documentation folder,
-  #               'The three meanings of off'
   # ---------------------------------------------------------------------------
   RouteMustBeSerializable:
     active: true
@@ -683,17 +661,11 @@ verbeclair:
   # CHECKED is now the same in every repository. What BLOCKS is yours to move.
   #
   # IF THESE FIRE EVERYWHERE
-  #   observe     set this engine to 'observe' for the module in
-  #               .prism/scope.json -- every finding is still reported, none of
-  #               them blocks. This is the right answer to 'this repository has
-  #               a lot of these'.
   #   baseline    records what exists TODAY; a NEW violation still fails. This
   #               is strictly better than the switch it replaces, which hid the
   #               new ones too.
   #   off         `active: false`, here, one rule at a time. Last resort: the
   #               rule never comes back, and neither does the check.
-  #   see         'Changing things' in the PRISM documentation folder,
-  #               'The three meanings of off'
   # ---------------------------------------------------------------------------
   JUnit4InJvmUnitTest:
     active: true

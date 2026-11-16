@@ -50,10 +50,10 @@ class StructureRulesTest {
                 .map { it.groupValues[1].removePrefix(":").replace(':', '/') }
                 .toSet()
 
-        // PRISM's own two modules are declared in settings.gradle.kts but are
+        // The two tooling modules are declared in settings.gradle.kts but are
         // sliced out of the analysis scope, so they carry no mapping and must not
-        // be demanded to. See ProjectScope.PRISM_OWNED_MODULES.
-        val consumerModules = declared - ProjectScope.PRISM_OWNED_MODULES.toSet()
+        // be demanded to. See ProjectScope.TOOLING_MODULES.
+        val consumerModules = declared - ProjectScope.TOOLING_MODULES.toSet()
 
         val unmapped = consumerModules - MODULE_PACKAGE_ROOTS.keys
         val stale = MODULE_PACKAGE_ROOTS.keys - consumerModules

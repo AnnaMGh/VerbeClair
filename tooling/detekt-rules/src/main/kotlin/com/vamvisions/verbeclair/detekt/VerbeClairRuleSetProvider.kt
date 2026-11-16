@@ -10,7 +10,7 @@ import dev.detekt.api.RuleSetProvider
  * detekt finds this class through
  * `META-INF/services/dev.detekt.api.RuleSetProvider`. Without that file detekt
  * loads the jar and silently finds nothing, so a rule added here must also be
- * listed in `detekt.yml` under the `prism` id — with `config.validation` on, a
+ * listed in `detekt.yml` under the `verbeclair` id — with `config.validation` on, a
  * name that does not match fails the build.
  */
 class VerbeClairRuleSetProvider : RuleSetProvider {

@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test
  * began reporting `\`-separated paths on Windows and every `/`-anchored
  * comparison here stopped matching, the two cases written to catch a widened
  * scope both PASSED while the scope was, measured on a 26-module install, 308 of
- * 314 declarations of PRISM's own sources.
+ * 314 declarations of the tooling modules' own sources.
  *
  * These tests take the opposite approach and test the PREDICATE against known
  * inputs, both spellings, with no scope, no konsist parse and no consumer
@@ -46,8 +46,8 @@ class ScopePathSpellingTest {
     }
 
     @Test
-    fun `a prism-owned module is recognised however the platform spells it`() {
-        ProjectScope.PRISM_OWNED_MODULES.forEach { module ->
+    fun `a tooling module is recognised however the platform spells it`() {
+        ProjectScope.TOOLING_MODULES.forEach { module ->
             assertThat(ProjectScope.isExcluded("/$module/src/test/kotlin/Rule.kt"))
                 .isTrue()
             val windows = module.replace('/', '\\')
@@ -66,15 +66,15 @@ class ScopePathSpellingTest {
     /**
      * The exclusions are anchored, and must stay so.
      *
-     * `.prism` bounded at both ends is why a consumer module called
+     * `.claude` bounded at both ends is why a consumer module called
      * `detekt-rules` at the repository root is still their code. Without the
      * anchors this function would quietly widen in the other direction and hide
      * the consumer's own sources from every rule.
      */
     @Test
     fun `a module whose name merely contains an excluded root is still the consumers`() {
-        assertThat(ProjectScope.isExcluded("/my-prism-setup/src/main/kotlin/A.kt")).isFalse()
-        assertThat(ProjectScope.isExcluded("""\my-prism-setup\src\main\kotlin\A.kt""")).isFalse()
+        assertThat(ProjectScope.isExcluded("/my-claude-setup/src/main/kotlin/A.kt")).isFalse()
+        assertThat(ProjectScope.isExcluded("""\my-claude-setup\src\main\kotlin\A.kt""")).isFalse()
         assertThat(ProjectScope.isExcluded("/tooling/detekt-rules-extra/src/main/kotlin/A.kt"))
             .isFalse()
     }

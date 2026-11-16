@@ -2,7 +2,7 @@
 #
 # detekt's `config.validation` checks every entry in the root `detekt.yml`
 # against the defaults it can see, and it can only see a rule set's names if the
-# rule set ships them. Without this file the whole `prism` section of the root
+# rule set ships them. Without this file the whole `verbeclair` section of the root
 # config would be rejected as misspelled.
 #
 # Whether a rule is on, and what it excludes, is decided in the root `detekt.yml`
