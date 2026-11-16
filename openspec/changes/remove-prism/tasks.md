@@ -22,10 +22,11 @@
 ## 4. Hooks and the new `/finalize`
 
 - [x] 4.1 Add `.claude/hooks/ktlint-format.sh` (PostToolUse `Edit|Write`) and register it; verify a mis-indented `.kt` edit is reformatted, a wildcard import is reported, a Markdown edit is ignored, and a missing classpath file exits 0
-- [ ] 4.2 Add `.claude/hooks/stop-checks.sh` (Stop) with the `stop_hook_active` guard, a counter capped at three blocks, and the relevant-files filter; verify a detekt violation blocks the stop, the fourth stop is allowed, and a Markdown-only change runs nothing
-- [ ] 4.3 Measure how long the stop checks take; if the iOS simulator tasks make them too slow, exclude them there and verify CI still runs them
-- [ ] 4.4 Change `pr-gate.sh` to read the marker from `.claude/state/finalize-pass`, reword the denial to ask the developer to run `/finalize`, and add `.claude/state/` to `.gitignore`; verify the updated `pr-gate-test.py` covers pass, no pass, stale pass, missing base and `--base main`, and passes
-- [ ] 4.5 Register `pr-gate.sh` as the only PreToolUse Bash hook and verify no hook is registered for `git push`
+- [x] 4.2 Add `.claude/hooks/stop-checks.sh` (Stop) with the `stop_hook_active` guard, a counter capped at three blocks, and the relevant-files filter; verify a detekt violation blocks the stop, the fourth stop is allowed, and a Markdown-only change runs nothing
+- [x] 4.3 Measure how long the stop checks take; if the iOS simulator tasks make them too slow, exclude them there and verify CI still runs them
+  - Measured: a change in `:core:domain` ran detekt, ktlint, Konsist and every module's `check` (iOS simulator tests included) in 43 s; unchanged inputs take 7 s. Nothing is excluded.
+- [x] 4.4 Change `pr-gate.sh` to read the marker from `.claude/state/finalize-pass`, reword the denial to ask the developer to run `/finalize`, and add `.claude/state/` to `.gitignore`; verify the updated `pr-gate-test.py` covers pass, no pass, stale pass, missing base and `--base main`, and passes
+- [x] 4.5 Register `pr-gate.sh` as the only PreToolUse Bash hook and verify no hook is registered for `git push`
 - [ ] 4.6 Rewrite `.claude/skills/finalize/SKILL.md` with `disable-model-invocation: true`: detekt, Konsist, `build`, `jacocoCoverageVerification`, `scripts/emulator/verbeclair-emulator.sh start phone`, `ANDROID_SERIAL=emulator-5574 ./gradlew connectedAndroidDeviceTest`, `/verify`, then write `HEAD` to the marker only if all passed; verify a run with a failing check leaves the marker unchanged and a passing run writes the current commit
 - [ ] 4.7 Verify the agent cannot invoke `/finalize` and that a terminal `git push` and PR command are not blocked by any hook
 

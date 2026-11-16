@@ -93,7 +93,7 @@ def run(command: str, marker=None) -> int:
         subprocess.run(git + ["commit", "-q", "--allow-empty", "-m", "second"], check=True)
         head = subprocess.run(git + ["rev-parse", "HEAD"], text=True, capture_output=True, check=True).stdout.strip()
         if marker is not None:
-            state = os.path.join(root, ".prism", "verify", "state")
+            state = os.path.join(root, ".claude", "state")
             os.makedirs(state)
             sha = old if marker.startswith("old") else head
             with open(os.path.join(state, "finalize-pass"), "w") as f:

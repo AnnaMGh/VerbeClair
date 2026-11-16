@@ -1,15 +1,16 @@
 #!/bin/sh
 # PreToolUse(Bash) hook: a PR to dev needs a /finalize pass on the current commit.
 #
-# /finalize writes the commit it passed on (READY_TO_PUSH) to .prism/verify/state/finalize-pass. Any
-# newer commit changes HEAD, so the marker goes stale and /finalize has to run again.
+# The developer's /finalize writes the commit it passed on to .claude/state/finalize-pass (gitignored). Any
+# newer commit changes HEAD, so the marker goes stale and /finalize has to run again. The agent cannot run
+# /finalize and must never write the marker by hand.
 #
 # Reads the hook event (JSON) on stdin. Exit 2 with a message on stderr denies the command; exit 0 allows it.
 # Only commands whose text contains `gh pr create` / `gh pr new` are looked at; every other Bash command passes through.
 set -u
 
 root=${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}
-marker="$root/.prism/verify/state/finalize-pass"
+marker="$root/.claude/state/finalize-pass"
 
 command=$(python3 -c '
 import json, sys
@@ -58,6 +59,7 @@ fi
 printf 'PR DENIED — /finalize has not passed on this commit.\n\n' >&2
 printf 'HEAD:            %s\n' "${head:-unknown}" >&2
 printf 'Last /finalize:  %s\n\n' "${passed:-none recorded}" >&2
-printf 'Run /finalize (it ends in /verify) and wait for READY_TO_PUSH, then open the PR again.\n' >&2
-printf 'Any new commit makes the pass stale, so run it again after changing anything.\n' >&2
+printf 'Ask the developer to run /finalize (only they can) and tell you when it passes, then open the PR again.\n' >&2
+printf 'Any new commit makes the pass stale, so it has to run again after changing anything.\n' >&2
+printf 'Do not write the marker file yourself.\n' >&2
 exit 2

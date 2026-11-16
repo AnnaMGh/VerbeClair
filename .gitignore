@@ -20,3 +20,5 @@ node_modules/
 # Python caches from .claude/hooks/pr-gate-test.py
 __pycache__/
 *.pyc
+# Local /finalize pass marker
+.claude/state/
