@@ -1,9 +1,9 @@
 ## 1. Rename away from PRISM
 
-- [ ] 1.1 Rename plugin ids `prism.*` to `verbeclair.*` in `build-logic` and every module that applies them; verify `./gradlew help` configures all modules
-- [ ] 1.2 Rename `:tooling:prism-rules` to `:tooling:detekt-rules` (folder, `settings.gradle.kts`, references) and its package to `com.vamvisions.verbeclair.detekt`, including the `META-INF/services` provider; verify `./gradlew :tooling:detekt-rules:test` passes
-- [ ] 1.3 Rename the `prism:` rule-set key in `detekt.yml` and any baselines that name it; verify `./gradlew detekt` reports no new findings
-- [ ] 1.4 Verify `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./gradlew build` passes, then commit the rename on its own
+- [x] 1.1 Rename plugin ids `prism.*` to `verbeclair.*` in `build-logic` and every module that applies them; verify `./gradlew help` configures all modules
+- [x] 1.2 Rename `:tooling:prism-rules` to `:tooling:detekt-rules` (folder, `settings.gradle.kts`, references) and its package to `com.vamvisions.verbeclair.detekt`, including the `META-INF/services` provider; verify `./gradlew :tooling:detekt-rules:test` passes
+- [x] 1.3 Rename the `prism:` rule-set key in `detekt.yml` and any baselines that name it; verify `./gradlew detekt` reports no new findings
+- [x] 1.4 Verify `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./gradlew build` passes, then commit the rename on its own
 
 ## 2. Delete PRISM-only Gradle code
 
