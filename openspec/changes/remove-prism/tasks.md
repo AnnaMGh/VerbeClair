@@ -14,7 +14,7 @@
 ## 3. Remove the PRISM layer
 
 - [x] 3.1 Delete `.prism/`, `prism`, `prism.cmd` and the PRISM blocks in `.gitignore` and `.gitattributes`; verify `git ls-files | grep -i prism` lists only files handled by later tasks
-- [ ] 3.2 Delete the skills `prism-setup` and `prism-burndown`; verify neither directory exists
+- [x] 3.2 Delete the skills `prism-setup` and `prism-burndown`; verify neither directory exists
 - [x] 3.3 Strip PRISM hook entries, `permissions.ask` entries and `PRISM_AVD_PREFIX` from `.claude/settings.json`; verify the file is valid JSON and has no `prism` text
 - [ ] 3.4 Remove `prism.yml` references from the agents `skip-checker`, `convention-reviewer` and `mutation-worker` and make `/verify` a plain diff review; verify `grep -ri prism .claude/agents .claude/skills/verify` finds nothing
 - [ ] 3.5 Verify `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./gradlew build` still passes and commit
