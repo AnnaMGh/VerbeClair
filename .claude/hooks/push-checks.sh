@@ -10,7 +10,9 @@
 # push the developer types in a terminal.
 #
 # Skipped (exit 0): branch deletions and dry runs; a push whose commits change no Kotlin, Gradle, detekt or
-# editorconfig file; a HEAD that already passed (recorded in .claude/state/push-pass, gitignored).
+# editorconfig file; a HEAD that already passed (recorded in .claude/state/push-pass, gitignored). Neither shortcut
+# applies when the same command also moves HEAD (`git commit … && git push`): the hook sees the old HEAD, so it checks.
+# A pass is recorded only when the working tree is clean, so it always describes the committed HEAD.
 #
 # The device tests run on emulator-5574 only (ANDROID_SERIAL), never on another project's emulator.
 set -u
@@ -93,17 +95,27 @@ for push in pushes:
     if refspecs and (deletes or all(token.startswith(":") for token in refspecs)):
         continue
     verdict = 1
+# The hook runs BEFORE the command, so when the same command also moves HEAD (`git commit … && git push`) the HEAD read
+# below is the old one. Verdict 2 = check it, and trust neither the passed-HEAD marker nor the changed-files shortcut.
+moves_head = re.search(
+    r"(?:^|[\s;&|(`])git(?:\s+(?:-[Cc]\s+\S+|-\S+))*\s+(?:commit|merge|cherry-pick|rebase|revert|am|pull|reset)\b", text
+)
+if verdict and moves_head:
+    verdict = 2
 print(verdict)
 ')
-[ "$verdict" = 1 ] || exit 0
+[ "$verdict" = 1 ] || [ "$verdict" = 2 ] || exit 0
 
 head=$(git -C "$root" rev-parse HEAD 2>/dev/null || true)
 [ -n "$head" ] || exit 0
-[ "$(cat "$marker" 2>/dev/null || true)" = "$head" ] && exit 0
+base=
+if [ "$verdict" = 1 ]; then
+    [ "$(cat "$marker" 2>/dev/null || true)" = "$head" ] && exit 0
 
-# Files this push carries: against the upstream branch if there is one, else against origin/dev.
-base=$(git -C "$root" rev-parse --verify -q '@{upstream}' 2>/dev/null ||
-    git -C "$root" merge-base HEAD origin/dev 2>/dev/null || true)
+    # Files this push carries: against the upstream branch if there is one, else against origin/dev.
+    base=$(git -C "$root" rev-parse --verify -q '@{upstream}' 2>/dev/null ||
+        git -C "$root" merge-base HEAD origin/dev 2>/dev/null || true)
+fi
 if [ -n "$base" ]; then
     changed=$(git -C "$root" diff --name-only "$base" HEAD 2>/dev/null)
     if ! printf '%s\n' "$changed" |
@@ -145,5 +157,9 @@ output=$("$root/scripts/emulator/verbeclair-emulator.sh" start phone 2>&1) ||
 output=$(cd "$root" && ANDROID_SERIAL=$serial ./gradlew --console=plain --continue connectedAndroidDeviceTest 2>&1) ||
     deny "the Android instrumented tests on $serial (AppKoinGraphTest is known to be flaky; rerun once if it is the only failure)" "$output"
 
-mkdir -p "$state_dir" && printf '%s\n' "$head" >"$marker"
+# Remember the pass only when it covers exactly the commit: the checks ran on the working tree, so uncommitted changes
+# (or a command that moves HEAD, verdict 2) mean HEAD itself was not what got tested.
+if [ "$verdict" = 1 ] && [ -z "$(git -C "$root" status --porcelain 2>/dev/null)" ]; then
+    mkdir -p "$state_dir" && printf '%s\n' "$head" >"$marker"
+fi
 exit 0

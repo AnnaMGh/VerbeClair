@@ -38,6 +38,9 @@ def make_repo(root, changed_file):
     git(root, "init", "-q")
     with open(os.path.join(root, "README.md"), "w") as f:
         f.write("x\n")
+    # Like the real repo, ignore what the checks and the hook write, so only a real edit makes the tree dirty.
+    with open(os.path.join(root, ".gitignore"), "w") as f:
+        f.write("calls.log\nfail\n.claude/state/\n")
     for path, body in (("gradlew", GRADLEW), ("scripts/emulator/verbeclair-emulator.sh", EMULATOR)):
         full = os.path.join(root, path)
         os.makedirs(os.path.dirname(full), exist_ok=True)
@@ -55,9 +58,18 @@ def make_repo(root, changed_file):
     git(root, "commit", "-q", "-m", "work")
 
 
-def run(command, changed_file="shared/src/commonMain/kotlin/A.kt", fail=None, twice=False, prior_pass=False):
+def run(command, changed_file="shared/src/commonMain/kotlin/A.kt", fail=None, twice=False, prior_pass=False,
+        upstream_at_head=False, dirty=False):
     with tempfile.TemporaryDirectory() as root:
         make_repo(root, changed_file)
+        if upstream_at_head:
+            # The branch is already pushed: its upstream is HEAD, so `git diff @{upstream} HEAD` is empty.
+            git(root, "branch", "pushed", "HEAD")
+            git(root, "branch", "--set-upstream-to=pushed")
+        if dirty:
+            # An uncommitted Kotlin edit that the command may be about to commit.
+            with open(os.path.join(root, "B.kt"), "w") as f:
+                f.write("uncommitted\n")
         # calls.log and the stubs' fail switch live outside git's view of the change.
         if fail:
             with open(os.path.join(root, "fail"), "w") as f:
@@ -101,6 +113,16 @@ CASES = [
     ("delete flag with two branches", "git push -d origin old1 old2", {}, 0, 0, None),
     ("same HEAD already passed", PUSH, {"prior_pass": True}, 0, 0, None),
     ("second push of the same HEAD runs the checks once", PUSH, {"twice": True}, 0, 4, None),
+    # The hook runs before the command, so a commit in the same command is not in HEAD yet.
+    ("commit and push, upstream already at HEAD, new Kotlin is checked",
+     "git add -A && git commit -m x && git push", {"upstream_at_head": True, "dirty": True}, 0, 4, None),
+    ("commit and push, a passed HEAD does not skip the checks",
+     "git commit -am x && git push", {"upstream_at_head": True, "dirty": True, "prior_pass": True}, 0, 4, None),
+    ("commit and push records no pass, so the next push checks again",
+     "git commit -am x && git push", {"upstream_at_head": True, "dirty": True, "twice": True}, 0, 8, None),
+    ("plain push, upstream at HEAD, nothing new: skipped", PUSH, {"upstream_at_head": True}, 0, 0, None),
+    ("push with uncommitted edits is checked but records no pass", PUSH, {"dirty": True, "twice": True}, 0, 8, None),
+    ("push on a clean tree records the pass", PUSH, {"twice": True}, 0, 4, None),
     ("not a push: git status", "git status", {}, 0, 0, None),
     ("not a push: git pull", "git pull --rebase", {}, 0, 0, None),
     ("not a push: gh pr view", "gh pr view 3", {}, 0, 0, None),
