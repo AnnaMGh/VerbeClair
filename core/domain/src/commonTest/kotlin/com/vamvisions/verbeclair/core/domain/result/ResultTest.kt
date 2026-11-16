@@ -1,7 +1,8 @@
 package com.vamvisions.verbeclair.core.domain.result
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class ResultTest {
 
@@ -10,12 +11,12 @@ class ResultTest {
 
     @Test
     fun mapTransformsASuccess() {
-        assertEquals(Result.Success(VALUE * 2), success.map { it * 2 })
+        assertThat(success.map { it * 2 }).isEqualTo(Result.Success(VALUE * 2))
     }
 
     @Test
     fun mapKeepsAFailure() {
-        assertEquals(Result.Error(DataError.Local.DISK_FULL), failure.map { it * 2 })
+        assertThat(failure.map { it * 2 }).isEqualTo(Result.Error(DataError.Local.DISK_FULL))
     }
 
     @Test
@@ -23,7 +24,7 @@ class ResultTest {
         val seen = mutableListOf<Int>()
         success.onSuccess { seen += it }
         failure.onSuccess { seen += it }
-        assertEquals(listOf(VALUE), seen)
+        assertThat(seen).isEqualTo(listOf(VALUE))
     }
 
     @Test
@@ -31,7 +32,7 @@ class ResultTest {
         val seen = mutableListOf<DataError.Local>()
         success.onFailure { seen += it }
         failure.onFailure { seen += it }
-        assertEquals(listOf(DataError.Local.DISK_FULL), seen)
+        assertThat(seen).isEqualTo(listOf(DataError.Local.DISK_FULL))
     }
 
     private companion object {

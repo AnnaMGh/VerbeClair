@@ -58,6 +58,16 @@ class NonAssertKAssertionTest {
     }
 
     @Test
+    fun `does not report the kotlin test Test annotation import`() {
+        assertThat(rule.lint("import kotlin.test.Test\n\nclass Sample")).isEmpty()
+    }
+
+    @Test
+    fun `still reports other kotlin test imports that start with Test`() {
+        assertThat(rule.lint("import kotlin.test.TestResult\n\nclass Sample")).hasSize(1)
+    }
+
+    @Test
     fun `does not report an AssertK import`() {
         assertThat(rule.lint("import assertk.assertThat\n\nclass Sample")).isEmpty()
     }

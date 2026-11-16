@@ -15,7 +15,8 @@ import org.jetbrains.kotlin.psi.KtImportDirective
  * `org.junit.Assert`, and jupiter's `Assertions` all sneak in through IDE
  * auto-import and fracture the assertion style. The jupiter exception-assertion
  * helpers stay allowed because AssertK has no equivalent that returns the
- * thrown value with the same ergonomics.
+ * thrown value with the same ergonomics. So does the `kotlin.test.Test` annotation:
+ * multiplatform `commonTest` has no other `@Test`, and AssertK ships none.
  */
 class NonAssertKAssertion(config: Config) :
     Rule(
@@ -30,6 +31,7 @@ class NonAssertKAssertion(config: Config) :
     override fun visitImportDirective(importDirective: KtImportDirective) {
         super.visitImportDirective(importDirective)
         val imported = importDirective.importedFqName?.asString() ?: return
+        if (imported == KOTLIN_TEST_ANNOTATION) return
         val banned =
             BANNED_PREFIXES.any { bannedPrefix -> imported.startsWith(bannedPrefix) } ||
                 isBannedJupiterHelper(imported)
@@ -52,6 +54,7 @@ class NonAssertKAssertion(config: Config) :
     private companion object {
         val BANNED_PREFIXES =
             listOf("kotlin.test.", "org.junit.Assert", "org.junit.jupiter.api.Assertions")
+        const val KOTLIN_TEST_ANNOTATION = "kotlin.test.Test"
         const val JUPITER_API_PREFIX = "org.junit.jupiter.api."
         const val HELPER_PREFIX = "assert"
         const val FAIL_HELPER = "fail"
