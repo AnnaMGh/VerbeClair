@@ -34,8 +34,8 @@ before Notion is edited).
 - Add four POSIX-sh hooks in `.claude/hooks/`, active only for Claude's own tool calls (no git `pre-push` hook):
   1. after `Edit`/`Write` of a Kotlin file: ktlint formats that file;
   2. at stop: detekt, Konsist, build and JVM unit tests, loop-guarded;
-  3. before Claude's `git push`: the JaCoCo coverage floors and the Android device tests on `emulator-5574`; the push
-     is denied when either fails. A pass is remembered per commit, and a push that carries no Kotlin or Gradle change
+  3. before Claude's `git push`: the JaCoCo coverage floors, the iOS simulator tests and the Android device tests on
+     `emulator-5574`; the push is denied when any of them fails. A pass is remembered per commit, and a push that carries no Kotlin or Gradle change
      is not checked. It does not need a `/finalize` pass;
   4. before Claude opens a pull request: denied unless `/finalize` passed for the current commit and `--base` is given.
 - A developer's own `git push` and pull request from a terminal are never checked or blocked.

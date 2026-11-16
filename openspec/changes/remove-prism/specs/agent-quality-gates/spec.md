@@ -50,20 +50,24 @@ the agent can never be stuck in a loop.
 
 ### Requirement: Check coverage and device tests before the agent pushes
 When the agent pushes commits that change Kotlin, Gradle, detekt or editorconfig files, the project SHALL first run the
-JaCoCo coverage floor checks and the Android instrumented tests on the project's own emulator, and SHALL deny the push
-with a trimmed failure report when either fails. A pass SHALL be remembered for the commit it ran on and SHALL NOT
+JaCoCo coverage floor checks, the iOS simulator tests and the Android instrumented tests on the project's own emulator,
+cheapest first, and SHALL deny the push with a trimmed failure report when any of them fails. A pass SHALL be remembered for the commit it ran on and SHALL NOT
 be committed. The check SHALL NOT use or modify an emulator of another project.
 
 #### Scenario: Coverage floor not met
 - **WHEN** the agent pushes and a module is below its coverage floor
 - **THEN** the push is denied and the report names the module and the floor
 
+#### Scenario: iOS simulator test fails
+- **WHEN** the agent pushes and an iOS simulator test fails
+- **THEN** the push is denied, the report names the failing test, and the emulator is not started
+
 #### Scenario: Instrumented test fails
 - **WHEN** the agent pushes and an Android instrumented test fails
 - **THEN** the push is denied and the report names the failing test
 
 #### Scenario: All checks pass
-- **WHEN** the agent pushes and the coverage floors and the instrumented tests pass
+- **WHEN** the agent pushes and the coverage floors, the iOS simulator tests and the instrumented tests pass
 - **THEN** the push goes ahead and the commit is recorded as checked
 
 #### Scenario: Same commit pushed again

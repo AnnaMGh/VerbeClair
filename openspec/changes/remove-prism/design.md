@@ -51,9 +51,10 @@ without PRISM, so CI is unaffected.
    one that names `/finalize`; the `agent-quality-gates` spec is the behavior contract. Notion N-16 is reworded after
    the user approves the text.
 
-9. **`push-checks.sh` gates the agent's `git push`, not its pull request.** It runs `jacocoCoverageVerification`, then
-   starts the phone emulator and runs `ANDROID_SERIAL=emulator-5574 ./gradlew connectedAndroidDeviceTest`, and denies
-   the push on a failure with a trimmed report. It is a plain text match on `git push` like `pr-gate.sh`. It skips
+9. **`push-checks.sh` gates the agent's `git push`, not its pull request.** It runs, cheapest first,
+   `jacocoCoverageVerification`, `iosSimulatorArm64Test` (the simulator tests CI runs in its own job; the project has
+   no XCUITest suite), then starts the phone emulator and runs `ANDROID_SERIAL=emulator-5574 ./gradlew
+   connectedAndroidDeviceTest`, and denies the push on a failure with a trimmed report. It is a plain text match on `git push` like `pr-gate.sh`. It skips
    branch deletions and dry runs, pushes whose commits (against the upstream, else `origin/dev`) change no Kotlin,
    Gradle, detekt or editorconfig file, and a `HEAD` already recorded in `.claude/state/push-pass` (gitignored), so a
    retried push does not repeat the run. It does not read the `/finalize` marker: the two gates are independent.

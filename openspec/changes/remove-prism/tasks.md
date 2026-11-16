@@ -29,7 +29,7 @@
 - [x] 4.5 Register `pr-gate.sh` as a PreToolUse Bash hook and verify no git hook is installed (the agent-side push hook is task 4.8)
 - [x] 4.6 Rewrite `.claude/skills/finalize/SKILL.md` with `disable-model-invocation: true`: detekt, Konsist, `build`, `jacocoCoverageVerification`, `scripts/emulator/verbeclair-emulator.sh start phone`, `ANDROID_SERIAL=emulator-5574 ./gradlew connectedAndroidDeviceTest`, `/verify`, then write `HEAD` to the marker only if all passed; verify a run with a failing check leaves the marker unchanged and a passing run writes the current commit
 - [x] 4.7 Verify the agent cannot invoke `/finalize` and that a terminal `git push` and PR command are not blocked by any hook (Claude hooks only apply to the agent's own tool calls)
-- [x] 4.8 Add `.claude/hooks/push-checks.sh` (PreToolUse `Bash`, `git push`) and `push-checks-test.py`; verify with stubbed Gradle and emulator scripts that a failing coverage floor and a failing device test deny the push, a pass records `.claude/state/push-pass`, and that a Markdown-only push, a deletion, a dry run and a repeated `HEAD` run nothing
+- [x] 4.8 Add `.claude/hooks/push-checks.sh` (PreToolUse `Bash`, `git push`) and `push-checks-test.py`; verify with stubbed Gradle and emulator scripts that a failing coverage floor, a failing iOS simulator test (emulator never started) and a failing device test deny the push, a pass records `.claude/state/push-pass`, and that a Markdown-only push, a deletion, a dry run and a repeated `HEAD` run nothing
 - [x] 4.9 Register it after `pr-gate.sh` with a one-hour timeout; verify the settings file is valid JSON and `jacocoCoverageVerification` runs for real from the repository root
 
 ## 5. Docs, memory and requirement

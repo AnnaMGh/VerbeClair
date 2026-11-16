@@ -1,6 +1,8 @@
 #!/bin/sh
-# PreToolUse(Bash) hook: before the agent's `git push`, run the JaCoCo coverage floors and the Android instrumented
-# tests on the VerbeClair emulator, and deny the push when either fails.
+# PreToolUse(Bash) hook: before the agent's `git push`, run the JaCoCo coverage floors, the iOS simulator tests and
+# the Android instrumented tests on the VerbeClair emulator, and deny the push when any of them fails. Cheapest first,
+# so a failure never waits for the emulator to boot. The iOS tests are the simulator tests CI runs in its own job
+# (commonTest and iosTest, Compose UI tests included); the project has no XCUITest suite.
 #
 # Reads the hook event (JSON) on stdin. Exit 2 with a trimmed failure report on stderr denies the command; exit 0
 # allows it. Only commands whose text contains `git push` are looked at (a plain text match, like pr-gate.sh: text
@@ -79,6 +81,9 @@ deny() { # $1 = step name, $2 = full output
 
 output=$(cd "$root" && ./gradlew --console=plain --continue jacocoCoverageVerification 2>&1) ||
     deny "the coverage floor check (jacocoCoverageVerification)" "$output"
+
+output=$(cd "$root" && ./gradlew --console=plain --continue iosSimulatorArm64Test 2>&1) ||
+    deny "the iOS simulator tests (iosSimulatorArm64Test)" "$output"
 
 output=$("$root/scripts/emulator/verbeclair-emulator.sh" start phone 2>&1) ||
     deny "starting the VerbeClair emulator ($serial)" "$output"
