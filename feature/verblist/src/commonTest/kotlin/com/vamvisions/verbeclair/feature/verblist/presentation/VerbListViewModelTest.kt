@@ -246,6 +246,51 @@ class VerbListViewModelTest {
         }
 
     @Test
+    fun aFailedFavouriteChangeEmitsAnEventAndKeepsTheStar() =
+        runTest {
+            favourites.failing = true
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onAction(VerbListAction.OnToggleFavourite("aller"))
+
+                assertEquals(VerbListEvent.FavouriteUpdateFailed, awaitItem())
+            }
+            assertEquals(0, viewModel.state.value.favouritesCount)
+        }
+
+    @Test
+    fun aFailedRemovalEmitsAnEventAndKeepsTheStarFilled() =
+        runTest {
+            favourites.slugs.value = setOf("aller")
+            favourites.failing = true
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onAction(VerbListAction.OnToggleFavourite("aller"))
+
+                assertEquals(VerbListEvent.FavouriteUpdateFailed, awaitItem())
+            }
+            assertEquals(1, viewModel.state.value.favouritesCount)
+        }
+
+    @Test
+    fun aSuccessfulFavouriteChangeEmitsNoEvent() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onAction(VerbListAction.OnToggleFavourite("aller"))
+                advanceUntilIdle()
+
+                expectNoEvents()
+            }
+        }
+
+    @Test
     fun emptyDatabaseRequestsOneSync() =
         runTest {
             catalog.empty.value = true
@@ -259,6 +304,36 @@ class VerbListViewModelTest {
             advanceUntilIdle()
 
             assertEquals(1, sync.requests)
+        }
+
+    @Test
+    fun anExistingDatabaseRequestsNoSync() =
+        runTest {
+            catalog.empty.value = false
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            assertFalse(viewModel.state.value.isEmptyDatabase)
+            assertEquals(0, sync.requests)
+        }
+
+    @Test
+    fun scoresAreReadOnlyForTheRowsOfTheCurrentQuery() =
+        runTest {
+            val viewModel = viewModel()
+            collectRows(viewModel)
+            advanceUntilIdle()
+            viewModel.verbs.asSnapshot()
+            advanceUntilIdle()
+            assertEquals(setOf("arriver", "aller"), scores.requested.last())
+
+            catalog.verbs = listOf(ALLER)
+            viewModel.onAction(VerbListAction.OnQueryChange("all"))
+            advanceTimeBy(400)
+            viewModel.verbs.asSnapshot()
+            advanceUntilIdle()
+
+            assertEquals(setOf("aller"), scores.requested.last())
         }
 
     @Test

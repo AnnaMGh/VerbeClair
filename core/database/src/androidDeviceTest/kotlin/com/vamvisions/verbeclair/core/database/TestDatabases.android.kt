@@ -7,5 +7,4 @@ import com.vamvisions.verbeclair.core.database.verb.VerbDatabase
 
 private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
 
-actual fun inMemoryVerbDatabaseBuilder(): RoomDatabase.Builder<VerbDatabase> =
-    Room.inMemoryDatabaseBuilder<VerbDatabase>(context)
+actual fun inMemoryVerbDatabaseBuilder(): RoomDatabase.Builder<VerbDatabase> = Room.inMemoryDatabaseBuilder<VerbDatabase>(context)

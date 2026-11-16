@@ -1,9 +1,14 @@
 package com.vamvisions.verbeclair.core.database.verb
 
 import com.vamvisions.verbeclair.core.database.dataset.DatasetJson
+import com.vamvisions.verbeclair.core.database.dataset.FormRecord
+import com.vamvisions.verbeclair.core.database.dataset.MoodRecord
+import com.vamvisions.verbeclair.core.database.dataset.TenseRecord
 import com.vamvisions.verbeclair.core.database.dataset.VerbDetailsRecord
 import com.vamvisions.verbeclair.core.database.fixture.DatasetFixtures
 import com.vamvisions.verbeclair.core.database.inMemoryVerbDatabase
+import com.vamvisions.verbeclair.core.database.verb.entity.TranslationEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.VerbEntity
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -52,6 +57,85 @@ class VerbMapperTest {
     }
 
     @Test
+    fun synonymsKeepTheirPositionsInDatasetOrder() {
+        val synonyms = record(DatasetFixtures.terminer).toEntities().synonyms
+
+        assertTrue(synonyms.isNotEmpty(), "the fixture has synonyms")
+        assertEquals(synonyms.indices.toList(), synonyms.map { it.position })
+    }
+
+    @Test
+    fun anImperativeSpellingFoundInNoOtherTenseIsSearchable() {
+        val imperative =
+            FormRecord(
+                person = "SECOND_SINGULAR",
+                conjugation = listOf("zorbe"),
+                root = null,
+                suffix = null,
+                auxiliary = null,
+                semiAuxiliary = null,
+                infinitivePreposition = null,
+                reflexivePronoun = null,
+                conjunction = null,
+                preposition = null,
+                pronoun = null,
+                spokenText = null,
+            )
+        val verb =
+            record(DatasetFixtures.parler).copy(
+                mood = listOf(MoodRecord("IMPERATIF", "Impératif", listOf(TenseRecord("PRESENT", "Présent", listOf(imperative))))),
+            )
+
+        assertEquals(
+            setOf("zorbe"),
+            verb
+                .toEntities()
+                .formSearch
+                .map { it.form }
+                .toSet(),
+        )
+    }
+
+    @Test
+    fun anInfinitiveFoundOnlyInTheInfinitifIsSearchable() {
+        // `aller` as an infinitive also appears in the futur proche, which is not searchable.
+        assertTrue("aller" in searchForms(DatasetFixtures.aller))
+    }
+
+    @Test
+    fun aSubjonctifSpellingFoundInNoOtherTenseIsSearchable() {
+        // `aille` is only the subjonctif présent of aller; `sois` would also be an impératif.
+        assertTrue("aille" in searchForms(DatasetFixtures.aller))
+    }
+
+    @Test
+    fun aFormKeepsItsSpokenTextThroughTheEntities() {
+        val spoken =
+            FormRecord(
+                person = "FIRST_SINGULAR",
+                conjugation = listOf("zorbe"),
+                root = null,
+                suffix = null,
+                auxiliary = null,
+                semiAuxiliary = null,
+                infinitivePreposition = null,
+                reflexivePronoun = null,
+                conjunction = null,
+                preposition = null,
+                pronoun = null,
+                spokenText = "zorb",
+            )
+        val verb =
+            record(DatasetFixtures.parler).copy(
+                mood = listOf(MoodRecord("INDICATIF", "Indicatif", listOf(TenseRecord("PRESENT", "Présent", listOf(spoken))))),
+            )
+        val entities = verb.toEntities()
+
+        assertEquals(listOf("zorb"), entities.forms.map { it.spokenText })
+        assertEquals(verb, entities.toRecord())
+    }
+
+    @Test
     fun etreSimpleFormsAreSearchable() {
         val entities = record(DatasetFixtures.etre).toEntities()
         assertEquals("etre", entities.verb.infinitiveKey)
@@ -76,6 +160,18 @@ class VerbMapperTest {
 
         // `termine` is also the impératif; the indicatif présent comes first (D-3).
         assertEquals(present.moodPos * 10_000 + present.tensePos * 100, termine.displayOrder)
+    }
+
+    @Test
+    fun aSpellingKeepsTheFormPositionOfItsFirstPlace() {
+        val entities = record(DatasetFixtures.terminer).toEntities()
+        val present = entities.forms.first { it.moodCode == "INDICATIF" && it.tenseCode == "PRESENT" }
+        val base = present.moodPos * 10_000 + present.tensePos * 100
+
+        // `termines` is the second person of the indicatif présent, after `termine` (first person).
+        assertEquals(base, entities.formSearch.single { it.form == "termine" }.displayOrder)
+        assertEquals(base + 1, entities.formSearch.single { it.form == "termines" }.displayOrder)
+        assertEquals(base + 3, entities.formSearch.single { it.form == "terminons" }.displayOrder)
     }
 
     @Test

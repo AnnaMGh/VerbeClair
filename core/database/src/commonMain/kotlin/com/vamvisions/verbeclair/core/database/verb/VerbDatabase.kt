@@ -5,6 +5,12 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverters
+import com.vamvisions.verbeclair.core.database.verb.entity.FormEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.FormSearchEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.MetadataEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.SynonymEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.TranslationEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.VerbEntity
 
 /**
  * The replaceable verb catalogue (A-1, A-3). It never migrates: a schema change raises

@@ -2,9 +2,9 @@ package com.vamvisions.verbeclair.feature.verblist.presentation
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.vamvisions.verbeclair.core.data.verb.RoomVerbCatalog
-import com.vamvisions.verbeclair.core.database.verb.FormSearchEntity
 import com.vamvisions.verbeclair.core.database.verb.VerbDatabase
-import com.vamvisions.verbeclair.core.database.verb.VerbEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.FormSearchEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.VerbEntity
 import com.vamvisions.verbeclair.core.domain.verb.normalizeKey
 import com.vamvisions.verbeclair.core.domain.verb.sortKey
 import kotlinx.coroutines.Dispatchers
@@ -23,10 +23,10 @@ fun seededVerbDatabase(): VerbDatabase =
         .also { runBlocking { seed(it) } }
 
 /** The real ViewModel over [database], with fakes for the user data. */
-fun verbListViewModel(database: VerbDatabase) =
+fun verbListViewModel(database: VerbDatabase, favourites: FakeFavouritesRepository = FakeFavouritesRepository()) =
     VerbListViewModel(
         catalog = RoomVerbCatalog(database),
-        favourites = FakeFavouritesRepository(),
+        favourites = favourites,
         scores = FakeTestScoreRepository(),
         preferences = FakeListPreferences(),
         syncTrigger = FakeDataSyncTrigger(),

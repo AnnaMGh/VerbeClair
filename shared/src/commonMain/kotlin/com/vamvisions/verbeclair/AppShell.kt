@@ -10,12 +10,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.tooling.preview.Preview
 import com.vamvisions.verbeclair.core.designsystem.component.TopLevelDestination
 import com.vamvisions.verbeclair.core.designsystem.component.VerbeClairBottomBar
 import com.vamvisions.verbeclair.core.designsystem.component.VerbeClairNavigationRail
 import com.vamvisions.verbeclair.core.designsystem.theme.VerbeClairTheme
 import com.vamvisions.verbeclair.core.presentation.window.WindowLayout
 import com.vamvisions.verbeclair.core.presentation.window.currentWindowLayout
+import com.vamvisions.verbeclair.feature.verblist.presentation.VerbListPreviewContent
 import com.vamvisions.verbeclair.feature.verblist.presentation.VerbListRoot
 
 /** Test tags of the shell's navigation, for UI tests. */
@@ -69,3 +71,82 @@ fun AppShell(
         }
     }
 }
+
+// The app shell around the verb list, per supported configuration, at the size of its full Figma frame
+// (status bar included, which the preview leaves empty). The list shows the frame's default rows.
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=10-2
+@Preview(name = "Phone portrait, light", widthDp = 393, heightDp = 852)
+@Composable
+private fun AppPhonePortraitLightPreview() =
+    VerbeClairTheme(darkTheme = false) {
+        AppShell(layout = WindowLayout.Compact) { modifier -> VerbListPreviewContent(WindowLayout.Compact, modifier) }
+    }
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=13-913
+@Preview(name = "Phone portrait, dark", widthDp = 393, heightDp = 852)
+@Composable
+private fun AppPhonePortraitDarkPreview() =
+    VerbeClairTheme(darkTheme = true) {
+        AppShell(layout = WindowLayout.Compact) { modifier -> VerbListPreviewContent(WindowLayout.Compact, modifier) }
+    }
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=87-9531
+@Preview(name = "Phone landscape, light", widthDp = 852, heightDp = 393)
+@Composable
+private fun AppPhoneLandscapeLightPreview() =
+    VerbeClairTheme(darkTheme = false) {
+        AppShell(
+            layout = WindowLayout.PhoneLandscape,
+        ) { modifier -> VerbListPreviewContent(WindowLayout.PhoneLandscape, modifier) }
+    }
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=90-12103
+@Preview(name = "Phone landscape, dark", widthDp = 852, heightDp = 393)
+@Composable
+private fun AppPhoneLandscapeDarkPreview() =
+    VerbeClairTheme(darkTheme = true) {
+        AppShell(
+            layout = WindowLayout.PhoneLandscape,
+        ) { modifier -> VerbListPreviewContent(WindowLayout.PhoneLandscape, modifier) }
+    }
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=88-744
+@Preview(name = "Tablet portrait, light", widthDp = 834, heightDp = 1194)
+@Composable
+private fun AppTabletPortraitLightPreview() =
+    VerbeClairTheme(darkTheme = false) {
+        AppShell(
+            layout = WindowLayout.ListDetail,
+        ) { modifier -> VerbListPreviewContent(WindowLayout.ListDetail, modifier) }
+    }
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=90-12250
+@Preview(name = "Tablet portrait, dark", widthDp = 834, heightDp = 1194)
+@Composable
+private fun AppTabletPortraitDarkPreview() =
+    VerbeClairTheme(darkTheme = true) {
+        AppShell(
+            layout = WindowLayout.ListDetail,
+        ) { modifier -> VerbListPreviewContent(WindowLayout.ListDetail, modifier) }
+    }
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=89-1153
+@Preview(name = "Tablet landscape, light", widthDp = 1194, heightDp = 834)
+@Composable
+private fun AppTabletLandscapeLightPreview() =
+    VerbeClairTheme(darkTheme = false) {
+        AppShell(
+            layout = WindowLayout.ListDetail,
+        ) { modifier -> VerbListPreviewContent(WindowLayout.ListDetail, modifier) }
+    }
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=90-12336
+@Preview(name = "Tablet landscape, dark", widthDp = 1194, heightDp = 834)
+@Composable
+private fun AppTabletLandscapeDarkPreview() =
+    VerbeClairTheme(darkTheme = true) {
+        AppShell(
+            layout = WindowLayout.ListDetail,
+        ) { modifier -> VerbListPreviewContent(WindowLayout.ListDetail, modifier) }
+    }

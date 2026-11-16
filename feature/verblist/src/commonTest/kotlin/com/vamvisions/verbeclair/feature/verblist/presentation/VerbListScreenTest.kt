@@ -234,6 +234,5 @@ class VerbListScreenTest {
             .collectAsLazyPagingItems()
     }
 
-    private fun ComposeUiTest.onTerminerButton(label: String) =
-        onNode(hasContentDescription(label) and cellOf("terminer"))
+    private fun ComposeUiTest.onTerminerButton(label: String) = onNode(hasContentDescription(label) and cellOf("terminer"))
 }

@@ -36,9 +36,7 @@ class NavigationComponentsTest {
             TopLevelDestination.Settings to "Settings",
         )
 
-    private fun assertOneSelectedAndTapsReported(
-        bar: @Composable (TopLevelDestination, (TopLevelDestination) -> Unit) -> Unit,
-    ) {
+    private fun assertOneSelectedAndTapsReported(bar: @Composable (TopLevelDestination, (TopLevelDestination) -> Unit) -> Unit) {
         TopLevelDestination.entries.forEach { selected ->
             runComposeUiTest {
                 val reported = mutableListOf<TopLevelDestination>()

@@ -1,8 +1,12 @@
 package com.vamvisions.verbeclair.core.data.user
 
-import com.vamvisions.verbeclair.core.database.user.FavouriteEntity
+import androidx.sqlite.SQLiteException
 import com.vamvisions.verbeclair.core.database.user.UserDatabase
+import com.vamvisions.verbeclair.core.database.user.entity.FavouriteEntity
 import com.vamvisions.verbeclair.core.domain.favourite.FavouritesRepository
+import com.vamvisions.verbeclair.core.domain.result.DataError
+import com.vamvisions.verbeclair.core.domain.result.EmptyResult
+import com.vamvisions.verbeclair.core.domain.result.Result
 import com.vamvisions.verbeclair.core.domain.verb.VerbCatalog
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -29,11 +33,17 @@ class RoomFavouritesRepository(
 
     override fun observeCount(): Flow<Int> = observeSlugs().map { it.size }
 
-    override suspend fun add(slug: String) {
-        dao.insert(FavouriteEntity(slug, addedAt = clock.now().toEpochMilliseconds()))
-    }
+    override suspend fun add(slug: String): EmptyResult<DataError.Local> =
+        write { dao.insert(FavouriteEntity(slug, addedAt = clock.now().toEpochMilliseconds())) }
 
-    override suspend fun remove(slug: String) {
-        dao.delete(slug)
-    }
+    override suspend fun remove(slug: String): EmptyResult<DataError.Local> = write { dao.delete(slug) }
+
+    /** SQLite reports every database failure as one exception type; it cannot tell a full disk from the rest. */
+    private inline fun write(action: () -> Unit): EmptyResult<DataError.Local> =
+        try {
+            action()
+            Result.Success(Unit)
+        } catch (_: SQLiteException) {
+            Result.Error(DataError.Local.UNKNOWN)
+        }
 }

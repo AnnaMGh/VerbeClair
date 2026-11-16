@@ -10,6 +10,11 @@ plugins {
     id("prism.jacoco")
 }
 
+// Measured 0 % (the one host test is a placeholder); the floor only rises from here.
+coverageFloor {
+    linePercent = 0
+}
+
 kotlin {
     listOf(
         iosArm64(),

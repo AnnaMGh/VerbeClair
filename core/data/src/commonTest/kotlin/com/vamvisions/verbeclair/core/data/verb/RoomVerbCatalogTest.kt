@@ -3,9 +3,9 @@ package com.vamvisions.verbeclair.core.data.verb
 import androidx.paging.testing.asSnapshot
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.vamvisions.verbeclair.core.data.bundle.inMemoryVerbDatabaseBuilder
-import com.vamvisions.verbeclair.core.database.verb.FormSearchEntity
 import com.vamvisions.verbeclair.core.database.verb.VerbDatabase
-import com.vamvisions.verbeclair.core.database.verb.VerbEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.FormSearchEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.VerbEntity
 import com.vamvisions.verbeclair.core.domain.verb.Auxiliary
 import com.vamvisions.verbeclair.core.domain.verb.AuxiliaryFilter
 import com.vamvisions.verbeclair.core.domain.verb.GroupBy

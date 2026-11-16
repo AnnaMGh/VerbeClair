@@ -15,9 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vamvisions.verbeclair.core.designsystem.generated.resources.Res
 import com.vamvisions.verbeclair.core.designsystem.generated.resources.icon_button_badge
+import com.vamvisions.verbeclair.core.designsystem.icon.VerbeClairIcons
 import com.vamvisions.verbeclair.core.designsystem.theme.VerbeClairTheme
 import org.jetbrains.compose.resources.stringResource
 
@@ -98,5 +100,81 @@ fun VerbeClairIconButton(
                 )
             }
         }
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=5-23
+@Preview
+@Composable
+private fun IconButtonStandardLightPreview() {
+    ComponentPreview(darkTheme = false) {
+        VerbeClairIconButton(icon = VerbeClairIcons.Tune, contentDescription = "List controls", onClick = {})
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=5-23
+@Preview
+@Composable
+private fun IconButtonStandardDarkPreview() {
+    ComponentPreview(darkTheme = true) {
+        VerbeClairIconButton(icon = VerbeClairIcons.Tune, contentDescription = "List controls", onClick = {})
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=5-38
+@Preview
+@Composable
+private fun IconButtonTonalLightPreview() {
+    ComponentPreview(darkTheme = false) {
+        VerbeClairIconButton(
+            icon = VerbeClairIcons.Tune,
+            contentDescription = "List controls",
+            onClick = {},
+            style = IconButtonStyle.Tonal,
+        )
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=5-38
+@Preview
+@Composable
+private fun IconButtonTonalDarkPreview() {
+    ComponentPreview(darkTheme = true) {
+        VerbeClairIconButton(
+            icon = VerbeClairIcons.Tune,
+            contentDescription = "List controls",
+            onClick = {},
+            style = IconButtonStyle.Tonal,
+        )
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=10-273
+@Preview
+@Composable
+private fun IconButtonTonalWithBadgeLightPreview() {
+    ComponentPreview(darkTheme = false) {
+        VerbeClairIconButton(
+            icon = VerbeClairIcons.Tune,
+            contentDescription = "List controls",
+            onClick = {},
+            style = IconButtonStyle.Tonal,
+            badgeCount = 2,
+        )
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=10-273
+@Preview
+@Composable
+private fun IconButtonTonalWithBadgeDarkPreview() {
+    ComponentPreview(darkTheme = true) {
+        VerbeClairIconButton(
+            icon = VerbeClairIcons.Tune,
+            contentDescription = "List controls",
+            onClick = {},
+            style = IconButtonStyle.Tonal,
+            badgeCount = 2,
+        )
     }
 }

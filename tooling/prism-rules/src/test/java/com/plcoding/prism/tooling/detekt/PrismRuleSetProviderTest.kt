@@ -88,6 +88,7 @@ class PrismRuleSetProviderTest {
             "ComposableSlotParameterAfterModifier",
             "NoPreviewParameterAnnotation",
             "PreviewMustBePrivate",
+            "PreviewInSameFileAsComposable",
             "PreviewFunctionNaming",
             "PreviewMustWrapInTheme",
             "NoCustomCompositionLocal",

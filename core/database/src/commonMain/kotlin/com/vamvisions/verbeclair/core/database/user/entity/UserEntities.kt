@@ -1,4 +1,4 @@
-package com.vamvisions.verbeclair.core.database.user
+package com.vamvisions.verbeclair.core.database.user.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -51,11 +51,4 @@ data class AttemptLineEntity(
     @ColumnInfo(name = "typed_text") val typedText: String,
     /** `CORRECT`, `CORRECT_NO_ACCENTS` or `FAILED`. */
     val result: String,
-)
-
-/** Line counts of a verb's latest attempt; the score is computed from them in Kotlin (design D6). */
-data class AttemptCounts(
-    val slug: String,
-    val correct: Int,
-    val total: Int,
 )

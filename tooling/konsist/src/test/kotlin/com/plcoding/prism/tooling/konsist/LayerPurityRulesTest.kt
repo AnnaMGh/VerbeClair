@@ -22,7 +22,10 @@ class LayerPurityRulesTest {
                     "serialization APIs — the domain layer is plain Kotlin so it stays " +
                     "testable on the JVM and independent of how data arrives",
         ) { file ->
-            file.imports.none { import -> FRAMEWORK_PREFIXES.any { import.name.startsWith(it) } }
+            file.imports.none { import ->
+                import.name !in ALLOWED_IMPORTS.getValue(file.name) &&
+                    FRAMEWORK_PREFIXES.any { import.name.startsWith(it) }
+            }
         }
     }
 
@@ -84,6 +87,14 @@ class LayerPurityRulesTest {
         }
 
     private companion object {
+        /**
+         * Framework imports a domain file may keep, by file name. `VerbCatalog` exposes the verb list as
+         * `PagingData` on purpose: paging is the shape of the list, not a transport detail. Anything
+         * else in that file, and any other file, is still checked.
+         */
+        val ALLOWED_IMPORTS: Map<String, Set<String>> =
+            mapOf("VerbCatalog" to setOf("androidx.paging.PagingData")).withDefault { emptySet() }
+
         val FRAMEWORK_PREFIXES =
             listOf(
                 "android.",

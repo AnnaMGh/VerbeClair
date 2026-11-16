@@ -9,15 +9,12 @@ import okio.Path.Companion.toPath
 
 private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
 
-actual fun fileVerbDatabaseBuilder(path: String): RoomDatabase.Builder<VerbDatabase> =
-    Room.databaseBuilder<VerbDatabase>(context, path)
+actual fun fileVerbDatabaseBuilder(path: String): RoomDatabase.Builder<VerbDatabase> = Room.databaseBuilder<VerbDatabase>(context, path)
 
 actual fun testResourceFileOpener(): ResourceFileOpener = AndroidResourceFileOpener(context)
 
-actual fun inMemoryVerbDatabaseBuilder(): RoomDatabase.Builder<VerbDatabase> =
-    Room.inMemoryDatabaseBuilder<VerbDatabase>(context)
+actual fun inMemoryVerbDatabaseBuilder(): RoomDatabase.Builder<VerbDatabase> = Room.inMemoryDatabaseBuilder<VerbDatabase>(context)
 
-actual fun inMemoryUserDatabaseBuilder(): RoomDatabase.Builder<UserDatabase> =
-    Room.inMemoryDatabaseBuilder<UserDatabase>(context)
+actual fun inMemoryUserDatabaseBuilder(): RoomDatabase.Builder<UserDatabase> = Room.inMemoryDatabaseBuilder<UserDatabase>(context)
 
 actual fun largeTestFilesDirectory(): okio.Path = context.filesDir.absolutePath.toPath()

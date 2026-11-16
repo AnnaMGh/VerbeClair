@@ -1,6 +1,7 @@
 package com.plcoding.prism.tooling.konsist
 
 import assertk.assertThat
+import assertk.assertions.containsAll
 import assertk.assertions.isEmpty
 import assertk.assertions.isNotEmpty
 import com.lemonappdev.konsist.api.Konsist
@@ -71,6 +72,36 @@ class ScopeIntegrityTest {
         }
     }
 
+    /**
+     * Every module with Kotlin under a source set whose name ends in `Main` must
+     * reach the production scope, not just the overall one. (Kotlin nests block
+     * comments, so a glob such as src-slash-star-Main cannot be written here.)
+     *
+     * The overall check above passes when a module's `commonMain` is classified as
+     * test code, because the files are still in scope. Classification by a literal
+     * `main` source set did exactly that to every KMP module, and the production
+     * rules (layer purity, MVI contract, data layer) then read nothing.
+     */
+    @Test
+    fun `every module with Main source sets has production files in scope`() {
+        val modulesWithMain = consumerModulePaths().filter { hasKotlinUnderMainSourceSet(it) }
+        assertThat(modulesWithMain).isNotEmpty()
+
+        val productionPaths = ProjectScope.productionFiles.map { it.projectPath.forwardSlashed() }
+        val unclassified =
+            modulesWithMain.filterNot { modulePath ->
+                productionPaths.any { it.startsWith("/$modulePath/") }
+            }
+
+        if (unclassified.isNotEmpty()) {
+            throw AssertionError(
+                "${unclassified.size} module(s) hold Kotlin under src/*Main but none of it is " +
+                    "classified as production: ${unclassified.joinToString()}. The production " +
+                    "rules in this suite would pass over that code without reading it.",
+            )
+        }
+    }
+
     @Test
     fun `the scope excludes generated sources`() {
         val generated =
@@ -112,6 +143,58 @@ class ScopeIntegrityTest {
                 )
             }
         }
+    }
+
+    /**
+     * The check above iterates `EXCLUDED_ROOTS`, so removing a root from it also removes
+     * that root's check. Pin the framework's and the harness's directories by name.
+     */
+    @Test
+    fun `the excluded roots name the framework and harness directories`() {
+        assertThat(ProjectScope.EXCLUDED_ROOTS).containsAll(".prism", ".claude", "prism-setup")
+    }
+
+    /**
+     * The mirror of the production check: test files must be classified as test, and the
+     * classification must reach something. A suffix that matched nothing would leave every
+     * test rule reading an empty list.
+     */
+    @Test
+    fun `test source sets are classified as test and production ones are not`() {
+        assertThat(ProjectScope.testFiles).isNotEmpty()
+
+        val misclassified =
+            ProjectScope.testFiles
+                .filter { it.sourceSetName.endsWith(MAIN_SUFFIX) || it.sourceSetName == PLAIN_MAIN }
+                .map { it.projectPath }
+
+        assertThat(misclassified).isEmpty()
+    }
+
+    /**
+     * Test source sets must not be classified as production: every production rule would
+     * then grade test code, and the module check above would still pass because each
+     * module also has `*Test` source sets.
+     */
+    @Test
+    fun `no test source set is classified as production`() {
+        val misclassified =
+            ProjectScope.productionFiles
+                .filter { it.sourceSetName == PLAIN_TEST || it.sourceSetName.endsWith(TEST_SUFFIX) }
+                .map { it.projectPath }
+
+        assertThat(misclassified).isEmpty()
+    }
+
+    /** The framework's own two modules are sliced out of the scope, not just listed. */
+    @Test
+    fun `the scope holds no source of the framework's own modules`() {
+        val leaked =
+            ProjectScope.files
+                .map { it.projectPath.forwardSlashed() }
+                .filter { path -> FRAMEWORK_MODULES.any { path.contains("/$it/") } }
+
+        assertThat(leaked).isEmpty()
     }
 
     /**
@@ -165,8 +248,25 @@ class ScopeIntegrityTest {
                     }.map { it.name }
             }.toSet()
 
+    private fun hasKotlinUnderMainSourceSet(modulePath: String): Boolean =
+        File(Konsist.projectRootPath, "$modulePath/src")
+            .listFiles { candidate: File ->
+                candidate.isDirectory && (candidate.name == PLAIN_MAIN || candidate.name.endsWith(MAIN_SUFFIX))
+            }.orEmpty()
+            .any { sourceSet ->
+                sourceSet.walkTopDown().any { it.isFile && it.extension == KOTLIN_EXTENSION }
+            }
+
     private companion object {
         const val KOTLIN_EXTENSION = "kt"
+        const val PLAIN_MAIN = "main"
+
+        const val MAIN_SUFFIX = "Main"
+        const val PLAIN_TEST = "test"
+        const val TEST_SUFFIX = "Test"
+
+        /** Spelled out, not read from `ProjectScope`, so emptying its list cannot empty this check too. */
+        val FRAMEWORK_MODULES = listOf("tooling/prism-rules", "tooling/konsist")
 
         val INCLUDE_PATTERN = Regex("""include\("([^"]+)"\)""")
 

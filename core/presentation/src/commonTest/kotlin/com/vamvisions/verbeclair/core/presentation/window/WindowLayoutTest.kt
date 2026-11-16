@@ -37,8 +37,7 @@ class WindowLayoutTest {
         notMedium.forEach { (w, h) -> kotlin.test.assertFalse(isMediumWidth(sizeClass(w, h)), "$w × $h dp") }
     }
 
-    private fun sizeClass(widthDp: Int, heightDp: Int) =
-        WindowSizeClass.BREAKPOINTS_V1.computeWindowSizeClass(widthDp, heightDp)
+    private fun sizeClass(widthDp: Int, heightDp: Int) = WindowSizeClass.BREAKPOINTS_V1.computeWindowSizeClass(widthDp, heightDp)
 
     private fun assertLayout(
         expected: WindowLayout,

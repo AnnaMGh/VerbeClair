@@ -73,6 +73,26 @@ class DispatchersSetMainWithoutResetTest {
     }
 
     @Test
+    fun `does not report when a kotlin test AfterTest teardown calls resetMain`() {
+        val code =
+            """
+            class SampleViewModelTest {
+                @BeforeTest
+                fun setUp() {
+                    Dispatchers.setMain(UnconfinedTestDispatcher())
+                }
+
+                @AfterTest
+                fun tearDown() {
+                    Dispatchers.resetMain()
+                }
+            }
+            """.trimIndent()
+
+        assertThat(rule.lint(code)).isEmpty()
+    }
+
+    @Test
     fun `does not report when a JUnit4 After teardown calls resetMain`() {
         val code =
             """
@@ -116,6 +136,39 @@ class DispatchersSetMainWithoutResetTest {
             """.trimIndent()
 
         assertThat(rule.lint(code)).isEmpty()
+    }
+
+    @Test
+    fun `does not report another call on Dispatchers`() {
+        val code =
+            """
+            class SampleViewModelTest {
+                fun setUp() {
+                    Dispatchers.shutdown()
+                }
+            }
+            """.trimIndent()
+
+        assertThat(rule.lint(code)).isEmpty()
+    }
+
+    @Test
+    fun `reports setMain when only a function without a teardown annotation resets it`() {
+        val code =
+            """
+            class SampleViewModelTest {
+                @BeforeEach
+                fun setUp() {
+                    Dispatchers.setMain(UnconfinedTestDispatcher())
+                }
+
+                fun tearDown() {
+                    Dispatchers.resetMain()
+                }
+            }
+            """.trimIndent()
+
+        assertThat(rule.lint(code)).hasSize(1)
     }
 
     @Test

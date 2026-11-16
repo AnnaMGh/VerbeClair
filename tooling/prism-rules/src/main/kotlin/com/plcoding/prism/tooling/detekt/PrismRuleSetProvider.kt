@@ -79,6 +79,7 @@ class PrismRuleSetProvider : RuleSetProvider {
                 ::ComposableSlotParameterAfterModifier,
                 ::NoPreviewParameterAnnotation,
                 ::PreviewMustBePrivate,
+                ::PreviewInSameFileAsComposable,
                 ::PreviewFunctionNaming,
                 ::PreviewMustWrapInTheme,
                 ::NoCustomCompositionLocal,

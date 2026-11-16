@@ -4,9 +4,9 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.vamvisions.verbeclair.core.data.di.PlatformPaths
 import com.vamvisions.verbeclair.core.database.dataset.BundledMetadata
-import com.vamvisions.verbeclair.core.database.verb.MetadataEntity
-import com.vamvisions.verbeclair.core.database.verb.MetadataKeys
 import com.vamvisions.verbeclair.core.database.verb.VERB_SCHEMA_VERSION
+import com.vamvisions.verbeclair.core.database.verb.entity.MetadataEntity
+import com.vamvisions.verbeclair.core.database.verb.entity.MetadataKeys
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.test.runTest

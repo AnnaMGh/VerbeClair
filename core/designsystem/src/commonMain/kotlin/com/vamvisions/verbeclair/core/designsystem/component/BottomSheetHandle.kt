@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vamvisions.verbeclair.core.designsystem.theme.VerbeClairTheme
 
@@ -35,5 +36,23 @@ fun BottomSheetHandle(modifier: Modifier = Modifier) {
                     VerbeClairTheme.radius.full,
                 ),
         )
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=7-154
+@Preview(widthDp = 393)
+@Composable
+private fun BottomSheetHandleLightPreview() {
+    ComponentPreview(darkTheme = false) {
+        BottomSheetHandle()
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=7-154
+@Preview(widthDp = 393)
+@Composable
+private fun BottomSheetHandleDarkPreview() {
+    ComponentPreview(darkTheme = true) {
+        BottomSheetHandle()
     }
 }

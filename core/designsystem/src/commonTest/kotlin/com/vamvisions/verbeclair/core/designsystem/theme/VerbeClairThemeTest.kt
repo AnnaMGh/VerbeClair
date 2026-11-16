@@ -53,8 +53,7 @@ class VerbeClairThemeTest {
     }
 
     @Test
-    fun lightThemeProvidesLightTokens() =
-        assertTheme(readTheme(darkTheme = false), LightColorScheme, LightExtendedColors)
+    fun lightThemeProvidesLightTokens() = assertTheme(readTheme(darkTheme = false), LightColorScheme, LightExtendedColors)
 
     @Test
     fun darkThemeProvidesDarkTokens() = assertTheme(readTheme(darkTheme = true), DarkColorScheme, DarkExtendedColors)
