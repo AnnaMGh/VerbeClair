@@ -27,27 +27,30 @@ per-artifact rules and the definition of done. If anything here disagrees with i
    from `dev`; work branches merge into `dev`, and only `dev` merges into `main`. Never commit
    directly to `main` or `dev`. Merges into `dev` and `main` happen only through a GitHub pull
    request approved by the user — never merge locally or push to `dev`/`main` directly.
-9. **`/finalize` before a PR to `dev`** — run `/finalize` and get `READY_TO_PUSH` (it ends in `/verify`)
-   before `gh pr create --base dev`. It records the commit it passed in
-   `.prism/verify/state/finalize-pass`; `.claude/hooks/pr-gate.sh` denies the PR if that is not the current
-   `HEAD`, so a new commit means running it again. A change that touches no module (a hook, script, workflow or
-   docs change) ends in `NOTHING_TO_FINALIZE` after `/verify` passes, and that records the pass too. If the change
-   edits files that define agent or CI behaviour (`.claude/`, `.prism/`, `.github/`, `scripts/`, `AGENTS.md`,
-   `CLAUDE.md`, `openspec/config.yaml`), `/verify` is not enough: the pass is recorded only after the user says in chat that
-   they reviewed the diff (an agent cannot give this review itself). Always pass
-   `--base` explicitly. The hook is a plain text match: any Bash command whose text contains `gh … pr create` or `gh … pr new` is
+9. **`/finalize` before a PR to `dev`** — only the developer can run `/finalize` (the agent cannot invoke it).
+   It runs detekt, the Konsist tests, `./gradlew build`, `jacocoCoverageVerification`, the Android device tests on the
+   VerbeClair emulator and `/verify`, stops at the first failure, and on a full pass writes the commit it passed to
+   `.claude/state/finalize-pass` (gitignored). **The agent must never write that file by hand.** When a PR to `dev` is
+   due and there is no pass for the current `HEAD`, ask the developer to run `/finalize`, then open the PR with
+   `gh pr create --base dev`. A new commit makes the pass stale, so it has to run again.
+   Three Claude-only hooks and CI make up the gate: `ktlint-format.sh` formats each edited Kotlin file,
+   `stop-checks.sh` runs detekt, ktlint, Konsist and the unit tests when the agent stops after changing Kotlin or
+   Gradle files (it blocks at most three times in a row), and `pr-gate.sh` denies the agent's PR to `dev` without a
+   pass. None of them touches a `git` or `gh` command the developer types in a terminal, and no git hook is installed.
+   `pr-gate.sh` is a plain text match: any Bash command whose text contains `gh … pr create` or `gh … pr new` is
    treated as the PR command, however it is wrapped. That also catches text that only mentions it (a commit message,
-   an echo); reword it or run the real PR command. The gate is skipped only when every `--base`/`-B` in the text is
-   exactly `main`; any other value (even an unrelated `-B`) is gated. A base built from quoted pieces
-   (`--base d"ev"`) is read as written and is a known gap. It does not cover `gh api` and it checks the checked-out `HEAD`, so create the PR from the branch it is for,
-   without `--head`. It is a guardrail against forgetting, not a security boundary.
+   an echo); write such text with Edit/Write, or run the real PR command. Always pass `--base` explicitly: the gate is
+   skipped only when every `--base`/`-B` in the text is exactly `main`, and any other value (even an unrelated `-B`)
+   is gated. A base built from quoted pieces (`--base d"ev"`) is read as written and is a known gap. It does not cover
+   `gh api` and it checks the checked-out `HEAD`, so create the PR from the branch it is for, without `--head`. It is
+   a guardrail against forgetting, not a security boundary; CI is the gate that cannot be skipped.
 
    **Order for a change made with OpenSpec:** finish the tasks, run the tests and `./gradlew build` (this ticks the
-   done-gate task) and commit → archive the change and commit it (`chore(openspec): archive <change>`) → `/finalize` →
-   fix and commit until it records a pass (`READY_TO_PUSH`, or `NOTHING_TO_FINALIZE` / the user's diff review in chat, as above) → open the PR to `dev`. Archive before `/finalize`, not
-   after: the archive is a commit, so one made after the pass would make it stale. The PR then ships the archived
-   change and the synced specs. `/finalize` is an extra review gate and does not replace the build and tests; if it
-   forces code fixes, re-run them and edit the archived change only when its artifacts became wrong.
+   done-gate task) and commit → archive the change and commit it (`chore(openspec): archive <change>`) → ask the
+   developer to run `/finalize` → fix and commit until it records a pass → open the PR to `dev`. Archive before
+   `/finalize`, not after: the archive is a commit, so one made after the pass would make it stale. The PR then ships
+   the archived change and the synced specs. `/finalize` is an extra review gate and does not replace the build and
+   tests; if it forces code fixes, re-run them and edit the archived change only when its artifacts became wrong.
 
 ## Running builds and tests
 
@@ -72,7 +75,6 @@ the CPU differs (arm64 here, x86_64 on the CI runner).
 
 - Run device tests on a VerbeClair emulator only: `ANDROID_SERIAL=emulator-5574 ./gradlew connectedAndroidDeviceTest`.
   Without `ANDROID_SERIAL`, Gradle runs on every connected device, including other projects' emulators.
-- `PRISM_AVD_PREFIX=VerbeClair` (set in `.claude/settings.json`) makes `.prism/assets/select_emulator.py`, and so
-  `/finalize`, consider only these AVDs. Start the emulator with the script first: if none is running,
-  `/finalize` boots one with `android emulator start`, which does not use the CI options or the fixed port.
+- `/finalize` starts the phone emulator with `scripts/emulator/verbeclair-emulator.sh start phone` and runs the device
+  tests with `ANDROID_SERIAL=emulator-5574`, so it never touches another project's emulator.
 - Never use, stop or modify another project's emulator.

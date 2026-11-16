@@ -32,7 +32,7 @@
 
 ## 5. Docs, memory and requirement
 
-- [ ] 5.1 Rewrite AGENTS.md rule 9 for the new `/finalize` and state the agent must never write the marker by hand, replace the PRISM emulator paragraph with one naming `/finalize`, and describe the three hooks and CI as the PR gate; verify no `prism` text remains in AGENTS.md and CLAUDE.md
+- [x] 5.1 Rewrite AGENTS.md rule 9 for the new `/finalize` and state the agent must never write the marker by hand, replace the PRISM emulator paragraph with one naming `/finalize`, and describe the three hooks and CI as the PR gate; verify no `prism` text remains in AGENTS.md and CLAUDE.md
 - [ ] 5.2 Show the user the reworded Notion N-16 text and, once approved, update the N-16 row; verify by fetching the page
 - [ ] 5.3 Update the memory files `prism-kmp-plan`, `prism-concepts`, `verbeclair-emulators`, `remove-prism-plan` and `MEMORY.md`; verify each index line matches its file
 
