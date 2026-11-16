@@ -17,7 +17,7 @@
 - [x] 3.2 Delete the skills `prism-setup` and `prism-burndown`; verify neither directory exists
 - [x] 3.3 Strip PRISM hook entries, `permissions.ask` entries and `PRISM_AVD_PREFIX` from `.claude/settings.json`; verify the file is valid JSON and has no `prism` text
 - [x] 3.4 Remove `prism.yml` references from the agents `skip-checker`, `convention-reviewer` and `mutation-worker` and make `/verify` a plain diff review; verify `grep -ri prism .claude/agents .claude/skills/verify` finds nothing
-- [ ] 3.5 Verify `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./gradlew build` still passes and commit
+- [x] 3.5 Verify `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./gradlew build` still passes and commit
 
 ## 4. Hooks and the new `/finalize`
 
