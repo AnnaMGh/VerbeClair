@@ -102,6 +102,9 @@ def run(command: str, marker=None) -> int:
         result = subprocess.run(["sh", HOOK], input=event, text=True, capture_output=True,
                                 env={**os.environ, "CLAUDE_PROJECT_DIR": root})
         run.stdout = result.stdout
+        run.stderr = result.stderr
+        run.head = head
+        run.old = old
         return result.returncode
 
 
@@ -123,6 +126,20 @@ for name, command, marker, want in MARKER_CASES:
     ok = got == want and reminded == (want == 0)
     failed += not ok
     print(f"{'ok  ' if ok else 'FAIL'} exit={got} (want {want})  {name}")
+# The denial message: it tells the agent to ask the developer for /finalize, and shows both commits.
+DENY = "gh pr create --base dev --title t"
+for name, marker in [("no pass recorded", None), ("stale pass", "old")]:
+    got = run(DENY, marker)
+    err = run.stderr
+    checks = [
+        "PR DENIED" in err,
+        "Ask the developer to run /finalize" in err,
+        f"HEAD:            {run.head}" in err,
+        f"Last /finalize:  {run.old if marker else 'none recorded'}" in err,
+    ]
+    ok = got == 2 and all(checks)
+    failed += not ok
+    print(f"{'ok  ' if ok else 'FAIL'} exit={got} (want 2), message {checks}  {name}: denial message")
 for name, command, want in CASES:
     got = run(command)
     is_pr = "pr create" in command or "pr new" in command

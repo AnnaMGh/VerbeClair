@@ -165,6 +165,21 @@ def case_format_reports_unfixable_violation(root):
     return result.returncode == 2 and "Wildcard import" in result.stderr
 
 
+def case_format_fixable_violation_is_silent(root):
+    # A stub `java` stands in for ktlint: it rewrites the file it is given (the last argument) and succeeds, as
+    # ktlint --format does for a fixable violation. The hook must leave the fix in place, stay silent and exit 0.
+    write(root, "A.kt", "import b.B\nimport a.A\n")
+    write(root, "build/ktlint/cli-classpath.txt", "x.jar\n")
+    write(root, "bin/java", "#!/bin/sh\nfor last; do :; done\nprintf 'import a.A\\nimport b.B\\n' > \"$last\"\nexit 0\n")
+    os.chmod(os.path.join(root, "bin/java"), 0o755)
+    event = json.dumps({"tool_input": {"file_path": os.path.join(root, "A.kt")}})
+    env = {**os.environ, "CLAUDE_PROJECT_DIR": root, "PATH": os.path.join(root, "bin") + os.pathsep + os.environ["PATH"]}
+    result = subprocess.run(["sh", FORMAT], input=event, text=True, capture_output=True, env=env)
+    with open(os.path.join(root, "A.kt")) as f:
+        formatted = f.read()
+    return result.returncode == 0 and result.stderr == "" and result.stdout == "" and formatted == "import a.A\nimport b.B\n"
+
+
 CASES = [
     ("stop: Markdown-only change runs nothing", case_markdown_only),
     ("stop: Kotlin change, checks pass", case_kotlin_change_passes),
@@ -179,6 +194,7 @@ CASES = [
     ("format: no ktlint classpath exits 0", case_format_without_classpath_exits_0),
     ("format: missing file exits 0", case_format_missing_file_exits_0),
     ("format: an unfixable violation is reported with exit 2", case_format_reports_unfixable_violation),
+    ("format: a fixable violation is fixed in place, silently, exit 0", case_format_fixable_violation_is_silent),
 ]
 
 failed = 0
