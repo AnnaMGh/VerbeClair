@@ -91,18 +91,19 @@ def run(command, changed_file="shared/src/commonMain/kotlin/A.kt", fail=None, tw
         event = json.dumps({"tool_input": {"command": command}})
         env = {**os.environ, "CLAUDE_PROJECT_DIR": root}
         code = 0
+        report = ""
         started = time.monotonic()
         for _ in range(2 if twice else 1):
             try:
-                code = subprocess.run(["sh", HOOK], input=event, text=True, capture_output=True, env=env,
-                                      timeout=30).returncode
+                result = subprocess.run(["sh", HOOK], input=event, text=True, capture_output=True, env=env, timeout=30)
+                code, report = result.returncode, result.stderr
             except subprocess.TimeoutExpired:
                 # A hook that hangs on a hostile command stalls the agent: report it as a failed case (-1).
                 code = -1
         elapsed = (time.monotonic() - started) / (2 if twice else 1)
         log_path = os.path.join(root, "calls.log")
         calls = open(log_path).read().splitlines() if os.path.exists(log_path) else []
-        return code, calls, elapsed
+        return code, calls, elapsed, report
 
 
 def nested(command, depth):
@@ -302,6 +303,80 @@ CASES = [
     ("wrappers nested 3 deep, another branch with Kotlin",
      nested("git push origin feat", 3), {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
     ("a megabyte of arguments after a push", "git push " + "a " * 400000, {}, 0, 4, None),
+    # A backslash and a newline vanish in the shell, so they join the two halves of a word (and of a flag).
+    ("line continuation inside the git word", "gi\\\nt push -u origin chore/x", {}, 0, 4, None),
+    ("line continuation inside the subcommand", "git pu\\\nsh -u origin chore/x", {}, 0, 4, None),
+    ("an escaped backslash, then a push on the next line", "echo a\\\\\ngit push -u origin chore/x", {}, 0, 4, None),
+    ("line continuation inside --all is still denied", "git push -\\\n-all origin", {}, 2, 0, None),
+    ("line continuation inside double quotes", 'git "pu\\\nsh" -u origin chore/x', {}, 0, 4, None),
+    ("line continuation inside a wrapper", "bash -c 'git pu\\\nsh -u origin chore/x'", {}, 0, 4, None),
+    ("a backslash-newline stays literal in single quotes: not the push subcommand", "git 'pu\\\nsh' -u origin chore/x",
+     {}, 0, 0, None),
+    ("line continuation between the dollar and the quote", "git $\\\n'pu'sh -u origin chore/x", {}, 0, 4, None),
+    ("line continuation between the dollar and an octal ANSI-C string", "git $\\\n'\\160ush' -u origin chore/x", {}, 0, 4, None),
+    ("line continuation before a locale string, in a wrapper", 'bash -c "git $\\\n\\"push\\" -u origin chore/x"', {}, 0, 4, None),
+    ("empty locale string inside the subcommand", 'git pu$""sh -u origin chore/x', {}, 0, 4, None),
+    ("empty locale string, in a wrapper", "bash -c 'git pu$\"\"sh -u origin chore/x'", {}, 0, 4, None),
+    ("zsh =git expansion", "=git push -u origin chore/x", {}, 0, 4, None),
+    ("a glob in the path of git", "/usr/bin/gi[t] push -u origin chore/x", {}, 0, 4, None),
+    ("a glob with a question mark in the path of git", "/usr/bin/gi? push -u origin chore/x", {}, 0, 4, None),
+    ("not git: a glob that cannot match git", "/usr/bin/ls? push", {}, 0, 0, None),
+    # The text inside a wrapper is read as a command, so it may split the word push the same ways.
+    ("split quotes inside a single-quoted wrapper", "bash -c 'git pu\"sh\" -u origin chore/x'", {}, 0, 4, None),
+    ("escape inside a double-quoted wrapper", 'bash -c "git pu\\\\sh -u origin chore/x"', {}, 0, 4, None),
+    ("ANSI-C octal escape inside a wrapper", r'''bash -c "git \$'\160ush' -u origin chore/x"''', {}, 0, 4, None),
+    ("split subcommand inside nested wrappers", nested("git pu\"sh\" -u origin chore/x", 3), {}, 0, 4, None),
+    # A locale string or an empty substitution inside a word still spells push.
+    ("locale string inside the subcommand, in a wrapper", "bash -c 'git pu$\"sh\" -u origin chore/x'", {}, 0, 4, None),
+    ("locale string inside the subcommand", 'git pu$"sh" -u origin chore/x', {}, 0, 4, None),
+    ("empty substitution inside the subcommand", "git pu$()sh -u origin chore/x", {}, 0, 4, None),
+    ("empty backticks inside the subcommand", "git pu``sh -u origin chore/x", {}, 0, 4, None),
+    ("empty substitution inside the git word", "g$()it push -u origin chore/x", {}, 0, 4, None),
+    ("empty substitution inside a wrapper", "bash -c 'git pu$()sh -u origin chore/x'", {}, 0, 4, None),
+    ("empty substitution that does not spell push: not a push", "echo pu$()ll && git status", {}, 0, 0, None),
+    # Adjacent backticks are a closing and an opening one when a substitution is open, and nothing when none is.
+    ("two backtick substitutions next to each other", "echo `echo hi``git push -u origin chore/x`", {}, 0, 4, None),
+    ("two backtick substitutions, the second a switch and push", "echo `echo hi``git switch feat && git push`", {}, 2, 0, None),
+    # An empty substitution inside double quotes disappears too.
+    ("empty substitution inside double quotes, whole subcommand", 'git "pu$()sh" -u origin chore/x', {}, 0, 4, None),
+    ("empty substitution in its own double quotes", 'git pu"$()"sh -u origin chore/x', {}, 0, 4, None),
+    ("empty backticks inside double quotes", 'git "pu``sh" -u origin chore/x', {}, 0, 4, None),
+    ("a substitution with only blanks inside", "git pu$( )sh -u origin chore/x", {}, 0, 4, None),
+    ("a substitution with only blanks inside double quotes", 'git "pu$(  )sh" -u origin chore/x', {}, 0, 4, None),
+    ("a glob that negates with a caret", "/usr/bin/gi[^x] push -u origin chore/x", {}, 0, 4, None),
+    # ANSI-C ($'...') and locale ($"...") strings are words the shell decodes.
+    ("ANSI-C quoted subcommand", "git $'push' -u origin chore/x", {}, 0, 4, None),
+    ("locale quoted subcommand", 'git $"push" -u origin chore/x', {}, 0, 4, None),
+    ("ANSI-C quoted git word", "$'git' push -u origin chore/x", {}, 0, 4, None),
+    ("ANSI-C octal escapes spell the subcommand", "git $'\\160\\165\\163\\150' -u origin chore/x", {}, 0, 4, None),
+    ("ANSI-C hex escapes spell the git word", "$'\\x67\\x69\\x74' push -u origin chore/x", {}, 0, 4, None),
+    ("ANSI-C unicode escape in the subcommand", "git $'\\u0070ush' -u origin chore/x", {}, 0, 4, None),
+    ("ANSI-C quoted branch is judged as another branch",
+     "git push origin $'feat'", {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    ("ANSI-C quoted --all is denied", "git push $'--all' origin", {}, 2, 0, None),
+    ("ANSI-C escaped quote does not end the string early: the switch inside stays hidden",
+     "git push -u origin chore/x $'\\'; git switch feat; \\''", {}, 0, 4, None),
+    ("ANSI-C string inside a wrapper", "bash -c $'git push -u origin chore/x'", {}, 0, 4, None),
+    ("a dollar before a substitution is not a string", "echo $(git push -u origin chore/x)", {}, 0, 4, None),
+    ("an ANSI-C string that does not spell push: not a push", "git $'status' && echo $'a\\tb'", {}, 0, 0, None),
+    # git options that take a separate value must not be read as the subcommand.
+    ("--attr-source with a value", "git --attr-source HEAD push -u origin chore/x", {}, 0, 4, None),
+    ("--config-env with a value", "git --config-env core.x=HOME push -u origin chore/x", {}, 0, 4, None),
+    ("--attr-source, another branch with Kotlin",
+     "git --attr-source HEAD push origin feat", {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    # git accepts a unique prefix of a long option, so the denied options are denied abbreviated too.
+    ("--mirr is --mirror", "git push --mirr origin", {}, 2, 0, None),
+    ("--mir is --mirror", "git push --mir origin", {}, 2, 0, None),
+    ("--al is --all", "git push --al origin", {}, 2, 0, None),
+    ("--all inside a wrapper", "bash -c 'git push --al origin'", {}, 2, 0, None),
+    ("--atomic is not --all", "git push --atomic -u origin chore/x", {}, 0, 4, None),
+    # The last of a flag and its negation wins.
+    ("--no-dry-run after -n pushes", "git push -n --no-dry-run -u origin chore/x", {}, 0, 4, None),
+    ("--no-dry-run abbreviated after --dry-run pushes", "git push --dry-run --no-dry -u origin chore/x", {}, 0, 4, None),
+    ("-n after --no-dry-run is a dry run", "git push --no-dry-run -n origin chore/x", {}, 0, 0, None),
+    ("--no-delete after --delete pushes", "git push --delete --no-delete origin feat", {}, 0, 4, None),
+    ("--delete after --no-delete deletes", "git push --no-delete --delete origin old", {}, 0, 0, None),
+    ("--no-delete abbreviated after -d pushes", "git push -d --no-del origin feat", {}, 0, 4, None),
     # Words that only look like git or push.
     ("not a push: another word ending in git", "legit push", {}, 0, 0, None),
     ("not a push: git push-foo", "git push-foo", {}, 0, 0, None),
@@ -311,9 +386,38 @@ CASES = [
     ("not a push: gh pr view", "gh pr view 3", {}, 0, 0, None),
 ]
 
+# The report the agent reads on a denial must say why and what to do. Each case: name, command, kwargs, want exit,
+# text the report (stderr) must contain, text it must not contain (the filter drops the stub gradle's task line). A broken failure filter or an empty report would pass the cases above.
+REPORTS = [
+    ("coverage floor fails: the trimmed gradle report names the failing task and drops task noise", PUSH,
+     {"fail": "jacocoCoverageVerification"}, 2,
+     ["PUSH DENIED", "Execution failed for task ':core:domain:jacocoCoverageVerification'", "Nothing was pushed"],
+     ["> Task :"]),
+    ("iOS simulator tests fail: the trimmed gradle report names the failing task", PUSH,
+     {"fail": "iosSimulatorArm64Test"}, 2,
+     ["PUSH DENIED", "Execution failed for task ':core:domain:iosSimulatorArm64Test'"], ["> Task :"]),
+    ("device tests fail: the trimmed gradle report names the failing task", PUSH,
+     {"fail": "connectedAndroidDeviceTest"}, 2,
+     ["PUSH DENIED", "Execution failed for task ':core:domain:connectedAndroidDeviceTest'"], ["> Task :"]),
+    ("--all: says to push one branch at a time", "git push --all origin", {}, 2,
+     ["PUSH DENIED", "--all/--mirror", "one at a time"], []),
+    ("another branch with Kotlin: names it and says to check it out",
+     "git push origin feat", {"changed_file": "docs/notes.md", "foreign": "kt"}, 2,
+     ["PUSH DENIED", "feat is not the checked-out branch", "git switch feat"], []),
+    ("switch and push: says to run the switch first", "git switch feat && git push", {}, 2,
+     ["PUSH DENIED", "switches branch and pushes", "own command"], []),
+]
+
 failed = 0
+for name, command, kwargs, want_code, parts, absent in REPORTS:
+    code, _, _, report = run(command, **kwargs)
+    ok = code == want_code and all(part in report for part in parts) and not any(part in report for part in absent)
+    failed += not ok
+    print(f"{'ok  ' if ok else 'FAIL'} exit={code} report has {len(parts)} expected parts  {name}")
+    if not ok:
+        print("     report was:", report.strip()[:300].replace("\n", " | "))
 for name, command, kwargs, want_code, want_calls, must_contain in CASES:
-    code, calls, elapsed = run(command, **kwargs)
+    code, calls, elapsed, _ = run(command, **kwargs)
     # The stubs return at once, so the hook itself must answer fast: a slow match stalls every Bash command.
     ok = code == want_code and len(calls) == want_calls and elapsed < MAX_SECONDS
     if must_contain and ok:
