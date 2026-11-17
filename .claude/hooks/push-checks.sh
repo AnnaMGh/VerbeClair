@@ -9,10 +9,13 @@
 # that only mentions the command is also checked, and costs nothing once the HEAD has passed). Never active for a
 # push the developer types in a terminal.
 # The match sees a push wherever `git` starts a word: after `&&`/`;`/`|`, inside `bash -c "…"`, `sh -c '…'` or `eval`,
-# inside `$( )`, backticks or a subshell, behind `sudo`/`timeout`/`env`, with a path (`/usr/bin/git`), and with git's
-# own options in front, whose values may be quoted (`-C "/a b"`, `-c k="v w"`, `--git-dir=…`). Known gaps, as for
-# pr-gate.sh: a push built from a variable, an alias or a quoted subcommand (`git "push"`), and a push made by a
-# script the command only runs. CI is the gate that cannot be skipped.
+# inside `$( )`, backticks or a subshell, behind `sudo`/`timeout`/`env`, with a path (`/usr/bin/git`), written `\git`
+# or `"git"`, and with git's own options in front, whose values may be quoted (`-C "/a b"`, `-c k="v w"`,
+# `--git-dir=…`). The arguments of a push inside a wrapper stop at the wrapper's closing quote, so a flag after it
+# (`bash -c "git push" -n`) is not read as the push's own. Commands that never mention `push` are not parsed at all.
+# Known gaps, as for pr-gate.sh: a push built from a variable, an alias or a quoted subcommand (`git "push"`), a
+# quoted refspec inside a wrapper (its closing quote ends the arguments early), and a push made by a script the
+# command only runs. CI is the gate that cannot be skipped.
 #
 # Skipped (exit 0): branch deletions and dry runs; a push whose commits change no Kotlin, Gradle, detekt or
 # editorconfig file; a HEAD that already passed (recorded in .claude/state/push-pass, gitignored). Neither shortcut
@@ -49,6 +52,10 @@ import os, re, sys
 
 current = os.environ.get("CUR_BRANCH", "")
 text = sys.stdin.read().replace("\\\n", " ")
+if "push" not in text:
+    # Most commands never mention a push: skip all matching, so a long unrelated command costs nothing.
+    print(0)
+    sys.exit(0)
 
 
 def strip_comments(source):
@@ -108,17 +115,26 @@ match_text = text.replace(chr(92) + DQ, DQ).replace(chr(92) + SQ, SQ)
 # One shell word: bare characters, backslash escapes and quoted parts, so a quoted path with a space stays one word.
 # The alternatives start with different characters, so the match cannot backtrack exponentially on hostile input.
 WORD = rx(r"(?:\\.|[^\s@D@S\\]|@D[^@D]*@D|@S[^@S]*@S)+")
-# `git` may be a path (`/usr/bin/git push`), follow `command`/`env`/`sudo`, or sit right after a quote (`bash -c "git
-# push"`, `eval "git push"`) or a `(`/backtick (`$(git push)`), so allow a leading directory part and those starts.
+# `git` starts a word after whitespace, `;&|`, a `(` or backtick (`$(git push)`), or a quote (`bash -c "git push"`,
+# `eval "git push"`). It may be a path (`/usr/bin/git push`; every segment ends at a slash, so a run of text cannot be
+# rescanned from each quote), be written `\git` to skip an alias, or be quoted itself (`"git" push`).
+# Group q is the quote the word starts after (a wrapper), group c a closing quote right after `git`.
 # Never write a single quote in this program: it sits inside a single-quoted shell string.
-GIT = rx(r"(?:^|[\s;&|(`@D@S])(?:\S*/)?git")
-# Options git takes before the subcommand. A value may be quoted (`-C "/a b"`) or follow as its own word.
+GIT = rx(r"(?:^|[\s;&|(`]|(?P<q>[@D@S]))(?:[^\s@D@S;&|(`/]*/)*\\?git(?P<c>[@D@S])?")
+# Options git takes before the subcommand. A value may be quoted (`-C "/a b"`) or follow as its own word. Each option
+# has exactly one parse (the generic flag branch excludes the options that take a value), so a failing match cannot
+# backtrack exponentially.
 GIT_OPTS = (
-    r"(?:\s+(?:-[Cc]\s+@W|--(?:git-dir|work-tree|namespace|super-prefix|config-env|exec-path)\s+@W|-@W))*"
+    r"(?:\s+(?:-[Cc]\s+@W"
+    r"|--(?:git-dir|work-tree|namespace|super-prefix|config-env|exec-path)\s+@W"
+    r"|-(?![Cc]\s)(?!-(?:git-dir|work-tree|namespace|super-prefix|config-env|exec-path)\s)@W))*"
 ).replace("@W", WORD)
 # A subcommand name ends at whitespace, a quote, `)` or the end, but not at `-` (`git push-foo` is not `git push`).
 END = r"(?![\w-])"
-pushes = re.finditer(GIT + GIT_OPTS + r"\s+push" + END + r"(?P<args>[^\n;&|]*)", match_text)
+# The push arguments run to the end of the command part. When `git` follows a wrapper quote and has no closing quote of
+# its own (`bash -c "git push origin x" -n`), they stop at that wrapper quote: what follows belongs to bash, not to git.
+ARGS = r"(?P<args>(?(q)(?(c)[^\n;&|]*|(?:(?!(?P=q))[^\n;&|])*)|[^\n;&|]*))"
+pushes = re.finditer(GIT + GIT_OPTS + r"\s+push" + END + ARGS, match_text)
 # What a wrapper leaves stuck to a word: the closing quote of `bash -c "…"`, a `)`, a backtick, a stray backslash.
 JUNK = DQ + SQ + "`()" + chr(92)
 # Every push in the command is looked at: check it when ANY of them is a real push.
@@ -144,16 +160,16 @@ for push in pushes:
             foreign.append(source)
 # The hook runs BEFORE the command, so when the same command also moves HEAD (`git commit … && git push`) the HEAD read
 # below is the old one. Verdict 2 = check it, and trust neither the passed-HEAD marker nor the changed-files shortcut.
-moves_head = re.search(
+moves_head = verdict and re.search(
     GIT + GIT_OPTS + r"\s+(?:commit|merge|cherry-pick|rebase|revert|am|pull|reset)" + END, match_text
 )
-switches = re.search(GIT + GIT_OPTS + r"\s+(?:switch|checkout)" + END, match_text)
-if verdict and moves_head:
+switches = verdict and re.search(GIT + GIT_OPTS + r"\s+(?:switch|checkout)" + END, match_text)
+if moves_head:
     verdict = 2
 print(verdict)
 for ref in dict.fromkeys(foreign):
     print(ref)
-if verdict and switches:
+if switches:
     print("!switch")
 ')
 verdict=$(printf '%s\n' "$verdict_out" | head -1)

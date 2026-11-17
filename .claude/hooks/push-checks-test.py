@@ -11,6 +11,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 
 HOOK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "push-checks.sh")
 
@@ -89,6 +90,7 @@ def run(command, changed_file="shared/src/commonMain/kotlin/A.kt", fail=None, tw
         event = json.dumps({"tool_input": {"command": command}})
         env = {**os.environ, "CLAUDE_PROJECT_DIR": root}
         code = 0
+        started = time.monotonic()
         for _ in range(2 if twice else 1):
             try:
                 code = subprocess.run(["sh", HOOK], input=event, text=True, capture_output=True, env=env,
@@ -96,12 +98,15 @@ def run(command, changed_file="shared/src/commonMain/kotlin/A.kt", fail=None, tw
             except subprocess.TimeoutExpired:
                 # A hook that hangs on a hostile command stalls the agent: report it as a failed case (-1).
                 code = -1
+        elapsed = (time.monotonic() - started) / (2 if twice else 1)
         log_path = os.path.join(root, "calls.log")
         calls = open(log_path).read().splitlines() if os.path.exists(log_path) else []
-        return code, calls
+        return code, calls, elapsed
 
 
 PUSH = "git push -u origin chore/x"
+MAX_SECONDS = 4
+GIT_WORD = "g" + "it"
 CASES = [
     # name, command, kwargs, want exit, want number of stub calls, text every call line must contain
     ("push with Kotlin changes, all pass", PUSH, {}, 0, 4, None),
@@ -208,6 +213,36 @@ CASES = [
     ("many quoted -C options then a push", "git " + '-C "a b" ' * 300 + "push", {}, 0, 4, None),
     ("an unbalanced quote does not hang", 'bash -c "git push ' + "'" * 3000, {}, 0, 4, None),
     ("a very long argument list is still a push", "git push " + "a " * 5000, {}, 0, 4, None),
+    # git written as a quoted or escaped word still pushes (a backslash is the usual way to skip an alias).
+    ("quoted command word, double quotes", '"git" push -u origin chore/x', {}, 0, 4, None),
+    ("quoted command word, single quotes", "'git' push -u origin chore/x", {}, 0, 4, None),
+    ("backslash before git", "\\git push -u origin chore/x", {}, 0, 4, None),
+    ("quoted path to git", '"/usr/bin/git" push -u origin chore/x', {}, 0, 4, None),
+    ("quoted command word keeps its later quoted refspec",
+     '"git" push origin "feat"', {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    # What follows the closing quote of a wrapper belongs to the wrapper, not to the push inside it.
+    ("a flag after the wrapper does not make the push a dry run", 'bash -c "git push" -n', {}, 0, 4, None),
+    ("a flag after the wrapper does not make the push a delete", "bash -c 'git push origin feat' --delete", {}, 0, 4, None),
+    ("a redirect and flag after the wrapper", 'bash -c "git push origin HEAD" > /tmp/o -n', {}, 0, 4, None),
+    ("the wrapper cut keeps a deny: another branch with Kotlin",
+     "bash -c 'git push origin feat' --delete", {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    ("a flag inside the wrapper still makes a dry run", 'bash -c "git push --dry-run" -x', {}, 0, 0, None),
+    # Options that take a value must have one parse only: these used to backtrack exponentially (2^n at n pairs).
+    ("40 -C options whose value starts with a dash, then pull", "git " + "-C -x " * 40 + "pull", {}, 0, 0, None),
+    ("40 -C options whose value starts with a dash, then push", "git " + "-C -x " * 40 + "push", {}, 0, 4, None),
+    ("40 -C -C pairs, then no subcommand", "git " + "-C -C " * 40 + "x", {}, 0, 0, None),
+    ("40 --git-dir options with a dash value, then pull", "git " + "--git-dir -x " * 40 + "pull", {}, 0, 0, None),
+    ("40 -c options with dash values, then push", "git " + "-c -x " * 40 + "push", {}, 0, 4, None),
+    ("mixed options 60 times, then pull", "git " + "-C a --git-dir b -c k=v -x " * 60 + "pull", {}, 0, 0, None),
+    ("-C as the last word before push takes push as its value", "git -C push", {}, 0, 0, None),
+    # The hook parses every Bash command: a long run without spaces must not be rescanned from each quote (O(n^2)).
+    ("100 KB of minified JSON in a heredoc, no push", "cat > /tmp/x.json <<EOF\n" + '{"a":"b","c":["d","e"]}' * 4300 + "\nEOF",
+     {}, 0, 0, None),
+    ("100 KB of minified JSON with one push word", "cat > /tmp/x.json <<EOF\n" + '{"a":"b","c":["d","e"]}' * 4300 + " push\nEOF",
+     {}, 0, 0, None),
+    ("100 KB of quotes with slashes and a push word", ('"a/' * 33000) + " push", {}, 0, 0, None),
+    ("100 KB path-like run before a push", ("a/" * 50000) + GIT_WORD + " push origin x", {}, 0, 4, None),
+    ("a long quoted run then a real push", "echo " + '"x"' * 30000 + " && git push", {}, 0, 4, None),
     # Words that only look like git or push.
     ("not a push: another word ending in git", "legit push", {}, 0, 0, None),
     ("not a push: git push-foo", "git push-foo", {}, 0, 0, None),
@@ -219,10 +254,12 @@ CASES = [
 
 failed = 0
 for name, command, kwargs, want_code, want_calls, must_contain in CASES:
-    code, calls = run(command, **kwargs)
-    ok = code == want_code and len(calls) == want_calls
+    code, calls, elapsed = run(command, **kwargs)
+    # The stubs return at once, so the hook itself must answer fast: a slow match stalls every Bash command.
+    ok = code == want_code and len(calls) == want_calls and elapsed < MAX_SECONDS
     if must_contain and ok:
         ok = all(any(part in line for part in must_contain.split("|")) for line in calls)
     failed += not ok
-    print(f"{'ok  ' if ok else 'FAIL'} exit={code} calls={len(calls)} (want {want_code}, {want_calls})  {name}")
+    print(f"{'ok  ' if ok else 'FAIL'} exit={code} calls={len(calls)} (want {want_code}, {want_calls}) "
+          f"{elapsed:.2f}s  {name}")
 sys.exit(1 if failed else 0)
