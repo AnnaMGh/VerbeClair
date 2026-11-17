@@ -59,9 +59,17 @@ def make_repo(root, changed_file):
 
 
 def run(command, changed_file="shared/src/commonMain/kotlin/A.kt", fail=None, twice=False, prior_pass=False,
-        upstream_at_head=False, dirty=False):
+        upstream_at_head=False, dirty=False, foreign=None):
     with tempfile.TemporaryDirectory() as root:
         make_repo(root, changed_file)
+        if foreign:
+            # Another branch `feat`, one commit past origin/dev, while the checked-out branch keeps its own change.
+            git(root, "switch", "-q", "-c", "feat", "origin/dev")
+            with open(os.path.join(root, "F.kt" if foreign == "kt" else "F.md"), "w") as f:
+                f.write("feat\n")
+            git(root, "add", "-A")
+            git(root, "commit", "-q", "-m", "feat work")
+            git(root, "switch", "-q", "-")
         if upstream_at_head:
             # The branch is already pushed: its upstream is HEAD, so `git diff @{upstream} HEAD` is empty.
             git(root, "branch", "pushed", "HEAD")
@@ -123,6 +131,23 @@ CASES = [
     ("plain push, upstream at HEAD, nothing new: skipped", PUSH, {"upstream_at_head": True}, 0, 0, None),
     ("push with uncommitted edits is checked but records no pass", PUSH, {"dirty": True, "twice": True}, 0, 8, None),
     ("push on a clean tree records the pass", PUSH, {"twice": True}, 0, 4, None),
+    # The checks run on the working tree, so a branch other than the checked-out one is judged by its own files.
+    ("push of another branch with Kotlin, from a docs-only HEAD: denied",
+     "git push origin feat", {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    ("push of another branch with Kotlin, with a refspec and a force plus",
+     "git push origin +feat:feat", {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    ("push of another branch with Kotlin, from a Kotlin HEAD: still denied",
+     "git push origin feat", {"foreign": "kt"}, 2, 0, None),
+    ("push of another branch with only Markdown: allowed", "git push origin feat",
+     {"changed_file": "docs/notes.md", "foreign": "md"}, 0, 0, None),
+    ("push of HEAD by name is the checked-out branch", "git push origin HEAD", {}, 0, 4, None),
+    ("switch to a branch and push in one command: denied",
+     "git switch feat && git push", {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    ("checkout of a branch and push in one command: denied",
+     "git checkout feat && git push", {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    ("push --all: denied", "git push --all origin", {}, 2, 0, None),
+    ("absolute path to git is a push too", "/usr/bin/git push -u origin chore/x", {}, 0, 4, None),
+    ("command git push is a push too", "command git push -u origin chore/x", {}, 0, 4, None),
     ("not a push: git status", "git status", {}, 0, 0, None),
     ("not a push: git pull", "git pull --rebase", {}, 0, 0, None),
     ("not a push: gh pr view", "gh pr view 3", {}, 0, 0, None),

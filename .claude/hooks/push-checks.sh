@@ -11,7 +11,12 @@
 #
 # Skipped (exit 0): branch deletions and dry runs; a push whose commits change no Kotlin, Gradle, detekt or
 # editorconfig file; a HEAD that already passed (recorded in .claude/state/push-pass, gitignored). Neither shortcut
-# applies when the same command also moves HEAD (`git commit … && git push`): the hook sees the old HEAD, so it checks.
+# applies when the same command also commits (`git commit … && git push`): the hook sees the old HEAD, so it checks.
+#
+# Denied (exit 2) without running anything: a push of a branch other than the checked-out one when that branch carries
+# Kotlin, Gradle, detekt or editorconfig changes (the checks run on the working tree, so they cannot vouch for another
+# branch: check it out and push it), `--all`/`--mirror`, and a `git switch`/`git checkout` in the same command as the
+# push (the hook sees the branch before the switch: run the switch as its own command first).
 # A pass is recorded only when the working tree is clean, so it always describes the committed HEAD.
 #
 # The device tests run on emulator-5574 only (ANDROID_SERIAL), never on another project's emulator.
@@ -30,10 +35,14 @@ except Exception:
     pass
 ')
 
-# 0 = not a push to check, 1 = check it.
-verdict=$(printf '%s' "$command" | python3 -c '
-import re, sys
+current=$(git -C "$root" symbolic-ref --short -q HEAD 2>/dev/null || true)
 
+# Line 1: 0 = not a push to check, 1 = check it, 2 = check it without the shortcuts. Further lines: refs the push
+# carries that are not the checked-out branch, and `!switch` when the command also switches branch.
+verdict_out=$(printf '%s' "$command" | CUR_BRANCH="$current" python3 -c '
+import os, re, sys
+
+current = os.environ.get("CUR_BRANCH", "")
 text = sys.stdin.read().replace("\\\n", " ")
 
 
@@ -79,9 +88,12 @@ def strip_comments(source):
 
 # A trailing shell comment is not part of the push arguments.
 text = strip_comments(text)
-pushes = re.finditer(r"(?:^|[\s;&|(`])git(?:\s+(?:-[Cc]\s+\S+|-\S+))*\s+push\b[^\n;&|]*", text)
+# `git` may be a path (`/usr/bin/git push`) or follow `command`/`env`, so allow a leading directory part.
+GIT = r"(?:^|[\s;&|(`])(?:\S*/)?git"
+pushes = re.finditer(GIT + r"(?:\s+(?:-[Cc]\s+\S+|-\S+))*\s+push\b[^\n;&|]*", text)
 # Every push in the command is looked at: check it when ANY of them is a real push.
 verdict = 0
+foreign = []
 for push in pushes:
     args = re.split(r"\bpush\b", push.group(0), maxsplit=1)[1]
     tokens = args.split()
@@ -95,16 +107,52 @@ for push in pushes:
     if refspecs and (deletes or all(token.startswith(":") for token in refspecs)):
         continue
     verdict = 1
+    if "--all" in flags or "--mirror" in flags:
+        foreign.append("--all")
+    for token in refspecs:
+        source = token.lstrip("+").split(":")[0]
+        if source and source not in ("HEAD", current, "refs/heads/" + current):
+            foreign.append(source)
 # The hook runs BEFORE the command, so when the same command also moves HEAD (`git commit … && git push`) the HEAD read
 # below is the old one. Verdict 2 = check it, and trust neither the passed-HEAD marker nor the changed-files shortcut.
 moves_head = re.search(
-    r"(?:^|[\s;&|(`])git(?:\s+(?:-[Cc]\s+\S+|-\S+))*\s+(?:commit|merge|cherry-pick|rebase|revert|am|pull|reset)\b", text
+    GIT + r"(?:\s+(?:-[Cc]\s+\S+|-\S+))*\s+(?:commit|merge|cherry-pick|rebase|revert|am|pull|reset)\b", text
 )
+switches = re.search(GIT + r"(?:\s+(?:-[Cc]\s+\S+|-\S+))*\s+(?:switch|checkout)\b", text)
 if verdict and moves_head:
     verdict = 2
 print(verdict)
+for ref in dict.fromkeys(foreign):
+    print(ref)
+if verdict and switches:
+    print("!switch")
 ')
+verdict=$(printf '%s\n' "$verdict_out" | head -1)
 [ "$verdict" = 1 ] || [ "$verdict" = 2 ] || exit 0
+
+stop_push() { # $1 = reason
+    printf 'PUSH DENIED — %s\n\nNothing was pushed.\n' "$1" >&2
+    exit 2
+}
+
+pushed_refs=$(printf '%s\n' "$verdict_out" | tail -n +2)
+if printf '%s\n' "$pushed_refs" | grep -qx '!switch'; then
+    stop_push "the command switches branch and pushes. The checks would run on the branch before the switch, not on what is pushed. Run the switch as its own command, then push."
+fi
+if printf '%s\n' "$pushed_refs" | grep -qx -e '--all'; then
+    stop_push "--all/--mirror pushes every branch, and the checks can only vouch for the checked-out one. Push the branches one at a time."
+fi
+# A branch other than the checked-out one: the checks run on the working tree, so they cannot vouch for it. Deny when it
+# carries code changes, and say to check it out first. A ref git cannot resolve is left for git itself to reject.
+for ref in $pushed_refs; do
+    commit=$(git -C "$root" rev-parse --verify -q "$ref^{commit}" 2>/dev/null) || continue
+    ref_base=$(git -C "$root" rev-parse --verify -q "$ref@{upstream}" 2>/dev/null ||
+        git -C "$root" merge-base "$commit" origin/dev 2>/dev/null) || continue
+    if git -C "$root" diff --name-only "$ref_base" "$commit" 2>/dev/null |
+        grep -qE '(\.kt|\.kts|\.gradle|detekt\.yml|\.editorconfig|libs\.versions\.toml|gradle\.properties)$'; then
+        stop_push "$ref is not the checked-out branch and carries Kotlin or Gradle changes. The checks run on the working tree, so they cannot vouch for it. Check it out (git switch $ref), then push."
+    fi
+done
 
 head=$(git -C "$root" rev-parse HEAD 2>/dev/null || true)
 [ -n "$head" ] || exit 0
