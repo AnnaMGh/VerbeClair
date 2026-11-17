@@ -50,9 +50,12 @@ record_head() { [ -n "$head" ] && printf '%s\n' "$head" >"$last_head"; }
 
 changed=$(
     {
-        git -C "$root" status --porcelain --untracked-files=all 2>/dev/null | sed 's/^...//; s/.* -> //'
+        # Not `status --porcelain`: it wraps a path with spaces or non-ASCII characters in quotes (`"dir \303\251/B.kt"`),
+        # and the quote hides the extension from the filter below. These commands print the real path.
+        git -C "$root" -c core.quotePath=false diff --name-only HEAD 2>/dev/null
+        git -C "$root" -c core.quotePath=false ls-files --others --exclude-standard 2>/dev/null
         if [ -n "$previous" ] && [ "$previous" != "$head" ]; then
-            git -C "$root" diff --name-only "$previous" "$head" 2>/dev/null
+            git -C "$root" -c core.quotePath=false diff --name-only "$previous" "$head" 2>/dev/null
         fi
     } | sort -u
 )
