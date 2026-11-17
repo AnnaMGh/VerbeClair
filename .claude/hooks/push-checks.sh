@@ -5,17 +5,21 @@
 # (commonTest and iosTest, Compose UI tests included); the project has no XCUITest suite.
 #
 # Reads the hook event (JSON) on stdin. Exit 2 with a trimmed failure report on stderr denies the command; exit 0
-# allows it. Only commands whose text contains `git push` are looked at (a plain text match, like pr-gate.sh: text
-# that only mentions the command is also checked, and costs nothing once the HEAD has passed). Never active for a
-# push the developer types in a terminal.
-# The match sees a push wherever `git` starts a word: after `&&`/`;`/`|`, inside `bash -c "…"`, `sh -c '…'` or `eval`,
-# inside `$( )`, backticks or a subshell, behind `sudo`/`timeout`/`env`, with a path (`/usr/bin/git`), written `\git`
-# or `"git"`, and with git's own options in front, whose values may be quoted (`-C "/a b"`, `-c k="v w"`,
-# `--git-dir=…`). The arguments of a push inside a wrapper stop at the wrapper's closing quote, so a flag after it
-# (`bash -c "git push" -n`) is not read as the push's own. Commands that never mention `push` are not parsed at all.
-# Known gaps, as for pr-gate.sh: a push built from a variable, an alias or a quoted subcommand (`git "push"`), a
-# quoted refspec inside a wrapper (its closing quote ends the arguments early), and a push made by a script the
-# command only runs. CI is the gate that cannot be skipped.
+# allows it. Only commands that contain a `git push` are looked at (text that only mentions the command, such as a
+# commit message, is also checked, and costs nothing once the HEAD has passed). Never active for a push the developer
+# types in a terminal.
+# The command is read as shell words (one linear pass: quotes, escapes and redirections are handled, nothing is
+# matched as text), so a push is found however it is spelled: after `&&`/`;`/`|`, inside `bash -c "…"`, `sh -c '…'`,
+# `eval` or `$( )` (a quoted word that mentions push is read again as a command), behind `sudo`/`timeout`/`env`,
+# with a path, as `\git`, `"git"`, `gi""t` or `Git`, with a quoted subcommand, and with git's own options in front
+# (`-C "/a b"`, `-c k="v w"`, `--git-dir=…`). The arguments of a push are the words of its own command: what follows
+# a wrapper's closing quote (`bash -c "git push" -n`) and redirection targets (`> -n`) are not among them. Commands
+# that never mention `push` are not parsed at all. A push quoted deeper than the parser reads (6 levels), or a
+# command the parser cannot read, is checked instead of allowed.
+# Known gaps, as for pr-gate.sh: a push built from a variable, an alias, a function or a script the command only
+# runs; a bare `:` refspec (it pushes the matching branches but is read as a deletion), `--branches` and pattern
+# refspecs (not denied like `--all`); the value of a push option that looks like a flag (`-o -n`); an error in the
+# command extractor below, which allows the command. CI is the gate that cannot be skipped.
 #
 # Skipped (exit 0): branch deletions and dry runs; a push whose commits change no Kotlin, Gradle, detekt or
 # editorconfig file; a HEAD that already passed (recorded in .claude/state/push-pass, gitignored). Neither shortcut
@@ -50,126 +54,209 @@ current=$(git -C "$root" symbolic-ref --short -q HEAD 2>/dev/null || true)
 verdict_out=$(printf '%s' "$command" | CUR_BRANCH="$current" python3 -c '
 import os, re, sys
 
+# The command is read as shell words (quotes and escapes removed), not matched as text: a regex over arbitrary text
+# either misses wrapped forms or backtracks, and this runs on every Bash command. The tokenizer is one linear pass.
+# A quoted word that mentions push is read again as a command (bash -c "...", eval "..."), to a fixed depth.
+# Never write a single quote in this program: it sits inside a single-quoted shell string.
+SQ = chr(39)
+DQ = chr(34)
+BS = chr(92)
+NL = chr(10)
+BT = chr(96)
+MAX_DEPTH = 6
+# Options git takes before the subcommand that consume the next word, even when it starts with a dash.
+VALUE_OPTIONS = ("-C", "-c", "--git-dir", "--work-tree", "--namespace", "--super-prefix")
+MOVES_HEAD = ("commit", "merge", "cherry-pick", "rebase", "revert", "am", "pull", "reset")
+SWITCHES = ("switch", "checkout")
+SEPARATORS = ";&|()" + NL + BT
+# A run of ordinary characters inside a word, and the characters that end a stretch of double-quoted text.
+PLAIN = re.compile("[^" + re.escape(SEPARATORS + "<>" + SQ + DQ + BS) + r"\s]+")
+DOUBLE_STOP = re.compile("[" + re.escape(DQ + BS) + "]")
+
 current = os.environ.get("CUR_BRANCH", "")
-text = sys.stdin.read().replace("\\\n", " ")
-if "push" not in text:
-    # Most commands never mention a push: skip all matching, so a long unrelated command costs nothing.
+text = sys.stdin.read().replace(BS + NL, " ")
+# Most commands never mention a push: skip all parsing, so a long unrelated command costs nothing. Quotes and
+# backslashes are ignored in this test, because pu"sh and pu\sh are still the word push.
+if "push" not in re.sub("[" + re.escape(BS + DQ + SQ) + "]", "", text):
     print(0)
     sys.exit(0)
 
 
-def strip_comments(source):
-    # A shell comment starts at an unquoted `#` that follows whitespace and runs to the end of the line. A `#` inside
-    # quotes (a commit message such as "Closes #42") is text, not a comment.
-    out = []
-    quote = None
-    in_comment = False
-    previous = " "
-    escaped = False
-    for char in source:
-        if escaped:
-            # The character after a backslash is literal (outside single quotes), so an escaped quote opens nothing.
-            escaped = False
-            out.append(char)
-            previous = char
-            continue
-        if char == chr(92) and quote != chr(39) and not in_comment:
-            escaped = True
-            out.append(char)
-            previous = char
-            continue
-        if in_comment:
-            if char == "\n":
-                in_comment = False
-                out.append(char)
-            previous = char
-            continue
-        if quote:
-            if char == quote:
-                quote = None
-        elif char in ("\"", chr(39)):
-            quote = char
-        elif char == "#" and previous.isspace():
-            in_comment = True
-            previous = char
-            continue
-        out.append(char)
-        previous = char
-    return "".join(out)
+def tokenize(source, depth):
+    """Split source into commands: lists of words with quotes and escapes removed."""
+    commands = []
+    words = []
+    word = []
+    in_word = False
+    quoted = False  # the word has a quoted part or an escape
+    skip_next = False  # the next word is the target of a redirection, not an argument
+    i = 0
+    n = len(source)
+
+    def end_word():
+        nonlocal word, in_word, quoted, skip_next
+        if not in_word:
+            return
+        value = "".join(word)
+        if quoted and "push" in value:
+            # A quoted string may itself be a command (bash -c "...", eval "..."): read what is inside it. Nested
+            # deeper than the limit it is not read, so the caller treats the whole command as unreadable and checks.
+            if depth >= MAX_DEPTH:
+                raise ValueError("push nested in quotes deeper than " + str(MAX_DEPTH))
+            commands.extend(tokenize(value, depth + 1))
+        if skip_next:
+            skip_next = False
+        else:
+            words.append(value)
+        word = []
+        in_word = False
+        quoted = False
+
+    def end_command():
+        nonlocal words, skip_next
+        end_word()
+        if words:
+            commands.append(words)
+        words = []
+        skip_next = False
+
+    while i < n:
+        ch = source[i]
+        if ch == BS:
+            if i + 1 < n:
+                word.append(source[i + 1])
+                in_word = True
+                quoted = True
+            i += 2
+        elif ch == SQ:
+            end = source.find(SQ, i + 1)
+            if end < 0:
+                end = n
+            word.append(source[i + 1:end])
+            in_word = True
+            quoted = True
+            i = end + 1
+        elif ch == DQ:
+            i += 1
+            while i < n:
+                stop = DOUBLE_STOP.search(source, i)
+                if stop is None:
+                    word.append(source[i:])
+                    i = n
+                    break
+                word.append(source[i:stop.start()])
+                i = stop.start()
+                if source[i] == DQ:
+                    i += 1
+                    break
+                # A backslash: only these characters are escaped inside double quotes.
+                if i + 1 < n and source[i + 1] in (DQ, BS, "$", BT, NL):
+                    word.append(source[i + 1])
+                    i += 2
+                else:
+                    word.append(BS)
+                    i += 1
+            in_word = True
+            quoted = True
+        elif ch in SEPARATORS:
+            end_command()
+            i += 1
+        elif ch in "<>":
+            # Digits right before the operator (2>file) belong to the redirection, not to the command.
+            if in_word and not quoted and "".join(word).isdigit():
+                word = []
+                in_word = False
+            else:
+                end_word()
+            while i < n and source[i] in "<>":
+                i += 1
+            if i < n and source[i] == "&":
+                i += 1
+            skip_next = True
+        elif ch.isspace():
+            end_word()
+            i += 1
+        elif ch == "#" and not in_word:
+            # A comment runs to the end of the line; the newline itself still ends the command.
+            end = source.find(NL, i)
+            i = n if end < 0 else end
+        else:
+            run = PLAIN.match(source, i)
+            word.append(run.group())
+            in_word = True
+            i = run.end()
+    end_command()
+    return commands
 
 
-# A trailing shell comment is not part of the push arguments.
-text = strip_comments(text)
-DQ = chr(34)
-SQ = chr(39)
+def analyse(commands):
+    """Return the argument lists of the pushes, and whether the command moves HEAD or switches branch."""
+    pushes = []
+    moves_head = False
+    switches = False
+    for words in commands:
+        i = 0
+        while i < len(words):
+            # git may be a path (/usr/bin/git), be quoted or escaped (the words are already unquoted), or differ in
+            # case (the default macOS file system ignores it).
+            if words[i].rsplit("/", 1)[-1].lower() != "git":
+                i += 1
+                continue
+            j = i + 1
+            while j < len(words):
+                if words[j] in VALUE_OPTIONS:
+                    j += 2
+                elif words[j].startswith("-"):
+                    j += 1
+                else:
+                    break
+            subcommand = words[j] if j < len(words) else ""
+            if subcommand == "push":
+                pushes.append(words[j + 1:])
+            elif subcommand in MOVES_HEAD:
+                moves_head = True
+            elif subcommand in SWITCHES:
+                switches = True
+            i = j
+    return pushes, moves_head, switches
 
 
-def rx(pattern):
-    # The program sits inside a single-quoted shell string, so a quote character is spelled with a placeholder.
-    return pattern.replace("@D", DQ).replace("@S", SQ)
-
-
-# A command that is itself inside a quoted string carries escaped quotes (`bash -c "git -C \"/a b\" push"`). Matching
-# sees them as plain quotes, so the nested command reads like a top-level one.
-match_text = text.replace(chr(92) + DQ, DQ).replace(chr(92) + SQ, SQ)
-# One shell word: bare characters, backslash escapes and quoted parts, so a quoted path with a space stays one word.
-# The alternatives start with different characters, so the match cannot backtrack exponentially on hostile input.
-WORD = rx(r"(?:\\.|[^\s@D@S\\]|@D[^@D]*@D|@S[^@S]*@S)+")
-# `git` starts a word after whitespace, `;&|`, a `(` or backtick (`$(git push)`), or a quote (`bash -c "git push"`,
-# `eval "git push"`). It may be a path (`/usr/bin/git push`; every segment ends at a slash, so a run of text cannot be
-# rescanned from each quote), be written `\git` to skip an alias, or be quoted itself (`"git" push`).
-# Group q is the quote the word starts after (a wrapper), group c a closing quote right after `git`.
-# Never write a single quote in this program: it sits inside a single-quoted shell string.
-GIT = rx(r"(?:^|[\s;&|(`]|(?P<q>[@D@S]))(?:[^\s@D@S;&|(`/]*/)*\\?git(?P<c>[@D@S])?")
-# Options git takes before the subcommand. A value may be quoted (`-C "/a b"`) or follow as its own word. Each option
-# has exactly one parse (the generic flag branch excludes the options that take a value), so a failing match cannot
-# backtrack exponentially.
-GIT_OPTS = (
-    r"(?:\s+(?:-[Cc]\s+@W"
-    r"|--(?:git-dir|work-tree|namespace|super-prefix|config-env|exec-path)\s+@W"
-    r"|-(?![Cc]\s)(?!-(?:git-dir|work-tree|namespace|super-prefix|config-env|exec-path)\s)@W))*"
-).replace("@W", WORD)
-# A subcommand name ends at whitespace, a quote, `)` or the end, but not at `-` (`git push-foo` is not `git push`).
-END = r"(?![\w-])"
-# The push arguments run to the end of the command part. When `git` follows a wrapper quote and has no closing quote of
-# its own (`bash -c "git push origin x" -n`), they stop at that wrapper quote: what follows belongs to bash, not to git.
-ARGS = r"(?P<args>(?(q)(?(c)[^\n;&|]*|(?:(?!(?P=q))[^\n;&|])*)|[^\n;&|]*))"
-pushes = re.finditer(GIT + GIT_OPTS + r"\s+push" + END + ARGS, match_text)
-# What a wrapper leaves stuck to a word: the closing quote of `bash -c "…"`, a `)`, a backtick, a stray backslash.
-JUNK = DQ + SQ + "`()" + chr(92)
-# Every push in the command is looked at: check it when ANY of them is a real push.
 verdict = 0
 foreign = []
-for push in pushes:
-    tokens = [token for token in (word.strip(JUNK) for word in push.group("args").split()) if token]
-    flags = [token for token in tokens if token.startswith("-")]
-    if "--dry-run" in flags or "-n" in flags:
-        continue
-    # The first non-flag word is the remote; the rest are refspecs. Only a push whose every refspec deletes a branch
-    # is skipped: `git push origin feat :old` still pushes feat.
-    refspecs = [token for token in tokens if not token.startswith("-")][1:]
-    deletes = "--delete" in flags or "-d" in flags
-    if refspecs and (deletes or all(token.startswith(":") for token in refspecs)):
-        continue
-    verdict = 1
-    if "--all" in flags or "--mirror" in flags:
-        foreign.append("--all")
-    for token in refspecs:
-        source = token.lstrip("+").split(":")[0]
-        if source and source not in ("HEAD", current, "refs/heads/" + current):
-            foreign.append(source)
-# The hook runs BEFORE the command, so when the same command also moves HEAD (`git commit … && git push`) the HEAD read
-# below is the old one. Verdict 2 = check it, and trust neither the passed-HEAD marker nor the changed-files shortcut.
-moves_head = verdict and re.search(
-    GIT + GIT_OPTS + r"\s+(?:commit|merge|cherry-pick|rebase|revert|am|pull|reset)" + END, match_text
-)
-switches = verdict and re.search(GIT + GIT_OPTS + r"\s+(?:switch|checkout)" + END, match_text)
-if moves_head:
+try:
+    pushes, moves_head, switches = analyse(tokenize(text, 0))
+    # Every push in the command is looked at: check it when ANY of them is a real push.
+    for args in pushes:
+        flags = [token for token in args if token.startswith("-")]
+        if "--dry-run" in flags or "-n" in flags:
+            continue
+        # The first non-flag word is the remote; the rest are refspecs. Only a push whose every refspec deletes a
+        # branch is skipped: git push origin feat :old still pushes feat.
+        refspecs = [token for token in args if not token.startswith("-")][1:]
+        deletes = "--delete" in flags or "-d" in flags
+        if refspecs and (deletes or all(token.startswith(":") for token in refspecs)):
+            continue
+        verdict = 1
+        if "--all" in flags or "--mirror" in flags:
+            foreign.append("--all")
+        for token in refspecs:
+            source = token.lstrip("+").split(":")[0]
+            if source and source not in ("HEAD", current, "refs/heads/" + current):
+                foreign.append(source)
+    # The hook runs BEFORE the command, so when the same command also moves HEAD (git commit ... && git push) the
+    # HEAD read below is the old one. Verdict 2 = check it, and trust neither the passed-HEAD marker nor the
+    # changed-files shortcut.
+    if verdict and moves_head:
+        verdict = 2
+except Exception:
+    # The text mentions a push and could not be read: check it, without the shortcuts, rather than allow it.
     verdict = 2
+    foreign = []
+    switches = False
 print(verdict)
 for ref in dict.fromkeys(foreign):
     print(ref)
-if switches:
+if verdict and switches:
     print("!switch")
 ')
 verdict=$(printf '%s\n' "$verdict_out" | head -1)

@@ -7,6 +7,7 @@ commands ran.
 """
 import json
 import os
+import shlex
 import stat
 import subprocess
 import sys
@@ -102,6 +103,13 @@ def run(command, changed_file="shared/src/commonMain/kotlin/A.kt", fail=None, tw
         log_path = os.path.join(root, "calls.log")
         calls = open(log_path).read().splitlines() if os.path.exists(log_path) else []
         return code, calls, elapsed
+
+
+def nested(command, depth):
+    """The command inside `bash -c` quoted `depth` times, as the shell needs the nested quotes."""
+    for _ in range(depth):
+        command = "bash -c " + shlex.quote(command)
+    return command
 
 
 PUSH = "git push -u origin chore/x"
@@ -243,6 +251,57 @@ CASES = [
     ("100 KB of quotes with slashes and a push word", ('"a/' * 33000) + " push", {}, 0, 0, None),
     ("100 KB path-like run before a push", ("a/" * 50000) + GIT_WORD + " push origin x", {}, 0, 4, None),
     ("a long quoted run then a real push", "echo " + '"x"' * 30000 + " && git push", {}, 0, 4, None),
+    # Pushes found by reading the command as shell words: the argument split follows quoting, wrappers and redirections.
+    ("wrapper cut must not drop a refspec: a delete and a quoted branch",
+     'bash -c "git push origin :old \\"feat\\""', {}, 0, 4, None),
+    ("a quote that closes an earlier word is not a wrapper", '"$HOME"/bin/git push origin :old "feat"', {}, 0, 4, None),
+    ("wrapped --all with a quoted remote is denied", 'bash -c "git push \\"origin\\" --all"', {}, 2, 0, None),
+    ("--mirror with a quoted remote after a quoted path is denied", '"$HOME"/bin/git push "origin" --mirror', {}, 2, 0, None),
+    ("quoted branch after a quoted path is judged as another branch",
+     '"$HOME"/bin/git push origin "feat"', {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    ("quoted push option inside a wrapper, another branch with Kotlin",
+     'bash -c "git push -o \\"ci.skip\\" origin feat"', {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    # What follows a wrapper belongs to the wrapper, wherever the push sits inside it.
+    ("push after cd && inside a wrapper, flag after the wrapper", 'bash -c "cd . && git push -u origin chore/x" -n', {}, 0, 4, None),
+    ("push after a semicolon inside a wrapper, flag after the wrapper", 'bash -c "git fetch; git push" -n', {}, 0, 4, None),
+    ("single-quoted wrapper, push after a semicolon, --delete after", "sh -c 'true; git push origin feat' --delete", {}, 0, 4, None),
+    ("a dry run inside the wrapper still counts", 'bash -c "cd . && git push --dry-run" -x', {}, 0, 0, None),
+    ("nested wrappers", """bash -c 'sh -c "git push -u origin chore/x"'""", {}, 0, 4, None),
+    ("eval of a quoted command with a branch switch", 'eval "git switch feat && git push"',
+     {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    # The git word and the subcommand may be spelled in ways the shell turns into the same words.
+    ("capital Git (the default macOS file system ignores case)", "Git push -u origin chore/x", {}, 0, 4, None),
+    ("upper case GIT", "GIT push", {}, 0, 4, None),
+    ("empty quotes inside the git word", 'gi""t push', {}, 0, 4, None),
+    ("one letter quoted", '"g"it push', {}, 0, 4, None),
+    ("empty quotes after the git word", 'git"" push', {}, 0, 4, None),
+    ("escape inside the git word", "g\\it push", {}, 0, 4, None),
+    ("quoted subcommand", 'git "push" origin chore/x', {}, 0, 4, None),
+    ("split quotes inside the subcommand", 'git pu""sh', {}, 0, 4, None),
+    # Redirections and substitutions are not arguments of the push.
+    ("a redirect target that looks like a flag", "git push -u origin chore/x > -n", {}, 0, 4, None),
+    ("a file descriptor redirect", "git push 2>&1", {}, 0, 4, None),
+    ("a dry run with a redirect", "git push --dry-run > out.txt", {}, 0, 0, None),
+    ("a flag inside a substitution after the push", "git push origin feat $(: -n)", {}, 0, 4, None),
+    # Stalls: the hook parses every Bash command, so none of these may be slow (MAX_SECONDS) or quadratic.
+    ("JSON of quoted git fragments in a heredoc, with a push word",
+     "echo push; cat <<E\n[" + ('"git -C a",' * 20000) + "]\nE", {}, 0, 0, None),
+    ("many git words each with a -C value, then a push", "git -C a " * 20000 + "git push", {}, 0, 4, None),
+    ("many git words each with a --git-dir value, then a push", "git --git-dir a " * 20000 + "git push", {}, 0, 4, None),
+    ("many -C options that swallow the next git word: the last -C takes push as its value", "git -C " * 20000 + "push", {}, 0, 0, None),
+    ("many git words, then a commit and a push", "git -C a " * 20000 + " commit && git push", {}, 0, 4, None),
+    ("many half-quoted flags, then a push", 'git -a"' * 20000 + " push", {}, 0, 4, None),
+    ("many half-quoted flags in a long run, no push word", 'git -a"' * 20000, {}, 0, 0, None),
+    # Quotes nested inside quotes, built the way the shell needs them. A push nested deeper than the parser reads
+    # is not allowed through: the command is treated as unreadable and checked.
+    ("wrappers nested 3 deep", nested("git push -u origin chore/x", 3), {}, 0, 4, None),
+    ("wrappers nested 6 deep", nested("git push -u origin chore/x", 6), {}, 0, 4, None),
+    ("wrappers nested 8 deep are checked, not skipped", nested("git push -u origin chore/x", 8), {}, 0, 4, None),
+    ("wrappers nested 8 deep, a dry run inside is still checked (unreadable)", nested("git push --dry-run", 8), {}, 0, 4, None),
+    ("wrappers nested 3 deep, a dry run inside", nested("git push --dry-run", 3), {}, 0, 0, None),
+    ("wrappers nested 3 deep, another branch with Kotlin",
+     nested("git push origin feat", 3), {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    ("a megabyte of arguments after a push", "git push " + "a " * 400000, {}, 0, 4, None),
     # Words that only look like git or push.
     ("not a push: another word ending in git", "legit push", {}, 0, 0, None),
     ("not a push: git push-foo", "git push-foo", {}, 0, 0, None),
