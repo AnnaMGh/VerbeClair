@@ -37,10 +37,14 @@ per-artifact rules and the definition of done. If anything here disagrees with i
    `stop-checks.sh` runs detekt, ktlint, Konsist and the unit tests when the agent stops after changing Kotlin or
    Gradle files (it blocks at most three times in a row), `push-checks.sh` runs the coverage floors, the iOS simulator
    tests and the device tests on `emulator-5574` before the agent's `git push` (it needs no `/finalize` pass, skips pushes with no Kotlin or
-   Gradle change, and remembers a passed `HEAD` in `.claude/state/push-pass`), and `pr-gate.sh` denies the agent's PR
+   Gradle change, and remembers a passed `HEAD` in `.claude/state/push-pass`). The checks run on the working tree, so
+   it denies, without running them, a push of a branch other than the checked-out one that carries Kotlin or Gradle
+   changes (check it out, then push), a `git switch`/`git checkout` in the same command as the push (run the switch
+   first), and `--all`/`--mirror` (push branches one at a time). And `pr-gate.sh` denies the agent's PR
    to `dev` without a pass; when it lets a PR through it reminds the agent to run `/verify` and to compare every
    changed screen with its Figma frame, and to say in the PR description what was checked. None of them touches a `git` or `gh` command the developer types in a terminal, and no git
-   hook is installed.
+   hook is installed. Each hook has a test harness in `.claude/hooks/` (`pr-gate-test.py`, `push-checks-test.py`,
+   `stop-checks-test.py`, which also covers `ktlint-format.sh`); run them after changing a hook.
    `pr-gate.sh` is a plain text match: any Bash command whose text contains `gh … pr create` or `gh … pr new` is
    treated as the PR command, however it is wrapped. That also catches text that only mentions it (a commit message,
    an echo); write such text with Edit/Write, or run the real PR command. Always pass `--base` explicitly: the gate is
