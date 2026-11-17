@@ -90,7 +90,12 @@ def run(command, changed_file="shared/src/commonMain/kotlin/A.kt", fail=None, tw
         env = {**os.environ, "CLAUDE_PROJECT_DIR": root}
         code = 0
         for _ in range(2 if twice else 1):
-            code = subprocess.run(["sh", HOOK], input=event, text=True, capture_output=True, env=env).returncode
+            try:
+                code = subprocess.run(["sh", HOOK], input=event, text=True, capture_output=True, env=env,
+                                      timeout=30).returncode
+            except subprocess.TimeoutExpired:
+                # A hook that hangs on a hostile command stalls the agent: report it as a failed case (-1).
+                code = -1
         log_path = os.path.join(root, "calls.log")
         calls = open(log_path).read().splitlines() if os.path.exists(log_path) else []
         return code, calls
@@ -148,6 +153,65 @@ CASES = [
     ("push --all: denied", "git push --all origin", {}, 2, 0, None),
     ("absolute path to git is a push too", "/usr/bin/git push -u origin chore/x", {}, 0, 4, None),
     ("command git push is a push too", "command git push -u origin chore/x", {}, 0, 4, None),
+    # A push wrapped in a quoted string (`bash -c "…"`, `sh -c '…'`, `eval "…"`) or a substitution is still a push.
+    ("bash -c, double quotes", 'bash -c "git push -u origin chore/x"', {}, 0, 4, None),
+    ("sh -c, single quotes", "sh -c 'git push -u origin chore/x'", {}, 0, 4, None),
+    ("bash -lc", 'bash -lc "git push origin HEAD"', {}, 0, 4, None),
+    ("eval", 'eval "git push"', {}, 0, 4, None),
+    ("timeout wrapping bash -c", 'timeout 3000 bash -c "git push origin HEAD"', {}, 0, 4, None),
+    ("sudo wrapping bash -c", "sudo bash -c 'git push'", {}, 0, 4, None),
+    ("push after && inside bash -c", 'bash -c "git add -A && git push"', {}, 0, 4, None),
+    ("push inside $( )", 'echo $(git push origin HEAD)', {}, 0, 4, None),
+    ("push inside backticks", "echo `git push origin HEAD`", {}, 0, 4, None),
+    ("push inside a subshell", "(git push origin HEAD)", {}, 0, 4, None),
+    ("push in a braces group", "{ git push; }", {}, 0, 4, None),
+    ("push after a newline", "echo hi\ngit push", {}, 0, 4, None),
+    ("push after a semicolon without a space", "true;git push", {}, 0, 4, None),
+    ("push after && without a space", "true&&git push", {}, 0, 4, None),
+    ("push through env and a variable assignment", "env GIT_TRACE=1 git push", {}, 0, 4, None),
+    # Quoted or escaped values of git's own options may contain spaces.
+    ("-C with a double-quoted path with a space", 'git -C "/tmp/a b" push origin x', {}, 0, 4, None),
+    ("-C with a single-quoted path with a space", "git -C '/tmp/a b' push origin x", {}, 0, 4, None),
+    ("-C with a backslash-escaped space", "git -C /tmp/a\\ b push origin x", {}, 0, 4, None),
+    ("-c with a quoted value with a space", 'git -c user.name="A B" push origin x', {}, 0, 4, None),
+    ("two -C options", 'git -C /tmp/a -C "b c" push', {}, 0, 4, None),
+    ("--git-dir with a separate quoted value", 'git --git-dir "/tmp/a b/.git" push', {}, 0, 4, None),
+    ("--git-dir= with a quoted value", 'git --git-dir="/tmp/a b/.git" push', {}, 0, 4, None),
+    ("--no-pager before push", "git --no-pager push", {}, 0, 4, None),
+    ("-C quoted path inside bash -c with escaped quotes", 'bash -c "git -C \\"/tmp/a b\\" push origin x"', {}, 0, 4, None),
+    ("a path that contains the word push", "git -C /tmp/push-dir push origin feat", {}, 0, 4, None),
+    # The wrappers must not hide the denials and skips either.
+    ("wrapped --all is denied", 'bash -c "git push --all origin"', {}, 2, 0, None),
+    ("wrapped push of another branch with Kotlin is denied",
+     "bash -c 'git push origin feat'", {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    ("wrapped push of another branch, double quotes and a refspec",
+     'sh -c "git push origin +feat:feat"', {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    ("push of another branch inside $( ) is denied",
+     "echo $(git push origin feat)", {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    ("wrapped push of another branch with only Markdown is allowed",
+     "bash -c 'git push origin feat'", {"changed_file": "docs/notes.md", "foreign": "md"}, 0, 0, None),
+    ("wrapped switch and push is denied",
+     'sh -c "git switch feat && git push"', {"changed_file": "docs/notes.md", "foreign": "kt"}, 2, 0, None),
+    ("wrapped dry run is skipped", 'bash -c "git push --dry-run"', {}, 0, 0, None),
+    ("wrapped --delete is skipped", "bash -c 'git push origin --delete old'", {}, 0, 0, None),
+    ("wrapped colon delete is skipped", 'bash -c "git push origin :old"', {}, 0, 0, None),
+    ("delete refspec after a path that contains the word push", "git -C /tmp/push-dir push origin :old", {}, 0, 0, None),
+    ("wrapped commit and push, a passed HEAD does not skip the checks",
+     'bash -c "git commit -am x && git push"', {"upstream_at_head": True, "dirty": True, "prior_pass": True}, 0, 4, None),
+    ("wrapped push on a passed HEAD is skipped", 'bash -c "git push"', {"prior_pass": True}, 0, 0, None),
+    ("wrapped push with only a Markdown change", "bash -c 'git push'", {"changed_file": "docs/notes.md"}, 0, 0, None),
+    # Hostile or malformed commands must neither hang the hook (the match must not backtrack exponentially) nor push.
+    ("many backslashes after -C do not hang, and the pairs are a real path", "git -C " + "\\" * 3000 + " push", {}, 0, 4, None),
+    ("many escaped quotes do not hang", "git " + '\\"' * 3000 + " push", {}, 0, 0, None),
+    ("many escaped spaces after -C do not hang", "git -C " + "\\ " * 2000 + " push", {}, 0, 4, None),
+    ("escaped spaces that swallow the word push are a path, not a push", "git -C " + "\\ " * 2000 + "push", {}, 0, 0, None),
+    ("many quoted -C options then a push", "git " + '-C "a b" ' * 300 + "push", {}, 0, 4, None),
+    ("an unbalanced quote does not hang", 'bash -c "git push ' + "'" * 3000, {}, 0, 4, None),
+    ("a very long argument list is still a push", "git push " + "a " * 5000, {}, 0, 4, None),
+    # Words that only look like git or push.
+    ("not a push: another word ending in git", "legit push", {}, 0, 0, None),
+    ("not a push: git push-foo", "git push-foo", {}, 0, 0, None),
+    ("not a push: git pushd-like word", "echo pushed", {}, 0, 0, None),
     ("not a push: git status", "git status", {}, 0, 0, None),
     ("not a push: git pull", "git pull --rebase", {}, 0, 0, None),
     ("not a push: gh pr view", "gh pr view 3", {}, 0, 0, None),
