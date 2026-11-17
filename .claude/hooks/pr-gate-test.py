@@ -140,6 +140,12 @@ for name, marker in [("no pass recorded", None), ("stale pass", "old")]:
     ok = got == 2 and all(checks)
     failed += not ok
     print(f"{'ok  ' if ok else 'FAIL'} exit={got} (want 2), message {checks}  {name}: denial message")
+# A PR without --base is denied with a message that says to use dev, whether or not a pass is recorded.
+for name, marker in [("no pass recorded", None), ("pass for HEAD", "head")]:
+    got = run("gh pr create --title t", marker)
+    ok = got == 2 and "pass --base explicitly" in run.stderr and "use `--base dev`" in run.stderr
+    failed += not ok
+    print(f"{'ok  ' if ok else 'FAIL'} exit={got} (want 2)  no --base, {name}: message says to use --base dev")
 for name, command, want in CASES:
     got = run(command)
     is_pr = "pr create" in command or "pr new" in command

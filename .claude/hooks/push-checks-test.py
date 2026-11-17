@@ -20,6 +20,12 @@ GRADLEW = """#!/bin/sh
 echo "gradlew ANDROID_SERIAL=${ANDROID_SERIAL:-none} $*" >> "$(dirname "$0")/calls.log"
 if [ -f "$(dirname "$0")/fail" ] && echo "$*" | grep -q "$(cat "$(dirname "$0")/fail")"; then
     echo "> Task :core:domain:$(cat "$(dirname "$0")/fail") FAILED"
+    # The detail a real run prints: the JaCoCo rule that failed, or the name of the failing test.
+    if [ "$(cat "$(dirname "$0")/fail")" = jacocoCoverageVerification ]; then
+        echo "Rule violated for bundle core:domain: instructions covered ratio is 0.50, but expected minimum is 0.80"
+    else
+        echo "FooTest > bar FAILED"
+    fi
     echo "Execution failed for task ':core:domain:$(cat "$(dirname "$0")/fail")'."
     exit 1
 fi
@@ -391,14 +397,17 @@ CASES = [
 REPORTS = [
     ("coverage floor fails: the trimmed gradle report names the failing task and drops task noise", PUSH,
      {"fail": "jacocoCoverageVerification"}, 2,
-     ["PUSH DENIED", "Execution failed for task ':core:domain:jacocoCoverageVerification'", "Nothing was pushed"],
+     ["PUSH DENIED", "Execution failed for task ':core:domain:jacocoCoverageVerification'", "Nothing was pushed",
+      "Rule violated for bundle core:domain", "expected minimum is 0.80"],
      ["> Task :"]),
     ("iOS simulator tests fail: the trimmed gradle report names the failing task", PUSH,
      {"fail": "iosSimulatorArm64Test"}, 2,
-     ["PUSH DENIED", "Execution failed for task ':core:domain:iosSimulatorArm64Test'"], ["> Task :"]),
+     ["PUSH DENIED", "Execution failed for task ':core:domain:iosSimulatorArm64Test'", "FooTest > bar FAILED"],
+     ["> Task :"]),
     ("device tests fail: the trimmed gradle report names the failing task", PUSH,
      {"fail": "connectedAndroidDeviceTest"}, 2,
-     ["PUSH DENIED", "Execution failed for task ':core:domain:connectedAndroidDeviceTest'"], ["> Task :"]),
+     ["PUSH DENIED", "Execution failed for task ':core:domain:connectedAndroidDeviceTest'", "FooTest > bar FAILED"],
+     ["> Task :"]),
     ("--all: says to push one branch at a time", "git push --all origin", {}, 2,
      ["PUSH DENIED", "--all/--mirror", "one at a time"], []),
     ("another branch with Kotlin: names it and says to check it out",
