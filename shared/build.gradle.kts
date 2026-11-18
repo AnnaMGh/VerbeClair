@@ -5,9 +5,9 @@ plugins {
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    id("prism.ktlint")
-    id("prism.detekt")
-    id("prism.jacoco")
+    id("verbeclair.ktlint")
+    id("verbeclair.detekt")
+    id("verbeclair.jacoco")
 }
 
 // Measured 0 % (the one host test is a placeholder); the floor only rises from here.

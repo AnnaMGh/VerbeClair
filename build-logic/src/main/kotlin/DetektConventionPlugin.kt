@@ -1,4 +1,3 @@
-import dev.detekt.gradle.DetektCreateBaselineTask
 import dev.detekt.gradle.extensions.DetektExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -12,14 +11,20 @@ import org.gradle.kotlin.dsl.project
  * Wires detekt into whichever project applies this plugin.
  *
  * The gate runs the plugin's plain `detekt` task — syntax-only, no type
- * resolution — against the single rule set in the root `detekt.yml`. No rule is
+ * resolution — and the type-resolving main-source tasks (`detektDebug` on Android
+ * application modules, `detektMain` on Kotlin/JVM modules) against the single rule set in the root `detekt.yml`. The plain task skips
+ * every rule that needs the Analysis API, so without the type-resolving tasks
+ * those rules would be active in `detekt.yml` and never run. Kotlin Multiplatform
+ * modules are not covered by the type-resolving tasks yet: their variants also
+ * analyse generated KSP and Compose resource code and report findings of their own.
+ * No rule is
  * enabled, disabled, or parameterised here: the configuration file is the only
  * surface, mirroring how `.editorconfig` is the only surface for ktlint.
  *
  * The detekt version is pinned exactly in `libs.versions.toml`. While the
  * pinned line is a 2.0 pre-release, a version bump is its own commit, gated by
- * the `:tooling:prism-rules` suite and a zero-finding `staticAnalysis` run,
- * and reverted if either fails.
+ * the `:tooling:detekt-rules` suite and a zero-finding `./gradlew detekt check`
+ * run, and reverted if either fails.
  *
  * Third-party and project-specific rule sets are added to the `detektPlugins`
  * configuration so that every module picks them up without repeating itself.
@@ -29,13 +34,6 @@ class DetektConventionPlugin : Plugin<Project> {
         with(target) {
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
             pluginManager.apply("dev.detekt")
-
-            // Bound at project scope on purpose -- see the note in
-            // KtlintConventionPlugin. Inside a configure block the receiver is
-            // usually not the Project, and a bare `path` then names something
-            // that is not a module.
-            val modulePath = path
-            val observed = PrismScope.observes(project, modulePath, "detekt")
 
             extensions.configure<DetektExtension> {
                 config.setFrom(rootProject.layout.projectDirectory.file("detekt.yml"))
@@ -82,36 +80,14 @@ class DetektConventionPlugin : Plugin<Project> {
                 // generated one therefore behaves exactly as it did before this
                 // line, which is why no placeholder guards it.
                 baseline.set(layout.projectDirectory.file(BASELINE_FILE))
-
-                // OBSERVE RUNS THE ENGINE AND DOES NOT FAIL THE BUILD. It is
-                // not `active: false` and it is not an exclusion: every rule
-                // still runs, every finding still lands in
-                // build/reports/detekt/, and only the exit status changes.
-                // That distinction is the whole point -- a module nobody has
-                // got to yet should still be able to tell you how much work is
-                // in it.
-                //
-                // Absent scope file == enforce, so an enforcing install reaches
-                // this line with `false` and behaves exactly as it did before
-                // per-module posture existed.
-                ignoreFailures.set(observed)
             }
 
-            // Creation tasks write per-task FRAGMENTS, never the baseline itself.
-            //
-            // DetektCreateBaselineTask REPLACES currentIssues rather than merging
-            // them -- it keeps only manuallySuppressedIssues from the file it finds
-            // and writes this run's ids as the whole set. A module runs two or
-            // three of these tasks (`detekt` for the test sources, plus
-            // `detektMain` or `detektDebug` for the resolution-backed rules), so
-            // pointing them at one file leaves whichever ran LAST and drops the
-            // others: a baseline that looks complete and covers one source set.
-            // lib/baseline.py unions each module's fragments into that module's
-            // baseline instead.
-            val fragments = layout.buildDirectory.dir(BASELINE_FRAGMENT_DIR)
-            tasks.withType(DetektCreateBaselineTask::class.java).configureEach {
-                baseline.set(fragments.map { dir -> dir.file("$name.xml") })
-            }
+            // Matched by name because the Android, JVM and Kotlin Multiplatform plugins
+            // each register their own variants, in any order relative to this plugin.
+            // `check` already runs the plain `detekt` task; this adds the ones that
+            // resolve types.
+            val typeResolving = tasks.matching { task -> task.name in TYPE_RESOLVING_TASKS }
+            tasks.matching { task -> task.name == "check" }.configureEach { dependsOn(typeResolving) }
 
             dependencies.add(DETEKT_PLUGINS_CONFIGURATION, libs.findLibrary("compose-rules-detekt").get())
             dependencies.add(DETEKT_PLUGINS_CONFIGURATION, dependencies.project(RULES_PROJECT))
@@ -120,8 +96,8 @@ class DetektConventionPlugin : Plugin<Project> {
 
     private companion object {
         const val DETEKT_PLUGINS_CONFIGURATION = "detektPlugins"
-        const val RULES_PROJECT = ":tooling:prism-rules"
+        const val RULES_PROJECT = ":tooling:detekt-rules"
         const val BASELINE_FILE = "detekt.baseline.xml"
-        const val BASELINE_FRAGMENT_DIR = "prism/baseline"
+        val TYPE_RESOLVING_TASKS = setOf("detektDebug", "detektMain")
     }
 }

@@ -7,9 +7,9 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
-    id("prism.ktlint")
-    id("prism.detekt")
-    id("prism.jacoco")
+    id("verbeclair.ktlint")
+    id("verbeclair.detekt")
+    id("verbeclair.jacoco")
 }
 
 coverageFloor {

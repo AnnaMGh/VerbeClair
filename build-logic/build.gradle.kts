@@ -2,7 +2,7 @@ plugins {
     `kotlin-dsl`
 }
 
-// build-logic is an included build, so it cannot apply its own `prism.ktlint`
+// build-logic is an included build, so it cannot apply its own `verbeclair.ktlint`
 // plugin. The tasks are registered here by hand against the same rule set.
 val ktlint: Configuration by configurations.creating {
     isCanBeConsumed = false
@@ -23,8 +23,8 @@ dependencies {
     // LibraryExtension and ApplicationExtension, so it needs the types to
     // compile -- but it reaches them only inside pluginManager.withPlugin
     // callbacks, which never fire in a project that has no AGP. Requiring AGP
-    // on the runtime classpath would make PRISM uninstallable in a pure
-    // Kotlin/JVM repository for the sake of a branch that would not execute.
+    // on the runtime classpath would make the plugins unusable in a pure
+    // Kotlin/JVM project for the sake of a branch that would not execute.
     // COORDINATES, NOT LIBRARY ALIASES, and a real install is why.
     //
     // A version catalog alias becomes a Kotlin accessor by splitting on -, _ and
@@ -47,20 +47,16 @@ dependencies {
 gradlePlugin {
     plugins {
         register("jacoco") {
-            id = "prism.jacoco"
+            id = "verbeclair.jacoco"
             implementationClass = "JacocoConventionPlugin"
         }
         register("ktlint") {
-            id = "prism.ktlint"
+            id = "verbeclair.ktlint"
             implementationClass = "KtlintConventionPlugin"
         }
         register("detekt") {
-            id = "prism.detekt"
+            id = "verbeclair.detekt"
             implementationClass = "DetektConventionPlugin"
-        }
-        register("staticAnalysis") {
-            id = "prism.static-analysis"
-            implementationClass = "StaticAnalysisConventionPlugin"
         }
     }
 }

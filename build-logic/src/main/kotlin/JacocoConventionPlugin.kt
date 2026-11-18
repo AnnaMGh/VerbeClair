@@ -169,7 +169,7 @@ class JacocoConventionPlugin : Plugin<Project> {
                 ":core:presentation" to "only commonMain and commonTest; no jvm() or host test target",
                 ":feature:verblist" to
                     "only commonMain, commonTest and device tests; no jvm() or host test target",
-                ":tooling:prism-rules" to
+                ":tooling:detekt-rules" to
                     "kotlin.jvm build tooling; this plugin measures multiplatform modules only, so it is not wired yet",
                 ":tooling:konsist" to
                     "kotlin.jvm build tooling; this plugin measures multiplatform modules only, so it is not wired yet",

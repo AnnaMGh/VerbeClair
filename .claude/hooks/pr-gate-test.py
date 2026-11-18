@@ -93,7 +93,7 @@ def run(command: str, marker=None) -> int:
         subprocess.run(git + ["commit", "-q", "--allow-empty", "-m", "second"], check=True)
         head = subprocess.run(git + ["rev-parse", "HEAD"], text=True, capture_output=True, check=True).stdout.strip()
         if marker is not None:
-            state = os.path.join(root, ".prism", "verify", "state")
+            state = os.path.join(root, ".claude", "state")
             os.makedirs(state)
             sha = old if marker.startswith("old") else head
             with open(os.path.join(state, "finalize-pass"), "w") as f:
@@ -101,6 +101,10 @@ def run(command: str, marker=None) -> int:
         event = json.dumps({"tool_input": {"command": command}})
         result = subprocess.run(["sh", HOOK], input=event, text=True, capture_output=True,
                                 env={**os.environ, "CLAUDE_PROJECT_DIR": root})
+        run.stdout = result.stdout
+        run.stderr = result.stderr
+        run.head = head
+        run.old = old
         return result.returncode
 
 
@@ -117,12 +121,37 @@ MARKER_CASES = [
 failed = 0
 for name, command, marker, want in MARKER_CASES:
     got = run(command, marker)
-    ok = got == want
+    # An allowed PR carries the /verify and Figma reminder as hook context; a denial prints nothing on stdout.
+    reminded = "/verify" in run.stdout and "Figma" in run.stdout
+    ok = got == want and reminded == (want == 0)
     failed += not ok
     print(f"{'ok  ' if ok else 'FAIL'} exit={got} (want {want})  {name}")
+# The denial message: it tells the agent to ask the developer for /finalize, and shows both commits.
+DENY = "gh pr create --base dev --title t"
+for name, marker in [("no pass recorded", None), ("stale pass", "old")]:
+    got = run(DENY, marker)
+    err = run.stderr
+    checks = [
+        "PR DENIED" in err,
+        "Ask the developer to run /finalize" in err,
+        f"HEAD:            {run.head}" in err,
+        f"Last /finalize:  {run.old if marker else 'none recorded'}" in err,
+    ]
+    ok = got == 2 and all(checks)
+    failed += not ok
+    print(f"{'ok  ' if ok else 'FAIL'} exit={got} (want 2), message {checks}  {name}: denial message")
+# A PR without --base is denied with a message that says to use dev, whether or not a pass is recorded.
+for name, marker in [("no pass recorded", None), ("pass for HEAD", "head")]:
+    got = run("gh pr create --title t", marker)
+    ok = got == 2 and "pass --base explicitly" in run.stderr and "use `--base dev`" in run.stderr
+    failed += not ok
+    print(f"{'ok  ' if ok else 'FAIL'} exit={got} (want 2)  no --base, {name}: message says to use --base dev")
 for name, command, want in CASES:
     got = run(command)
-    ok = got == want
+    is_pr = "pr create" in command or "pr new" in command
+    # Only an allowed PR command (base main here) is reminded; other commands and denials print nothing.
+    reminded = bool(run.stdout.strip())
+    ok = got == want and reminded == (want == 0 and is_pr)
     failed += not ok
     print(f"{'ok  ' if ok else 'FAIL'} exit={got} (want {want})  {name}")
 sys.exit(1 if failed else 0)
