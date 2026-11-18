@@ -76,7 +76,7 @@ fi
 
 # Cheapest first: static analysis and architecture tests, then the host unit tests (jvmTest, testAndroidHostTest).
 # Not `check`/`allTests`: they also build and run the iOS simulator tests, which push-checks.sh runs before the push.
-output=$(cd "$root" && ./gradlew --console=plain --continue detekt ktlintCheck :tooling:konsist:test jvmTest testAndroidHostTest 2>&1)
+output=$(cd "$root" && ./gradlew --console=plain --continue detekt ktlintCheck :tooling:konsist:test :tooling:detekt-rules:test jvmTest testAndroidHostTest 2>&1)
 status=$?
 
 if [ "$status" -eq 0 ]; then
@@ -103,7 +103,7 @@ fi
 printf '%s\n' "$blocks" >"$counter"
 {
     printf 'Stop checks failed (block %s of %s). Fix these before finishing:\n\n%s\n\n' "$blocks" "$max_blocks" "$report"
-    printf 'Re-run: ./gradlew --continue detekt ktlintCheck :tooling:konsist:test jvmTest testAndroidHostTest\n'
+    printf 'Re-run: ./gradlew --continue detekt ktlintCheck :tooling:konsist:test :tooling:detekt-rules:test jvmTest testAndroidHostTest\n'
     printf 'Formatting-only violations: ./gradlew ktlintFormat\n'
 } >&2
 exit 2
