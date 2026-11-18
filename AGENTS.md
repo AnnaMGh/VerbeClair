@@ -28,9 +28,11 @@ per-artifact rules and the definition of done. If anything here disagrees with i
    directly to `main` or `dev`. Merges into `dev` and `main` happen only through a GitHub pull
    request approved by the user — never merge locally or push to `dev`/`main` directly.
 9. **`/finalize` before a PR to `dev`** — only the developer can run `/finalize` (the agent cannot invoke it).
-   It runs detekt, the Konsist tests, `./gradlew build`, `jacocoCoverageVerification`, the Android device tests on the
-   VerbeClair emulator and `/verify`, stops at the first failure, and on a full pass writes the commit it passed to
-   `.claude/state/finalize-pass` (gitignored). **The agent must never write that file by hand.** When a PR to `dev` is
+   It runs `scripts/finalize.sh` (detekt, the Konsist tests, `./gradlew build`, `jacocoCoverageVerification`, the Android
+   device tests on the VerbeClair emulator), stops at the first failure, and on a full pass the script writes the
+   commit it passed to `.claude/state/finalize-pass` (gitignored); then it runs `/verify` and the agent removes the
+   marker if that review finds a blocking problem. The developer can also run `! scripts/finalize.sh` directly; its
+   harness is `scripts/finalize-test.py`. **The agent must never write that file by hand.** When a PR to `dev` is
    due and there is no pass for the current `HEAD`, ask the developer to run `/finalize`, then open the PR with
    `gh pr create --base dev`. A new commit makes the pass stale, so it has to run again.
    Four Claude-only hooks and CI make up the gate: `ktlint-format.sh` formats each edited Kotlin file,

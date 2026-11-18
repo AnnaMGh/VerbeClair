@@ -108,7 +108,10 @@ able to invoke it; only the developer can. `/finalize` SHALL never use or modify
 
 ### Requirement: `/finalize` records a pass for one commit
 When every `/finalize` check passes, it SHALL record the commit it passed on. The record SHALL be local to the
-developer's checkout and SHALL NOT be committed. When any check fails, `/finalize` SHALL NOT record a pass.
+developer's checkout and SHALL NOT be committed. When any check fails, `/finalize` SHALL NOT record a pass. The
+mechanical checks SHALL run in `scripts/finalize.sh`, which alone records the pass and only when every one of them
+exits 0, so that the agent never decides or writes a pass. When the `/verify` review that follows finds a blocking
+problem, the recorded pass SHALL be removed.
 
 #### Scenario: All checks pass
 - **WHEN** every `/finalize` check passes on a commit
@@ -117,6 +120,10 @@ developer's checkout and SHALL NOT be committed. When any check fails, `/finaliz
 #### Scenario: A check fails
 - **WHEN** any `/finalize` check fails
 - **THEN** no pass is recorded and an earlier pass for another commit stays as it was
+
+#### Scenario: The review finds a blocking problem
+- **WHEN** the mechanical checks recorded a pass and `/verify` then reports a blocking finding
+- **THEN** the recorded pass is removed
 
 #### Scenario: New commit after a pass
 - **WHEN** a new commit is made after `/finalize` passed
