@@ -34,8 +34,9 @@ per-artifact rules and the definition of done. If anything here disagrees with i
    due and there is no pass for the current `HEAD`, ask the developer to run `/finalize`, then open the PR with
    `gh pr create --base dev`. A new commit makes the pass stale, so it has to run again.
    Four Claude-only hooks and CI make up the gate: `ktlint-format.sh` formats each edited Kotlin file,
-   `stop-checks.sh` runs detekt, ktlint, Konsist and the unit tests when the agent stops after changing Kotlin or
-   Gradle files (it blocks at most three times in a row), `push-checks.sh` runs the coverage floors, the iOS simulator
+   `stop-checks.sh` runs detekt, ktlint, Konsist, the detekt rule tests and the JVM and Android host unit tests
+   (not the iOS simulator tests) when the agent stops after changing Kotlin or Gradle files (it blocks at most three
+   times in a row), `push-checks.sh` runs the coverage floors, the iOS simulator
    tests and the device tests on `emulator-5574` before the agent's `git push` (it needs no `/finalize` pass, skips pushes with no Kotlin or
    Gradle change, and remembers a passed `HEAD` in `.claude/state/push-pass`). The checks run on the working tree, so
    it denies, without running them, a push of a branch other than the checked-out one that carries Kotlin or Gradle

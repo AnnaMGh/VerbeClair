@@ -179,4 +179,4 @@ analysis tools SHALL keep enforcing the same rules through the project's own Gra
 
 #### Scenario: Build after removal
 - **WHEN** the full build runs from the repository root
-- **THEN** detekt, ktlint, the Konsist tests and the unit tests run and pass
+- **THEN** detekt, ktlint, the Konsist tests, the detekt rule tests and the host unit tests run and pass
