@@ -29,9 +29,10 @@ ktlint and SHALL report to the agent any violation that formatting cannot fix. O
 - **THEN** the edit is allowed and no error is raised
 
 ### Requirement: Check the agent's work when it stops
-When the agent stops after changing Kotlin, Gradle, detekt or editorconfig files, the project SHALL run detekt, the
-Konsist architecture tests and the project build with its JVM and host unit tests, and SHALL send the agent back to
-fix any failure with a trimmed failure report. The check SHALL stop blocking after three consecutive blocked stops so
+When the agent stops after changing Kotlin, Gradle, detekt or editorconfig files, the project SHALL run detekt, ktlint,
+the Konsist architecture tests, the detekt rule tests and the JVM and Android host unit tests only (`jvmTest` and
+`testAndroidHostTest`), and SHALL send the agent back to fix any failure with a trimmed failure report. The check SHALL
+NOT run the full project build, `check` or the iOS simulator tests; the push check runs those, so this check stays fast. The check SHALL stop blocking after three consecutive blocked stops so
 the agent can never be stuck in a loop.
 
 #### Scenario: Failing static analysis
