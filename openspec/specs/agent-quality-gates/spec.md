@@ -29,9 +29,10 @@ ktlint and SHALL report to the agent any violation that formatting cannot fix. O
 - **THEN** the edit is allowed and no error is raised
 
 ### Requirement: Check the agent's work when it stops
-When the agent stops after changing Kotlin, Gradle, detekt or editorconfig files, the project SHALL run detekt, the
-Konsist architecture tests and the project build with its JVM and host unit tests, and SHALL send the agent back to
-fix any failure with a trimmed failure report. The check SHALL stop blocking after three consecutive blocked stops so
+When the agent stops after changing Kotlin, Gradle, detekt or editorconfig files, the project SHALL run detekt, ktlint,
+the Konsist architecture tests, the detekt rule tests and the JVM and Android host unit tests only (`jvmTest` and
+`testAndroidHostTest`), and SHALL send the agent back to fix any failure with a trimmed failure report. The check SHALL
+NOT run the full project build, `check` or the iOS simulator tests; the push check runs those, so this check stays fast. The check SHALL stop blocking after three consecutive blocked stops so
 the agent can never be stuck in a loop.
 
 #### Scenario: Failing static analysis
@@ -107,7 +108,10 @@ able to invoke it; only the developer can. `/finalize` SHALL never use or modify
 
 ### Requirement: `/finalize` records a pass for one commit
 When every `/finalize` check passes, it SHALL record the commit it passed on. The record SHALL be local to the
-developer's checkout and SHALL NOT be committed. When any check fails, `/finalize` SHALL NOT record a pass.
+developer's checkout and SHALL NOT be committed. When any check fails, `/finalize` SHALL NOT record a pass. The
+mechanical checks SHALL run in `scripts/finalize.sh`, which alone records the pass and only when every one of them
+exits 0, so that the agent never decides or writes a pass. When the `/verify` review that follows finds a blocking
+problem, the recorded pass SHALL be removed.
 
 #### Scenario: All checks pass
 - **WHEN** every `/finalize` check passes on a commit
@@ -116,6 +120,10 @@ developer's checkout and SHALL NOT be committed. When any check fails, `/finaliz
 #### Scenario: A check fails
 - **WHEN** any `/finalize` check fails
 - **THEN** no pass is recorded and an earlier pass for another commit stays as it was
+
+#### Scenario: The review finds a blocking problem
+- **WHEN** the mechanical checks recorded a pass and `/verify` then reports a blocking finding
+- **THEN** the recorded pass is removed
 
 #### Scenario: New commit after a pass
 - **WHEN** a new commit is made after `/finalize` passed
@@ -178,4 +186,4 @@ analysis tools SHALL keep enforcing the same rules through the project's own Gra
 
 #### Scenario: Build after removal
 - **WHEN** the full build runs from the repository root
-- **THEN** detekt, ktlint, the Konsist tests and the unit tests run and pass
+- **THEN** detekt, ktlint, the Konsist tests, the detekt rule tests and the host unit tests run and pass

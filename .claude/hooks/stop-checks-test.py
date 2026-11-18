@@ -76,6 +76,15 @@ def case_kotlin_change_passes(root):
     return result.returncode == 0 and gradle_calls(root) == 1
 
 
+def case_runs_the_host_tests_and_not_the_ios_ones(root):
+    write(root, "A.kt")
+    stop(root)
+    tasks = open(os.path.join(root, "calls.log")).read().split()
+    wanted = {"detekt", "ktlintCheck", ":tooling:konsist:test", ":tooling:detekt-rules:test", "jvmTest",
+              "testAndroidHostTest"}
+    return wanted <= set(tasks) and not {"check", "allTests", "iosSimulatorArm64Test"} & set(tasks)
+
+
 def case_kotlin_change_fails_and_blocks(root):
     write(root, "A.kt")
     write(root, "fail")
@@ -183,6 +192,7 @@ def case_format_fixable_violation_is_silent(root):
 CASES = [
     ("stop: Markdown-only change runs nothing", case_markdown_only),
     ("stop: Kotlin change, checks pass", case_kotlin_change_passes),
+    ("stop: runs the host tests, including detekt-rules, and no iOS tests", case_runs_the_host_tests_and_not_the_ios_ones),
     ("stop: Kotlin change, checks fail, stop blocked with the failure", case_kotlin_change_fails_and_blocks),
     ("stop: the fourth stop is allowed and reports the failure", case_fourth_stop_allowed),
     ("stop: a new turn restarts the block count", case_new_turn_resets_counter),
