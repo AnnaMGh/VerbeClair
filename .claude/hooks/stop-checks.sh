@@ -1,6 +1,7 @@
 #!/bin/sh
 # Stop hook: when the agent stops after changing Kotlin, Gradle, detekt or editorconfig files, run detekt, ktlint, the
-# Konsist tests and the project's JVM and host unit tests, and send the agent back to fix any failure.
+# Konsist tests and the JVM and Android host unit tests (not the iOS simulator tests), and send the agent back to fix
+# any failure.
 #
 # Reads the hook event (JSON) on stdin. Exit 2 with a trimmed failure report on stderr blocks the stop; exit 0 allows it.
 #
@@ -73,8 +74,9 @@ if [ -z "${DEVELOPER_DIR:-}" ] && [ -d /Applications/Xcode.app/Contents/Develope
     export DEVELOPER_DIR
 fi
 
-# Cheapest first: static analysis and architecture tests, then the unit tests of every module.
-output=$(cd "$root" && ./gradlew --console=plain --continue detekt ktlintCheck :tooling:konsist:test check 2>&1)
+# Cheapest first: static analysis and architecture tests, then the host unit tests (jvmTest, testAndroidHostTest).
+# Not `check`/`allTests`: they also build and run the iOS simulator tests, which push-checks.sh runs before the push.
+output=$(cd "$root" && ./gradlew --console=plain --continue detekt ktlintCheck :tooling:konsist:test jvmTest testAndroidHostTest 2>&1)
 status=$?
 
 if [ "$status" -eq 0 ]; then
@@ -101,7 +103,7 @@ fi
 printf '%s\n' "$blocks" >"$counter"
 {
     printf 'Stop checks failed (block %s of %s). Fix these before finishing:\n\n%s\n\n' "$blocks" "$max_blocks" "$report"
-    printf 'Re-run: ./gradlew --continue detekt ktlintCheck :tooling:konsist:test check\n'
+    printf 'Re-run: ./gradlew --continue detekt ktlintCheck :tooling:konsist:test jvmTest testAndroidHostTest\n'
     printf 'Formatting-only violations: ./gradlew ktlintFormat\n'
 } >&2
 exit 2
