@@ -24,7 +24,7 @@ case "$*" in
 *connectedAndroidDeviceTest*)
     if [ -f "$d/device-fail" ]; then
         mkdir -p "$d/shared/build/outputs/androidTest-results/connected"
-        printf '<testsuite><testcase name="t" classname="%s"><failure>boom</failure></testcase></testsuite>' \\
+        printf '<testsuite>\\n<testcase name="ok" classname="p.AppShellTest" time="0.1" />\\n<testcase name="t" classname="%s"><failure>boom</failure></testcase>\\n</testsuite>' \\
             "$(cat "$d/device-fail")" >"$d/shared/build/outputs/androidTest-results/connected/r.xml"
         [ -f "$d/once" ] && rm -f "$d/device-fail" "$d/once"
         echo "> There were failing tests"

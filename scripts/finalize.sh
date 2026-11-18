@@ -45,16 +45,20 @@ blocked() { # $1 = step, $2 = reason, $3 = optional output
 failing_device_classes() {
     find "$root" -path '*/build/outputs/androidTest-results/*' -name '*.xml' -not -path '*/.git/*' 2>/dev/null |
         python3 -c '
-import re, sys
+import sys
+import xml.etree.ElementTree as ET
 classes = set()
 for path in sys.stdin.read().split("\n"):
     if not path:
         continue
-    text = open(path, errors="replace").read()
-    for case in re.findall(r"<testcase [^>]*?>.*?</testcase>", text, re.S):
-        if "<failure" in case or "<error" in case:
-            match = re.search(r"classname=\"([^\"]*)\"", case)
-            classes.add(match.group(1) if match else "?")
+    try:
+        root = ET.parse(path).getroot()
+    except (ET.ParseError, OSError):
+        classes.add("?")
+        continue
+    for case in root.iter("testcase"):
+        if case.find("failure") is not None or case.find("error") is not None:
+            classes.add(case.get("classname", "?"))
 print("\n".join(sorted(classes)))
 '
 }
