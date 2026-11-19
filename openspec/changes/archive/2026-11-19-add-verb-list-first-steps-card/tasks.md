@@ -1,6 +1,6 @@
 ## 1. Data and domain
 
-- [x] 1.1 Add `FirstStepsPreferences` (`closed: Flow<Boolean>`, `close()`) to `core/domain`, implement it on the app-settings DataStore in `core/data` as its own key (not in `ListPreferences`), register it in Koin, and verify a data test shows closed survives a new DataStore instance and defaults to false
+- [x] 1.1 Add `FirstStepsPreferences` (`closed: Flow<Boolean>`, `close()`) to `core/domain`, implement it on its own DataStore file in `core/data` that backup leaves out (not in `ListPreferences`), register it in Koin, and verify a data test shows closed survives a new DataStore instance and defaults to false
 - [x] 1.2 Add `TestScoreRepository.observeHasAnyAttempt()` with an `EXISTS` query on the user database, and verify a Room test: false when empty, true after one test attempt, true after one review attempt, true for attempts inserted by an import, and it reacts to the first insert
 - [x] 1.3 Make sure the closed flag is not stored in the user database and is not read by any export path, and verify with a test (or a Konsist rule if one fits) that `FirstStepsPreferences` is not referenced from the user-data module
 - [x] 1.4 Provide the top 10 verbs (most frequent, non-reflexive, 10 items) from `VerbCatalog` and verify a test against the seeded test database returns the expected order and no reflexive verb

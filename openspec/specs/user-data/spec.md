@@ -123,7 +123,8 @@ file (S-13) count like any other attempt.
 ### Requirement: First steps card closed flag
 Whether the user closed the first steps card (OB-1) SHALL be kept after the app is closed. It is an app setting, not user
 data: it is stored outside the user database, it SHALL NOT be part of any exported file, an import SHALL NOT change it,
-and it is cleared when the app is reinstalled.
+and it is cleared when the app is reinstalled, so it SHALL be kept in a store that the platform's backup and restore
+leave out.
 
 #### Scenario: Closed card stays closed
 - **WHEN** the user closes the card and reopens the app

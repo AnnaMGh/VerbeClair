@@ -59,7 +59,7 @@ with the list and is not a sticky header.
 
 #### Scenario: Grouped list
 - **WHEN** the list is grouped
-- **THEN** the card is still the first item, above the first sticky section header
+- **THEN** the card is hidden, and it is shown again when the grouping is removed
 
 #### Scenario: Other states
 - **WHEN** the Favourites tab is selected, or the empty result, no-data, no-favourites or loading skeleton is shown

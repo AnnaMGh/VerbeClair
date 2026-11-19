@@ -29,7 +29,7 @@ The card is `item(key = "first-steps", span = full width)` before the paged rows
 *Alternative:* put all conditions in the screen. Rejected: harder to unit test; the ViewModel part is testable with fakes.
 
 ### D3. Two small sources feed the rule
-- **Closed flag:** a new small interface in `core/domain` (`FirstStepsPreferences`: `closed: Flow<Boolean>`, `close()`), backed by the existing app-settings DataStore in `core/data` as a separate key. It is not part of `ListPreferences`, because it is not a list choice, and it is never read by export code.
+- **Closed flag:** a new small interface in `core/domain` (`FirstStepsPreferences`: `closed: Flow<Boolean>`, `close()`), backed by its own DataStore file in `core/data` (`first_steps.preferences_pb`, left out of backup), not the app-settings file. It is not part of `ListPreferences`, because it is not a list choice, and it is never read by export code.
 - **Any attempt:** `TestScoreRepository.observeHasAnyAttempt(): Flow<Boolean>`, backed by a Room query (`EXISTS`) on the attempts table in the user database. It reads imported attempts the same way as any other, so S-13 needs no special case.
 Both flows are combined with the list state in the ViewModel.
 
@@ -62,8 +62,8 @@ Phone portrait and tablet use `columns = 1`, so the card is simply the first gri
 - [The second button has the same colour as the card, so it looks like plain text; a user might not see it as a button] → it follows the Figma design; the 40 dp height and the 44 dp target keep it tappable, and the Tonal style is kept in code so it follows the theme.
 - [Reading the top 10 through paging may emit loading states] → the panel shows nothing until the 10 rows are loaded, and D5 allows a small catalogue method if needed.
 - [Hiding the card on "first page loading" depends on paging load state] → covered by a UI test with a slow fake page.
-- [Extra DataStore key] → one boolean; no migration. Reinstall clears it, as required.
+- [Auto Backup would restore the flag after a reinstall] → the flag has its own DataStore file, kept in `noBackupFilesDir` on Android and in an iCloud-excluded Application Support folder on iOS, so reinstall clears it, as required. The list choices stay in the backed-up app-settings file.
 
 ## Migration Plan
 
-None. No schema change, no data migration. The new DataStore key defaults to "not closed". Rolling back means removing the card; the unused key is harmless.
+None. No schema change, no data migration. The new DataStore file defaults to "not closed". Rolling back means removing the card; the unused file is harmless.
