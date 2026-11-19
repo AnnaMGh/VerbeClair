@@ -109,6 +109,30 @@ class VerbListRootTest {
             assertEquals(listOf("etre"), tested)
         }
 
+    @Test
+    fun theFirstStepsTestEtreButtonOpensTheTestSetupForEtreOnly() =
+        runComposeUiTest {
+            val opened = mutableListOf<String>()
+            val tested = mutableListOf<String>()
+            setContent {
+                VerbeClairTheme {
+                    VerbListRoot(
+                        onVerbClick = { opened += it },
+                        onTestClick = { tested += it },
+                        viewModel = viewModel,
+                        layout = WindowLayout.Compact,
+                    )
+                }
+            }
+            waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("Test être")).fetchSemanticsNodes().isNotEmpty() }
+
+            onNode(hasText("Test être")).performClick()
+
+            waitForIdle()
+            assertEquals(listOf("etre"), tested)
+            assertEquals(emptyList(), opened)
+        }
+
     /**
      * Rotating a phone switches between the Compact and PhoneLandscape structures. On iOS (and on an
      * Android resize without recreation) the composition is kept, so only the layout changes.
