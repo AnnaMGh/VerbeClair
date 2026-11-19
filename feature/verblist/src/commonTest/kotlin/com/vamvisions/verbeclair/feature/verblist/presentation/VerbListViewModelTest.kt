@@ -36,6 +36,7 @@ class VerbListViewModelTest {
     private val scores = FakeTestScoreRepository(mapOf("aller" to 92))
     private val preferences = FakeListPreferences()
     private val sync = FakeDataSyncTrigger()
+    private val firstSteps = FakeFirstStepsPreferences()
 
     @BeforeTest
     fun setUp() {
@@ -47,7 +48,7 @@ class VerbListViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = VerbListViewModel(catalog, favourites, scores, preferences, sync)
+    private fun viewModel() = VerbListViewModel(catalog, favourites, scores, preferences, sync, firstSteps)
 
     /** Collects the rows as the screen does, so the list query runs. */
     private fun TestScope.collectRows(viewModel: VerbListViewModel) {
@@ -78,7 +79,7 @@ class VerbListViewModelTest {
         runTest {
             val slowFavourites = FakeFavouritesRepository(setOf("aller"), loaded = false)
             preferences.storedTab.value = ListTab.FAVOURITES
-            val viewModel = VerbListViewModel(catalog, slowFavourites, scores, preferences, sync)
+            val viewModel = VerbListViewModel(catalog, slowFavourites, scores, preferences, sync, firstSteps)
             collectRows(viewModel)
             advanceUntilIdle()
             assertTrue(catalog.queries.isEmpty())
@@ -92,7 +93,7 @@ class VerbListViewModelTest {
     fun allTabDoesNotWaitForTheFavourites() =
         runTest {
             val slowFavourites = FakeFavouritesRepository(setOf("aller"), loaded = false)
-            val viewModel = VerbListViewModel(catalog, slowFavourites, scores, preferences, sync)
+            val viewModel = VerbListViewModel(catalog, slowFavourites, scores, preferences, sync, firstSteps)
             collectRows(viewModel)
             advanceUntilIdle()
 
@@ -361,4 +362,155 @@ class VerbListViewModelTest {
         val ARRIVER = VerbListItem("arriver", "arriver", VerbGroup.I, false, Auxiliary.ETRE, 500.0)
         val ALLER = VerbListItem("aller", "aller", VerbGroup.III, false, Auxiliary.ETRE, 1_300.0)
     }
+
+    @Test
+    fun firstStepsAreHiddenUntilBothFlowsHaveEmitted() =
+        runTest {
+            assertFalse(VerbListState().showFirstSteps)
+            assertFalse(VerbListState(firstStepsClosed = false).showFirstSteps)
+            assertFalse(VerbListState(hasAnyAttempt = false).showFirstSteps)
+            assertTrue(VerbListState(firstStepsClosed = false, hasAnyAttempt = false).showFirstSteps)
+        }
+
+    @Test
+    fun freshInstallShowsTheFirstSteps() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            assertTrue(viewModel.state.value.showFirstSteps)
+        }
+
+    @Test
+    fun searchingHidesTheFirstStepsAndClearingBringsThemBack() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.onAction(VerbListAction.OnQueryChange("su"))
+            assertFalse(viewModel.state.value.showFirstSteps)
+            viewModel.onAction(VerbListAction.OnClearQuery)
+            assertTrue(viewModel.state.value.showFirstSteps)
+        }
+
+    @Test
+    fun aFilterHidesTheFirstSteps() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.onAction(VerbListAction.OnToggleReflexive(false))
+            assertFalse(viewModel.state.value.showFirstSteps)
+        }
+
+    @Test
+    fun favouritesTabHidesTheFirstSteps() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.onAction(VerbListAction.OnTabSelect(ListTab.FAVOURITES))
+            assertFalse(viewModel.state.value.showFirstSteps)
+        }
+
+    @Test
+    fun emptyDatabaseHidesTheFirstSteps() =
+        runTest {
+            catalog.empty.value = true
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            assertFalse(viewModel.state.value.showFirstSteps)
+        }
+
+    @Test
+    fun aClosedCardStaysHidden() =
+        runTest {
+            val closed = FakeFirstStepsPreferences(closed = true)
+            val viewModel = VerbListViewModel(catalog, favourites, scores, preferences, sync, closed)
+            advanceUntilIdle()
+
+            assertFalse(viewModel.state.value.showFirstSteps)
+        }
+
+    @Test
+    fun theFirstAttemptHidesTheFirstSteps() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+            assertTrue(viewModel.state.value.showFirstSteps)
+
+            scores.hasAny.value = true
+            assertFalse(viewModel.state.value.showFirstSteps)
+        }
+
+    @Test
+    fun importedAttemptsHideTheFirstSteps() =
+        runTest {
+            val imported = FakeTestScoreRepository(hasAnyAttempt = true)
+            val viewModel = VerbListViewModel(catalog, favourites, imported, preferences, sync, firstSteps)
+            advanceUntilIdle()
+
+            assertFalse(viewModel.state.value.showFirstSteps)
+        }
+
+    @Test
+    fun groupingAndSortHideTheFirstStepsUntilTheirChipsAreRemoved() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.onAction(VerbListAction.OnGroupBySelect(GroupBy.GROUP))
+            assertFalse(viewModel.state.value.showFirstSteps)
+            viewModel.onAction(VerbListAction.OnRemoveChoice(ActiveChoice.Grouping(GroupBy.GROUP)))
+            assertTrue(viewModel.state.value.showFirstSteps)
+
+            viewModel.onAction(VerbListAction.OnSortSelect(SortOrder.Z_TO_A))
+            assertFalse(viewModel.state.value.showFirstSteps)
+            viewModel.onAction(VerbListAction.OnReset)
+            assertTrue(viewModel.state.value.showFirstSteps)
+        }
+
+    @Test
+    fun closingTheCardStoresTheFlagAndHidesIt() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.onAction(VerbListAction.OnFirstStepsClose)
+            advanceUntilIdle()
+
+            assertTrue(firstSteps.storedClosed.value)
+            assertFalse(viewModel.state.value.showFirstSteps)
+        }
+
+    @Test
+    fun testEtreRaisesTheTestSetupEventForEtre() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.events.test {
+                viewModel.onAction(VerbListAction.OnFirstStepsTestEtre)
+                assertEquals(VerbListEvent.OpenTestSetup("etre"), awaitItem())
+            }
+            assertNull(viewModel.state.value.selectedSlug)
+        }
+
+    @Test
+    fun mostCommonFirstSortsByFrequencyAndHidesTheCardUntilTheChipIsRemoved() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.onAction(VerbListAction.OnFirstStepsMostCommon)
+
+            assertEquals(SortOrder.MOST_FREQUENT, viewModel.state.value.choices.sort)
+            assertEquals(listOf(ActiveChoice.Sort(SortOrder.MOST_FREQUENT)), viewModel.state.value.activeChoices)
+            assertEquals(SortOrder.MOST_FREQUENT, preferences.storedChoices.value.sort)
+            assertFalse(viewModel.state.value.showFirstSteps)
+
+            viewModel.onAction(VerbListAction.OnRemoveChoice(ActiveChoice.Sort(SortOrder.MOST_FREQUENT)))
+            assertTrue(viewModel.state.value.showFirstSteps)
+        }
 }

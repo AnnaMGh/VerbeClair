@@ -66,6 +66,7 @@ kotlin {
             implementation(project(":core:data"))
             implementation(project(":core:database"))
             implementation(libs.kotlin.test)
+            implementation(libs.assertk)
             implementation(libs.compose.uiTest)
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.turbine)

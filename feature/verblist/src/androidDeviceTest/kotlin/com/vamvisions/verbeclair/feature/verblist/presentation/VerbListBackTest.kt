@@ -5,6 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runAndroidComposeUiTest
@@ -66,7 +68,8 @@ class VerbListBackTest {
                     }
                 }
                 waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("être")).fetchSemanticsNodes().isNotEmpty() }
-                onNode(hasText("être")).performClick()
+                // The first steps card and the top 10 panel also show "être"; the tap goes to the cell in the list.
+                onNode(hasText("être") and hasAnyAncestor(hasTestTag(VerbListTestTags.GRID))).performClick()
                 assertEquals("etre", viewModel.state.value.selectedSlug)
                 waitForIdle() // the back handler is enabled once the screen shows the selection
 

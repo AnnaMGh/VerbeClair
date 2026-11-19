@@ -63,6 +63,10 @@ fun VerbListRoot(
             VerbListEvent.FavouriteUpdateFailed -> {
                 snackbarHostState.showSnackbar(favouriteFailedMessage, duration = SnackbarDuration.Short)
             }
+
+            is VerbListEvent.OpenTestSetup -> {
+                onTestClick(event.slug)
+            }
         }
     }
 

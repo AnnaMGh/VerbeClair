@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -49,6 +50,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import com.vamvisions.verbeclair.core.designsystem.component.BottomSheetHandle
+import com.vamvisions.verbeclair.core.designsystem.component.CardActionsAlignment
 import com.vamvisions.verbeclair.core.designsystem.component.EmptyState
 import com.vamvisions.verbeclair.core.designsystem.component.IconButtonStyle
 import com.vamvisions.verbeclair.core.designsystem.component.ListTabs
@@ -134,15 +136,21 @@ fun VerbListScreen(
         isBackEnabled = layout == WindowLayout.ListDetail && isMediumWidth && state.selectedSlug != null,
         onBackCompleted = { onAction(VerbListAction.OnClearSelection) },
     )
+
     val onCellClick: (String) -> Unit = { slug ->
         onAction(VerbListAction.OnSelectVerb(slug))
         onVerbClick(slug)
     }
+
+    // The ViewModel's rules plus the loaded, non-empty first page; the card and the tablet panel share this value.
+    val showFirstSteps = state.showFirstSteps && verbs.itemCount > 0
+
     val screenModifier =
         modifier
             .fillMaxSize()
             .flagScreenBackground()
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.End))
+
     when (layout) {
         WindowLayout.ListDetail -> {
             Row(screenModifier) {
@@ -151,6 +159,7 @@ fun VerbListScreen(
                     verbs = verbs,
                     columns = 1,
                     combinedTopRow = false,
+                    showFirstSteps = showFirstSteps,
                     selectedSlug = state.selectedSlug,
                     // The rail and the right pane are next to the list; the list scrolls above the navigation bar.
                     bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
@@ -162,7 +171,11 @@ fun VerbListScreen(
                     modifier = Modifier.width(ListPaneWidth).fillMaxHeight(),
                 )
                 VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                DetailPlaceholder(Modifier.weight(1f).fillMaxHeight().testTag(VerbListTestTags.DETAIL_PANE))
+                DetailPane(
+                    topVerbs = state.topVerbs.takeIf { showFirstSteps && state.selectedSlug == null }.orEmpty(),
+                    onVerbClick = onCellClick,
+                    modifier = Modifier.weight(1f).fillMaxHeight().testTag(VerbListTestTags.DETAIL_PANE),
+                )
             }
         }
 
@@ -172,6 +185,7 @@ fun VerbListScreen(
                 verbs = verbs,
                 columns = if (layout == WindowLayout.PhoneLandscape) 2 else 1,
                 combinedTopRow = layout == WindowLayout.PhoneLandscape,
+                showFirstSteps = showFirstSteps,
                 selectedSlug = null,
                 bottomPadding =
                     if (layout == WindowLayout.PhoneLandscape) {
@@ -189,6 +203,7 @@ fun VerbListScreen(
             )
         }
     }
+
     if (state.isSheetOpen) {
         ListControlsSheet(choices = state.choices, onAction = onAction)
     }
@@ -200,6 +215,7 @@ private fun ListPane(
     verbs: LazyPagingItems<VerbListRowUi>,
     columns: Int,
     combinedTopRow: Boolean,
+    showFirstSteps: Boolean,
     selectedSlug: String?,
     bottomPadding: Dp,
     gridState: LazyGridState,
@@ -231,6 +247,7 @@ private fun ListPane(
                 state = state,
                 verbs = verbs,
                 columns = columns,
+                showFirstSteps = showFirstSteps,
                 selectedSlug = selectedSlug,
                 bottomPadding = bottomPadding,
                 gridState = gridState,
@@ -333,6 +350,7 @@ private fun ListContent(
     state: VerbListState,
     verbs: LazyPagingItems<VerbListRowUi>,
     columns: Int,
+    showFirstSteps: Boolean,
     selectedSlug: String?,
     bottomPadding: Dp,
     gridState: LazyGridState,
@@ -397,9 +415,23 @@ private fun ListContent(
                 modifier = Modifier.fillMaxSize().testTag(VerbListTestTags.GRID),
                 contentPadding = PaddingValues(bottom = bottomPadding),
             ) {
+                if (showFirstSteps) firstStepsItem(columns, onAction)
                 verbRows(verbs, columns, selectedSlug, skeletonDelay, onAction, onCellClick, onTestClick)
             }
         }
+    }
+}
+
+/**
+ * The first steps card: a full-span item before the paged rows (design D1), so it spans both columns on phone
+ * landscape and scrolls away with the list. Its actions are centred on phone landscape (Figma PL-07).
+ */
+private fun LazyGridScope.firstStepsItem(columns: Int, onAction: (VerbListAction) -> Unit) {
+    item(key = FIRST_STEPS_KEY, span = { GridItemSpan(maxLineSpan) }, contentType = ROW_FIRST_STEPS) {
+        FirstStepsCardItem(
+            alignment = if (columns > 1) CardActionsAlignment.Center else CardActionsAlignment.Start,
+            onAction = onAction,
+        )
     }
 }
 
@@ -545,7 +577,25 @@ private fun CentredEmptyState(aboveBottomBar: Boolean, content: @Composable () -
 /** The shell's bottom bar height (Figma 52:3195), which the Compact empty states are centred against. */
 private val BottomBarHeight = 80.dp
 
-/** The tablet right pane until verb details exist: the Neutral empty state, title only (N-15). */
+/**
+ * The tablet right pane until verb details exist: the top 10 panel while the first steps card is shown and no verb
+ * is selected ([topVerbs] not empty), otherwise the Neutral empty state (N-15).
+ */
+@Composable
+private fun DetailPane(
+    topVerbs: List<VerbUi>,
+    onVerbClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (topVerbs.isEmpty()) {
+        DetailPlaceholder(modifier)
+    } else {
+        // Figma TP-07 (195:18187): 16 dp above the panel.
+        TopVerbsPanel(topVerbs, onVerbClick, modifier.padding(top = VerbeClairTheme.spacing.space16))
+    }
+}
+
+/** The tablet right pane empty state: title only (N-15). */
 @Composable
 private fun DetailPlaceholder(modifier: Modifier = Modifier) {
     Box(modifier, contentAlignment = Alignment.Center) {
@@ -563,6 +613,8 @@ private fun DetailPlaceholder(modifier: Modifier = Modifier) {
 private const val ROW_HEADER = "header"
 private const val ROW_VERB = "verb"
 private const val ROW_SKELETON = "skeleton"
+private const val ROW_FIRST_STEPS = "firstSteps"
+private const val FIRST_STEPS_KEY = "first-steps"
 
 // Screen previews, one per Figma state, in light and dark (design D13). Sizes are the Figma frames
 // without the status bar and the bottom bar or rail, which the app shell draws.
@@ -1023,6 +1075,139 @@ private fun L03GroupedRomanianPreview() {
             state = VerbListState(choices = GroupedChoices, favouritesCount = 12),
             verbs = previewItems(PreviewData.grouped),
             layout = WindowLayout.Compact,
+            onAction = {},
+            onVerbClick = {},
+            onTestClick = {},
+        )
+    }
+}
+
+// First steps card (OB-1): one preview per Figma frame, in light and dark. TP-07 / TL-07 also show the top 10 panel
+// in the right pane, with nothing selected.
+private val FirstStepsState = VerbListState(favouritesCount = 12, firstStepsClosed = false, hasAnyAttempt = false)
+private val FirstStepsTabletState = FirstStepsState.copy(topVerbs = PreviewData.topVerbs)
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=152-15348
+@Preview(widthDp = 393, heightDp = 728)
+@Composable
+private fun L10FirstStepsLightPreview() {
+    ScreenPreview(darkTheme = false) {
+        VerbListScreen(
+            state = FirstStepsState,
+            verbs = previewItems(PreviewData.default),
+            layout = WindowLayout.Compact,
+            onAction = {},
+            onVerbClick = {},
+            onTestClick = {},
+        )
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=154-16242
+@Preview(widthDp = 393, heightDp = 728)
+@Composable
+private fun L10FirstStepsDarkPreview() {
+    ScreenPreview(darkTheme = true) {
+        VerbListScreen(
+            state = FirstStepsState,
+            verbs = previewItems(PreviewData.default),
+            layout = WindowLayout.Compact,
+            onAction = {},
+            onVerbClick = {},
+            onTestClick = {},
+        )
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=195-17561
+@Preview(widthDp = 772, heightDp = 393)
+@Composable
+private fun PL07FirstStepsLightPreview() {
+    ScreenPreview(darkTheme = false) {
+        VerbListScreen(
+            state = FirstStepsState,
+            verbs = previewItems(PreviewData.default),
+            layout = WindowLayout.PhoneLandscape,
+            onAction = {},
+            onVerbClick = {},
+            onTestClick = {},
+        )
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=195-17859
+@Preview(widthDp = 772, heightDp = 393)
+@Composable
+private fun PL07FirstStepsDarkPreview() {
+    ScreenPreview(darkTheme = true) {
+        VerbListScreen(
+            state = FirstStepsState,
+            verbs = previewItems(PreviewData.default),
+            layout = WindowLayout.PhoneLandscape,
+            onAction = {},
+            onVerbClick = {},
+            onTestClick = {},
+        )
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=195-18161
+@Preview(widthDp = 754, heightDp = 1150)
+@Composable
+private fun TP07FirstStepsLightPreview() {
+    ScreenPreview(darkTheme = false) {
+        VerbListScreen(
+            state = FirstStepsTabletState,
+            verbs = previewItems(PreviewData.tablet),
+            layout = WindowLayout.ListDetail,
+            onAction = {},
+            onVerbClick = {},
+            onTestClick = {},
+        )
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=195-18557
+@Preview(widthDp = 754, heightDp = 1150)
+@Composable
+private fun TP07FirstStepsDarkPreview() {
+    ScreenPreview(darkTheme = true) {
+        VerbListScreen(
+            state = FirstStepsTabletState,
+            verbs = previewItems(PreviewData.tablet),
+            layout = WindowLayout.ListDetail,
+            onAction = {},
+            onVerbClick = {},
+            onTestClick = {},
+        )
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=195-18953
+@Preview(widthDp = 1114, heightDp = 790)
+@Composable
+private fun TL07FirstStepsLightPreview() {
+    ScreenPreview(darkTheme = false) {
+        VerbListScreen(
+            state = FirstStepsTabletState,
+            verbs = previewItems(PreviewData.tablet),
+            layout = WindowLayout.ListDetail,
+            onAction = {},
+            onVerbClick = {},
+            onTestClick = {},
+        )
+    }
+}
+
+// Figma: https://www.figma.com/design/1TyF6efL7m5d6DSTktnnLy/VerbeClair-%E2%80%94-Design-System---App?node-id=195-19327
+@Preview(widthDp = 1114, heightDp = 790)
+@Composable
+private fun TL07FirstStepsDarkPreview() {
+    ScreenPreview(darkTheme = true) {
+        VerbListScreen(
+            state = FirstStepsTabletState,
+            verbs = previewItems(PreviewData.tablet),
+            layout = WindowLayout.ListDetail,
             onAction = {},
             onVerbClick = {},
             onTestClick = {},
