@@ -308,6 +308,42 @@ class VerbListViewModelTest {
         }
 
     @Test
+    fun anExistingDatabaseFillsTheTopVerbsFromTheCatalog() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            assertEquals(
+                listOf("arriver", "aller"),
+                viewModel.state.value.topVerbs
+                    .map { it.slug },
+            )
+        }
+
+    @Test
+    fun topVerbsAreReadAgainWhenTheVerbsArriveAfterASync() =
+        runTest {
+            catalog.verbs = emptyList()
+            catalog.empty.value = true
+            val viewModel = viewModel()
+            advanceUntilIdle()
+            assertTrue(
+                viewModel.state.value.topVerbs
+                    .isEmpty(),
+            )
+
+            catalog.verbs = listOf(ARRIVER, ALLER)
+            catalog.empty.value = false
+            advanceUntilIdle()
+
+            assertEquals(
+                listOf("arriver", "aller"),
+                viewModel.state.value.topVerbs
+                    .map { it.slug },
+            )
+        }
+
+    @Test
     fun anExistingDatabaseRequestsNoSync() =
         runTest {
             catalog.empty.value = false
