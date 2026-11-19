@@ -26,6 +26,7 @@ import assertk.assertThat
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThan
+import assertk.assertions.isGreaterThanOrEqualTo
 import assertk.assertions.isLessThan
 import assertk.assertions.isLessThanOrEqualTo
 import com.vamvisions.verbeclair.core.designsystem.theme.VerbeClairTheme
@@ -156,6 +157,21 @@ class FirstStepsScreenTest {
             show(shown.copy(tab = ListTab.FAVOURITES), rows = PreviewData.favourites)
 
             onNode(card).assertDoesNotExist()
+        }
+
+    @Test
+    fun aCardThatAppearsAfterTheFirstPageStaysInViewAtTheTop() =
+        runComposeUiTest {
+            // The two flags arrive after the first page was drawn: the card is added above the first verb.
+            show(shown.copy(firstStepsClosed = null, hasAnyAttempt = null))
+            onNode(card).assertDoesNotExist()
+
+            current = shown
+            waitForIdle()
+
+            onNode(card).assertExists()
+            assertCardAbove("abaisser")
+            assertThat(onNode(card).getBoundsInRoot().top, "card top").isGreaterThanOrEqualTo(0.dp)
         }
 
     @Test

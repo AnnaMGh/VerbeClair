@@ -37,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -144,6 +145,17 @@ fun VerbListScreen(
 
     // The ViewModel's rules plus the loaded, non-empty first page; the card and the tablet panel share this value.
     val showFirstSteps = state.showFirstSteps && verbs.itemCount > 0
+
+    // The card is a keyed item at index 0 and its flags can arrive after the first page was drawn. The grid then keeps
+    // the first verb in place and the card lands above the viewport; bring a list that sat at the top back to it.
+    LaunchedEffect(showFirstSteps) {
+        if (showFirstSteps) {
+            withFrameNanos { }
+            if (gridState.firstVisibleItemIndex == 1 && gridState.firstVisibleItemScrollOffset == 0) {
+                gridState.requestScrollToItem(0)
+            }
+        }
+    }
 
     val screenModifier =
         modifier
