@@ -8,4 +8,7 @@ interface PlatformPaths {
     val verbDatabaseFile: String
     val userDatabaseFile: String
     val dataStoreFile: String
+
+    /** The first steps card's DataStore file. Backup and restore leave it out, so a reinstall clears it (OB-1). */
+    val firstStepsFile: String
 }

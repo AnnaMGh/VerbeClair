@@ -43,6 +43,7 @@ class AppKoinGraphTest {
                         override val verbDatabaseFile = "$directory/verbs.db"
                         override val userDatabaseFile = "$directory/user.db"
                         override val dataStoreFile = "$directory/app_settings.preferences_pb"
+                        override val firstStepsFile = "$directory/first_steps.preferences_pb"
                     }
                 }
             }
@@ -64,6 +65,8 @@ class AppKoinGraphTest {
     fun resolvesPlatformPaths() {
         val paths = app.koin.get<PlatformPaths>()
         assertTrue(paths.verbDatabaseFile.startsWith(directory))
+        // The first steps flag must not share the backed-up app-settings file (OB-1).
+        assertTrue(paths.dataStoreFile != paths.firstStepsFile)
     }
 
     @Test

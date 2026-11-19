@@ -9,7 +9,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
-/** The first steps card's closed flag in the app-settings DataStore, under its own key (OB-1). */
+/**
+ * The first steps card's closed flag, in a DataStore file of its own that backup and restore leave out, so a
+ * reinstall clears it (OB-1). The app-settings file is backed up, so the flag must not live there.
+ */
 class DataStoreFirstStepsPreferences(private val dataStore: DataStore<Preferences>) : FirstStepsPreferences {
 
     override val closed: Flow<Boolean> =

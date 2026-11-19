@@ -34,6 +34,7 @@ import org.koin.dsl.module
 import org.koin.dsl.onClose
 
 private val AppSettingsScope = named("appSettingsScope")
+private val FirstStepsStore = named("firstStepsStore")
 
 /** The local stores and repositories (design D12). Paths come from [PlatformPaths] in `platformModule`. */
 val coreDataModule =
@@ -59,13 +60,17 @@ val coreDataModule =
         single<DataStore<Preferences>> {
             createAppSettingsDataStore(get<PlatformPaths>().dataStoreFile, get(AppSettingsScope))
         }
+        // Its own file, because the app-settings file is backed up and this flag must not outlive a reinstall (OB-1).
+        single<DataStore<Preferences>>(FirstStepsStore) {
+            createAppSettingsDataStore(get<PlatformPaths>().firstStepsFile, get(AppSettingsScope))
+        }
 
         // Repositories and preferences over those stores.
         single<VerbCatalog> { RoomVerbCatalog(get<VerbDatabaseProvider>()::get) }
         single<FavouritesRepository> { RoomFavouritesRepository(get(), get()) }
         singleOf(::RoomTestScoreRepository) { bind<TestScoreRepository>() }
         singleOf(::DataStoreListPreferences) { bind<ListPreferences>() }
-        singleOf(::DataStoreFirstStepsPreferences) { bind<FirstStepsPreferences>() }
+        single<FirstStepsPreferences> { DataStoreFirstStepsPreferences(get(FirstStepsStore)) }
 
         singleOf(::NoOpDataSyncTrigger) { bind<DataSyncTrigger>() }
     }
