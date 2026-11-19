@@ -4,6 +4,7 @@ import com.vamvisions.verbeclair.core.database.user.UserDatabase
 import com.vamvisions.verbeclair.core.domain.score.TestScoreRepository
 import com.vamvisions.verbeclair.core.domain.score.scorePercent
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
@@ -17,4 +18,6 @@ class RoomTestScoreRepository(database: UserDatabase) : TestScoreRepository {
             rows.mapNotNull { row -> scorePercent(row.correct, row.total)?.let { row.slug to it } }.toMap()
         }
     }
+
+    override fun observeHasAnyAttempt(): Flow<Boolean> = dao.observeHasAny().distinctUntilChanged()
 }

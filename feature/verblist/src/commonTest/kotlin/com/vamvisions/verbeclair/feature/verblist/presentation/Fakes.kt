@@ -4,6 +4,7 @@ import androidx.paging.LoadState
 import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import com.vamvisions.verbeclair.core.domain.favourite.FavouritesRepository
+import com.vamvisions.verbeclair.core.domain.preferences.FirstStepsPreferences
 import com.vamvisions.verbeclair.core.domain.preferences.ListPreferences
 import com.vamvisions.verbeclair.core.domain.result.DataError
 import com.vamvisions.verbeclair.core.domain.result.EmptyResult
@@ -33,6 +34,8 @@ class FakeVerbCatalog(var verbs: List<VerbListItem> = emptyList()) : VerbCatalog
         val result = if (query.tab == ListTab.FAVOURITES) verbs.filter { it.slug in query.favouriteSlugs } else verbs
         return flowOf(PagingData.from(result, COMPLETE))
     }
+
+    override suspend fun topVerbs(limit: Int): List<VerbListItem> = verbs.filterNot { it.reflexive }.take(limit)
 
     override fun isEmpty(): Flow<Boolean> = empty
 
@@ -81,13 +84,27 @@ class FakeFavouritesRepository(
     }
 }
 
-class FakeTestScoreRepository(private val scores: Map<String, Int> = emptyMap()) : TestScoreRepository {
+class FakeTestScoreRepository(private val scores: Map<String, Int> = emptyMap(), hasAnyAttempt: Boolean = false) : TestScoreRepository {
+    val hasAny = MutableStateFlow(hasAnyAttempt)
+
     /** The slugs of every call, in order. */
     val requested = mutableListOf<Set<String>>()
 
     override fun observeScores(slugs: Set<String>): Flow<Map<String, Int>> {
         requested += slugs
         return flowOf(scores.filterKeys { it in slugs })
+    }
+
+    override fun observeHasAnyAttempt(): Flow<Boolean> = hasAny
+}
+
+class FakeFirstStepsPreferences(closed: Boolean = false) : FirstStepsPreferences {
+    val storedClosed = MutableStateFlow(closed)
+
+    override val closed: Flow<Boolean> = storedClosed
+
+    override suspend fun close() {
+        storedClosed.value = true
     }
 }
 

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.vamvisions.verbeclair.core.data.di.PlatformPaths
 import com.vamvisions.verbeclair.core.domain.favourite.FavouritesRepository
+import com.vamvisions.verbeclair.core.domain.preferences.FirstStepsPreferences
 import com.vamvisions.verbeclair.core.domain.preferences.ListPreferences
 import com.vamvisions.verbeclair.core.domain.score.TestScoreRepository
 import com.vamvisions.verbeclair.core.domain.sync.DataSyncTrigger
@@ -71,6 +72,7 @@ class AppKoinGraphTest {
         app.koin.get<FavouritesRepository>()
         app.koin.get<TestScoreRepository>()
         app.koin.get<ListPreferences>()
+        app.koin.get<FirstStepsPreferences>()
         app.koin.get<DataSyncTrigger>()
     }
 

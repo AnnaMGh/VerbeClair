@@ -1,6 +1,10 @@
 package com.vamvisions.verbeclair.core.data.user
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import app.cash.turbine.test
+import assertk.assertThat
+import assertk.assertions.isFalse
+import assertk.assertions.isTrue
 import com.vamvisions.verbeclair.core.data.bundle.inMemoryUserDatabaseBuilder
 import com.vamvisions.verbeclair.core.database.user.UserDatabase
 import com.vamvisions.verbeclair.core.database.user.entity.AttemptLineEntity
@@ -125,6 +129,58 @@ class RoomTestScoreRepositoryTest {
             attempt("terminer", at = 2, correct = 10)
 
             assertEquals(mapOf("terminer" to 100), scores("terminer"))
+        }
+
+    @Test
+    fun noAttemptStoredMeansNoAttempt() =
+        runTest {
+            assertThat(repository.observeHasAnyAttempt().first()).isFalse()
+        }
+
+    @Test
+    fun oneTestAttemptCounts() =
+        runTest {
+            attempt("terminer", at = 1, correct = 1)
+
+            assertThat(repository.observeHasAnyAttempt().first()).isTrue()
+        }
+
+    @Test
+    fun oneReviewAttemptCounts() =
+        runTest {
+            attempt("terminer", at = 1, correct = 1, kind = AttemptKind.REVIEW)
+
+            assertThat(repository.observeHasAnyAttempt().first()).isTrue()
+        }
+
+    /** An import writes the same rows as a test, whatever the verb. */
+    @Test
+    fun anImportedAttemptOfAnyVerbCounts() =
+        runTest {
+            database.attemptDao().insert(
+                TestAttemptEntity(
+                    slug = "verb-from-another-device",
+                    kind = AttemptKind.TEST.name,
+                    startedAt = 1,
+                    selectedTenses = listOf(SelectedTense("INDICATIF", "PRESENT")),
+                ),
+                emptyList(),
+            )
+
+            assertThat(repository.observeHasAnyAttempt().first()).isTrue()
+        }
+
+    @Test
+    fun theFirstInsertIsObserved() =
+        runTest {
+            repository.observeHasAnyAttempt().test {
+                assertThat(awaitItem()).isFalse()
+
+                attempt("terminer", at = 1, correct = 1)
+
+                assertThat(awaitItem()).isTrue()
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     private suspend fun scores(vararg slugs: String) = repository.observeScores(slugs.toSet()).first()

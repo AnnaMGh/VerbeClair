@@ -28,4 +28,7 @@ fun lastTestScore(lines: List<LineResult>): Int? =
 interface TestScoreRepository {
     /** The last test score of each of [slugs] that has one. */
     fun observeScores(slugs: Set<String>): Flow<Map<String, Int>>
+
+    /** True once a test or review attempt is stored for any verb, imported ones included (OB-1). */
+    fun observeHasAnyAttempt(): Flow<Boolean>
 }

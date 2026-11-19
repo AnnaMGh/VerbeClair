@@ -11,6 +11,9 @@ interface VerbCatalog {
     /** True while the local verb database holds no verb (L-10). */
     fun isEmpty(): Flow<Boolean>
 
+    /** The [limit] most frequent verbs that are not reflexive, most frequent first (OB-1). */
+    suspend fun topVerbs(limit: Int): List<VerbListItem>
+
     /** The subset of [slugs] that exist in the local verb database. */
     fun existingSlugs(slugs: Set<String>): Flow<Set<String>>
 }

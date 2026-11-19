@@ -7,6 +7,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.vamvisions.verbeclair.core.data.bundle.BundledVerbDatabaseInstaller
 import com.vamvisions.verbeclair.core.data.bundle.BundledVerbDatabaseSource
 import com.vamvisions.verbeclair.core.data.bundle.ResourceBundledVerbDatabaseSource
+import com.vamvisions.verbeclair.core.data.preferences.DataStoreFirstStepsPreferences
 import com.vamvisions.verbeclair.core.data.preferences.DataStoreListPreferences
 import com.vamvisions.verbeclair.core.data.preferences.createAppSettingsDataStore
 import com.vamvisions.verbeclair.core.data.sync.NoOpDataSyncTrigger
@@ -16,6 +17,7 @@ import com.vamvisions.verbeclair.core.data.verb.RoomVerbCatalog
 import com.vamvisions.verbeclair.core.data.verb.VerbDatabaseProvider
 import com.vamvisions.verbeclair.core.database.user.UserDatabase
 import com.vamvisions.verbeclair.core.domain.favourite.FavouritesRepository
+import com.vamvisions.verbeclair.core.domain.preferences.FirstStepsPreferences
 import com.vamvisions.verbeclair.core.domain.preferences.ListPreferences
 import com.vamvisions.verbeclair.core.domain.score.TestScoreRepository
 import com.vamvisions.verbeclair.core.domain.sync.DataSyncTrigger
@@ -58,10 +60,13 @@ val coreDataModule =
             createAppSettingsDataStore(get<PlatformPaths>().dataStoreFile, get(AppSettingsScope))
         }
 
+        // Repositories and preferences over those stores.
         single<VerbCatalog> { RoomVerbCatalog(get<VerbDatabaseProvider>()::get) }
         single<FavouritesRepository> { RoomFavouritesRepository(get(), get()) }
         singleOf(::RoomTestScoreRepository) { bind<TestScoreRepository>() }
         singleOf(::DataStoreListPreferences) { bind<ListPreferences>() }
+        singleOf(::DataStoreFirstStepsPreferences) { bind<FirstStepsPreferences>() }
+
         singleOf(::NoOpDataSyncTrigger) { bind<DataSyncTrigger>() }
     }
 

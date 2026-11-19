@@ -14,7 +14,7 @@ import com.vamvisions.verbeclair.core.domain.verb.normalizeKey
  */
 internal object ListQueryBuilder {
 
-    fun build(query: ListQuery): RoomRawQuery {
+    fun build(query: ListQuery, limit: Int? = null): RoomRawQuery {
         // Bound in SQL text order: the matched-form column first, then the WHERE conditions.
         val selectArguments = mutableListOf<Any>()
         val arguments = mutableListOf<Any>()
@@ -69,6 +69,7 @@ internal object ListQueryBuilder {
                 sectionOrder(query.choices.groupBy)?.let { append(it).append(", ") }
                 append(sortOrder(query.choices.sort))
                 append(", v.infinitive_key ASC, v.slug ASC")
+                limit?.let { append(" LIMIT ").append(it) }
             }
 
         return RoomRawQuery(sql) { statement ->
