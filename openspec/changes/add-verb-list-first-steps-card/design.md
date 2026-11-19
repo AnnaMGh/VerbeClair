@@ -25,7 +25,7 @@ The card is `item(key = "first-steps", span = full width)` before the paged rows
 *Alternative:* a fixed card under the tabs. Rejected: the product owner wants it to scroll with the list, and a fixed card would take list height on landscape.
 
 ### D2. Visibility is computed in the ViewModel, not in the composable
-`VerbListState` gets `showFirstSteps: Boolean`. It is true when: tab is All, search is empty, no filter is selected, the verb database is not empty, the card is not closed and no attempt exists. The first-page skeleton and empty-result conditions depend on paging load state, which only the screen sees. So the screen draws the card only when `state.showFirstSteps` **and** the paged list has content (first page loaded, not empty). The tablet panel uses the same combined value, so both always agree.
+`VerbListState` gets `showFirstSteps: Boolean`. It is true when: tab is All, search is empty, no active choice (filter, grouping or sort) exists, the verb database is not empty, the card is not closed and no attempt exists. The first-page skeleton and empty-result conditions depend on paging load state, which only the screen sees. So the screen draws the card only when `state.showFirstSteps` **and** the paged list has content (first page loaded, not empty). The tablet panel uses the same combined value, so both always agree.
 *Alternative:* put all conditions in the screen. Rejected: harder to unit test; the ViewModel part is testable with fakes.
 
 ### D3. Two small sources feed the rule
@@ -34,7 +34,7 @@ The card is `item(key = "first-steps", span = full width)` before the paged rows
 Both flows are combined with the list state in the ViewModel.
 
 ### D4. Actions
-New actions: `OnFirstStepsClose`, `OnFirstStepsTestEtre`, `OnFirstStepsMostCommon`. `OnFirstStepsMostCommon` reuses the existing sort action with Most frequent, so the sort chip and remembered choice follow the normal path. `OnFirstStepsTestEtre` raises the same navigation event as the cell test button, with slug `etre` (checked in the bundled dataset). Closing calls `FirstStepsPreferences.close()`; the state follows from the flow, with no local flag.
+New actions: `OnFirstStepsClose`, `OnFirstStepsTestEtre`, `OnFirstStepsMostCommon`. `OnFirstStepsMostCommon` reuses the existing sort action with Most frequent, so the sort chip and remembered choice follow the normal path, and the card hides because a sort is an active choice. `OnFirstStepsTestEtre` raises the same navigation event as the cell test button, with slug `etre` (checked in the bundled dataset). Closing calls `FirstStepsPreferences.close()`; the state follows from the flow, with no local flag.
 
 ### D5. The top 10 verbs use the existing catalogue query
 The panel reads `VerbCatalog.pagedList(ListQuery(sort = MOST_FREQUENT, reflexive = NON_REFLEXIVE))` limited to the first 10 items, or a small `top(limit)` method on `VerbCatalog` if reading from `PagingData` proves awkward. No hard-coded list: the dataset can change on sync. Computed against the bundled dataset (v3) the result is être, avoir, aller, faire, dire, pouvoir, vouloir, savoir, voir, devoir.

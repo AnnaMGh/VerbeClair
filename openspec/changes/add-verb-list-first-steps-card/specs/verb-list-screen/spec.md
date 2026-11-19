@@ -1,18 +1,18 @@
 ## ADDED Requirements
 
 ### Requirement: First steps card
-In the All tab, with an empty search and no filter selected, the screen SHALL show the first steps card
+In the All tab, with an empty search and no active choice (no filter, grouping or sort), the screen SHALL show the first steps card
 (OB-1) as the first item of the list, scrolling with it, while the user has no saved test or review attempt (user-data)
 and has not closed the card. The card reads "New to French verbs? Start with the most common ones." and has two buttons
 and a close button:
 - **Test être** reports the slug "etre" to the test-setup navigation callback, as the test button of a cell does.
-- **Most common first** sets the sort to Most frequent, so the sort chip appears in the active choices row; the card
-  stays, because a sort does not hide it.
+- **Most common first** sets the sort to Most frequent, so the sort chip appears in the active choices row and the
+  card is hidden, because a sort is an active choice.
 - **Close** (accessible label "Close tip") hides the card for good (user-data).
 
-The card is also hidden in the Favourites tab, while the search box has text, while any filter is selected, in the empty
-result, no-data and no-favourites states, and while the first page of the list is still loading (skeleton). Grouping
-and sort do not hide it. Once any attempt is saved, including one that arrives with an imported file (S-13), the card
+The card is also hidden in the Favourites tab, while the search box has text, while any filter, grouping or sort is
+active (any chip in the active choices row), in the empty result, no-data and no-favourites states, and while the first
+page of the list is still loading (skeleton). Removing the last chip (or Reset or Clear filters) shows it again. Once any attempt is saved, including one that arrives with an imported file (S-13), the card
 is hidden for good. The card text, the button labels and the close label SHALL come from string resources in English,
 French (formal) and Romanian (informal).
 
@@ -26,7 +26,12 @@ with the list and is not a sticky header.
 
 #### Scenario: Most common first
 - **WHEN** the user taps "Most common first"
-- **THEN** the list is sorted by frequency, the "Most frequent" chip is shown, and the card is still there
+- **THEN** the list is sorted by frequency, the "Most frequent" chip is shown, and the card is hidden
+
+#### Scenario: Removing the last chip brings the card back
+- **GIVEN** the card was hidden by the "Most frequent" chip
+- **WHEN** the user removes the chip
+- **THEN** the card is the first item again, as long as there is no saved attempt and it was not closed
 
 #### Scenario: Test être
 - **WHEN** the user taps "Test être"

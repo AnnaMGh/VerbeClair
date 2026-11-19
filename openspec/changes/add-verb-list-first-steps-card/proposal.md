@@ -5,8 +5,8 @@ A new user opens the verb list and sees 7,000 verbs with no hint where to start.
 ## What Changes
 
 - Add a **First steps card** as the first item of the All tab list on Screen 1. It scrolls with the list.
-  - Shown only with an empty search, no filters, the All tab, no saved attempt, and the card not closed. It is also hidden in the no-data, empty-result and first-page-skeleton states. Grouping and sort do not hide it.
-  - Content: "New to French verbs? Start with the most common ones." (fr and ro strings are in the table below), a **Test être** button (opens Screen 4 for être), a **Most common first** button (sets the sort to most frequent, so the sort chip appears and the card stays) and a close (X) button with the accessible label "Close tip".
+  - Shown only with an empty search, no active choice (no filter, grouping or sort), the All tab, no saved attempt, and the card not closed. It is also hidden in the no-data, empty-result and first-page-skeleton states. Removing the last chip shows it again.
+  - Content: "New to French verbs? Start with the most common ones." (fr and ro strings are in the table below), a **Test être** button (opens Screen 4 for être), a **Most common first** button (sets the sort to most frequent, so the sort chip appears and the card is hidden until the chip is removed) and a close (X) button with the accessible label "Close tip".
   - Closing it hides it for good. The closed flag lives in the app-settings DataStore, is never exported, and resets on reinstall.
   - Any saved test or review attempt hides it for good, including attempts that arrive through an imported file (S-13).
 - **Phone landscape:** the card spans both columns of the list grid. Title and body are left-aligned, the buttons are centred.
@@ -61,7 +61,7 @@ None.
 
 Decided with the product owner; recorded here so the specs can turn them into scenarios:
 
-- Grouping and sort do not hide the card.
+- Any active choice (filter, grouping or sort) hides the card; removing the last chip shows it again.
 - The card is hidden in the no-data, empty-result and first-page-skeleton states.
 - Any saved attempt counts, including attempts from an imported file. The closed flag is not exported and resets on reinstall.
 
