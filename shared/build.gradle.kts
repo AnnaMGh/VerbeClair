@@ -81,6 +81,7 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.compose.uiTest)
+            implementation(libs.datastore.preferences)
         }
         getByName("androidDeviceTest").dependencies {
             implementation(libs.androidx.testRunner)
