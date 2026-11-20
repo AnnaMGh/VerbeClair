@@ -120,7 +120,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.run == 'true'
     runs-on: macos-15
-    timeout-minutes: 25
+    # A cold build (no Kotlin/Native or Gradle cache) takes about 20 minutes before the first test runs, so
+    # 25 was too tight; 40 leaves room to see where a hang is instead of cancelling it blind.
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -145,25 +147,57 @@ jobs:
           echo "DEVELOPER_DIR=$(xcode-select -p)" >> "$GITHUB_ENV"
           xcodebuild -version
 
+      # Diagnostics for the iOS job hanging with no output: Kotlin/Native prints test results only when a test task
+      # finishes, so the log cannot name a hanging test. This logs each test as it starts and ends, and prints the
+      # simulator state, so a hang names its test (or shows the simulator never came up).
+      - name: Log simulator state and per-test events
+        run: |
+          xcrun simctl list devices available
+          xcrun simctl list runtimes
+          cat > "$RUNNER_TEMP/test-logging.init.gradle" <<'EOF'
+          allprojects {
+              tasks.withType(org.gradle.api.tasks.testing.AbstractTestTask).configureEach {
+                  testLogging {
+                      events "started", "passed", "failed", "skipped"
+                      showStandardStreams = true
+                  }
+              }
+          }
+          EOF
+          echo "GRADLE_TEST_LOGGING_INIT=$RUNNER_TEMP/test-logging.init.gradle" >> "$GITHUB_ENV"
+
       # Everything ./gradlew build runs for the Apple targets: the simulator tests, device compilation, the
       # frameworks Xcode links, and the iOS / Apple / Native metadata compilation. `checks` covers the rest.
+      # A watchdog prints, every 3 minutes, which simulator and test processes are alive, so a stall shows what was
+      # running. It lives in this step because output from a background process outlives its step only as lost lines.
       - name: iOS simulator tests, device compilation and frameworks
-        run: >
-          ./gradlew
-          iosSimulatorArm64Test
-          compileKotlinIosArm64
-          compileTestKotlinIosArm64
-          linkDebugFrameworkIosSimulatorArm64
-          linkDebugFrameworkIosArm64
-          linkReleaseFrameworkIosSimulatorArm64
-          linkReleaseFrameworkIosArm64
-          compileIosMainKotlinMetadata
-          compileAppleMainKotlinMetadata
-          compileNativeMainKotlinMetadata
-          metadataIosMainClasses
-          metadataIosMainProcessResources
-          iosArm64MetadataElements
-          iosSimulatorArm64MetadataElements
+        run: |
+          (while true; do
+            sleep 180
+            echo "::group::watchdog $(date -u +%T)"
+            xcrun simctl list devices booted
+            ps -axo pid,etime,%cpu,command | grep -Ei 'simctl|launchd_sim|test\.kexe|Simulator' | grep -v grep \
+              || echo "no simulator or test processes"
+            echo "::endgroup::"
+          done) &
+          watchdog=$!
+          trap 'kill "$watchdog" 2>/dev/null || true' EXIT
+          ./gradlew \
+          -I "$GRADLE_TEST_LOGGING_INIT" \
+          iosSimulatorArm64Test \
+          compileKotlinIosArm64 \
+          compileTestKotlinIosArm64 \
+          linkDebugFrameworkIosSimulatorArm64 \
+          linkDebugFrameworkIosArm64 \
+          linkReleaseFrameworkIosSimulatorArm64 \
+          linkReleaseFrameworkIosArm64 \
+          compileIosMainKotlinMetadata \
+          compileAppleMainKotlinMetadata \
+          compileNativeMainKotlinMetadata \
+          metadataIosMainClasses \
+          metadataIosMainProcessResources \
+          iosArm64MetadataElements \
+          iosSimulatorArm64MetadataElements \
           --stacktrace
         env:
           FRENCH_VERBS_DATASET_TOKEN: ${{ secrets.FRENCH_VERBS_DATASET_TOKEN }}
