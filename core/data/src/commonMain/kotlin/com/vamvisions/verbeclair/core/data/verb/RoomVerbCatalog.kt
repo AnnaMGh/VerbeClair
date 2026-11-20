@@ -7,7 +7,10 @@ import androidx.paging.map
 import com.vamvisions.verbeclair.core.database.verb.VerbDatabase
 import com.vamvisions.verbeclair.core.database.verb.VerbRow
 import com.vamvisions.verbeclair.core.domain.verb.Auxiliary
+import com.vamvisions.verbeclair.core.domain.verb.ListChoices
+import com.vamvisions.verbeclair.core.domain.verb.ListFilters
 import com.vamvisions.verbeclair.core.domain.verb.ListQuery
+import com.vamvisions.verbeclair.core.domain.verb.SortOrder
 import com.vamvisions.verbeclair.core.domain.verb.VerbCatalog
 import com.vamvisions.verbeclair.core.domain.verb.VerbGroup
 import com.vamvisions.verbeclair.core.domain.verb.VerbListItem
@@ -34,6 +37,18 @@ class RoomVerbCatalog(private val database: suspend () -> VerbDatabase) : VerbCa
                 }.flow,
             )
         }.map { page -> page.map { it.toListItem() } }
+
+    override suspend fun topVerbs(limit: Int): List<VerbListItem> {
+        val query =
+            ListQuery(
+                choices =
+                    ListChoices(
+                        filters = ListFilters(reflexive = setOf(false)),
+                        sort = SortOrder.MOST_FREQUENT,
+                    ),
+            )
+        return database().verbDao().list(ListQueryBuilder.build(query, limit)).map { it.toListItem() }
+    }
 
     override fun isEmpty(): Flow<Boolean> = flow { emitAll(database().verbDao().observeIsEmpty()) }
 

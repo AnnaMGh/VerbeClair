@@ -39,4 +39,13 @@ sealed interface VerbListAction {
     data class OnSelectVerb(val slug: String) : VerbListAction
 
     data object OnClearSelection : VerbListAction
+
+    /** The three actions of the first steps card (OB-1), handled together by the view model. */
+    sealed interface FirstStepsAction : VerbListAction
+
+    data object OnFirstStepsClose : FirstStepsAction
+
+    data object OnFirstStepsTestEtre : FirstStepsAction
+
+    data object OnFirstStepsMostCommon : FirstStepsAction
 }

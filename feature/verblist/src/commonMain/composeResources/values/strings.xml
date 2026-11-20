@@ -50,4 +50,11 @@
     <string name="detail_empty_title">Choose a verb to see its conjugation</string>
     <!-- Snackbar when adding or removing a favourite fails (Figma 7:144) -->
     <string name="favourite_update_failed">Couldn’t update favourites. Try again.</string>
+    <!-- First steps card (OB-1) and the tablet top 10 panel -->
+    <string name="first_steps_title">New to French verbs?</string>
+    <string name="first_steps_body">Start with the most common ones.</string>
+    <string name="first_steps_test_etre">Test être</string>
+    <string name="first_steps_most_common">Most common first</string>
+    <string name="first_steps_close">Close tip</string>
+    <string name="top_verbs_title">Does any of these catch your eye?</string>
 </resources>

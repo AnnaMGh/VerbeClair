@@ -45,4 +45,11 @@
     <string name="detail_empty_title">Choisissez un verbe pour voir sa conjugaison</string>
     <!-- Snackbar when adding or removing a favourite fails (Figma 7:144) -->
     <string name="favourite_update_failed">Impossible de mettre à jour les favoris. Réessayez.</string>
+    <!-- First steps card (OB-1) and the tablet top 10 panel -->
+    <string name="first_steps_title">Vous débutez avec les verbes français ?</string>
+    <string name="first_steps_body">Commencez par les plus courants.</string>
+    <string name="first_steps_test_etre">Tester être</string>
+    <string name="first_steps_most_common">Les plus courants d’abord</string>
+    <string name="first_steps_close">Fermer le conseil</string>
+    <string name="top_verbs_title">L’un de ces verbes vous attire-t-il ?</string>
 </resources>

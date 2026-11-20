@@ -109,6 +109,21 @@ internal object PreviewData {
             verb("trouver", VerbGroup.I, Auxiliary.AVOIR, 900.0),
         )
 
+    /** TP-07 / TL-07 top 10 panel (195:18534): the 10 most frequent non-reflexive verbs. */
+    val topVerbs: List<VerbUi> =
+        listOf(
+            "être" to "etre",
+            "avoir" to "avoir",
+            "aller" to "aller",
+            "faire" to "faire",
+            "dire" to "dire",
+            "pouvoir" to "pouvoir",
+            "vouloir" to "vouloir",
+            "savoir" to "savoir",
+            "voir" to "voir",
+            "devoir" to "devoir",
+        ).map { (infinitive, slug) -> verb(infinitive, VerbGroup.III, Auxiliary.AVOIR, 1.0, slug = slug).first.toUi() }
+
     private fun verb(
         infinitive: String,
         group: VerbGroup,

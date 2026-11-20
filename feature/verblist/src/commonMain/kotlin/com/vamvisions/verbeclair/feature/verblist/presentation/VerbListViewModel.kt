@@ -7,6 +7,7 @@ import androidx.paging.cachedIn
 import androidx.paging.insertSeparators
 import androidx.paging.map
 import com.vamvisions.verbeclair.core.domain.favourite.FavouritesRepository
+import com.vamvisions.verbeclair.core.domain.preferences.FirstStepsPreferences
 import com.vamvisions.verbeclair.core.domain.preferences.ListPreferences
 import com.vamvisions.verbeclair.core.domain.result.onFailure
 import com.vamvisions.verbeclair.core.domain.score.TestScoreRepository
@@ -14,6 +15,7 @@ import com.vamvisions.verbeclair.core.domain.sync.DataSyncTrigger
 import com.vamvisions.verbeclair.core.domain.verb.ListChoices
 import com.vamvisions.verbeclair.core.domain.verb.ListQuery
 import com.vamvisions.verbeclair.core.domain.verb.ListTab
+import com.vamvisions.verbeclair.core.domain.verb.SortOrder
 import com.vamvisions.verbeclair.core.domain.verb.VerbCatalog
 import com.vamvisions.verbeclair.core.domain.verb.VerbListItem
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -49,6 +51,7 @@ class VerbListViewModel(
     private val scores: TestScoreRepository,
     private val preferences: ListPreferences,
     private val syncTrigger: DataSyncTrigger,
+    private val firstSteps: FirstStepsPreferences,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(VerbListState())
@@ -151,13 +154,32 @@ class VerbListViewModel(
         syncTrigger.isSyncing
             .onEach { syncing -> _state.update { it.copy(isSyncing = syncing) } }
             .launchIn(viewModelScope)
+        observeFirstStepsInputs()
         catalog
             .isEmpty()
             .distinctUntilChanged()
             .onEach { empty ->
                 _state.update { it.copy(isEmptyDatabase = empty) }
-                if (empty) requestSyncOnce()
+                if (empty) requestSyncOnce() else loadTopVerbs()
             }.launchIn(viewModelScope)
+    }
+
+    /** Read again when the verbs arrive after a sync, so the panel never shows a stale or empty list. */
+    private fun loadTopVerbs() {
+        viewModelScope.launch {
+            val top = catalog.topVerbs(TOP_VERBS_COUNT).map { it.toUi() }
+            _state.update { it.copy(topVerbs = top) }
+        }
+    }
+
+    private fun observeFirstStepsInputs() {
+        firstSteps.closed
+            .onEach { closed -> _state.update { it.copy(firstStepsClosed = closed) } }
+            .launchIn(viewModelScope)
+        scores
+            .observeHasAnyAttempt()
+            .onEach { any -> _state.update { it.copy(hasAnyAttempt = any) } }
+            .launchIn(viewModelScope)
     }
 
     fun onAction(action: VerbListAction) {
@@ -176,7 +198,24 @@ class VerbListViewModel(
             is VerbListAction.OnToggleFavourite -> toggleFavourite(action.slug)
             is VerbListAction.OnSelectVerb -> _state.update { it.copy(selectedSlug = action.slug) }
             VerbListAction.OnClearSelection -> _state.update { it.copy(selectedSlug = null) }
+            is VerbListAction.FirstStepsAction -> onFirstStepsAction(action)
             else -> Unit
+        }
+    }
+
+    private fun onFirstStepsAction(action: VerbListAction.FirstStepsAction) {
+        when (action) {
+            VerbListAction.OnFirstStepsClose -> {
+                viewModelScope.launch { firstSteps.close() }
+            }
+
+            VerbListAction.OnFirstStepsTestEtre -> {
+                viewModelScope.launch { _events.send(VerbListEvent.OpenTestSetup(FIRST_STEPS_TEST_SLUG)) }
+            }
+
+            VerbListAction.OnFirstStepsMostCommon -> {
+                onAction(VerbListAction.OnSortSelect(SortOrder.MOST_FREQUENT))
+            }
         }
     }
 
@@ -210,6 +249,9 @@ class VerbListViewModel(
     private data class SectionedItem(val item: VerbListItem, val section: VerbSection?)
 
     private companion object {
+        /** The verb the first steps card tests (OB-1), checked in the bundled dataset. */
+        const val FIRST_STEPS_TEST_SLUG = "etre"
+        const val TOP_VERBS_COUNT = 10
         const val SEARCH_DEBOUNCE_MILLIS = 300L
         const val SCORES_DEBOUNCE_MILLIS = 50L
         const val STOP_TIMEOUT_MILLIS = 5_000L

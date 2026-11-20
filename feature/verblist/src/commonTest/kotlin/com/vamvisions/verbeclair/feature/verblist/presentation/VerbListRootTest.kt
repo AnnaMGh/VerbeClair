@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -99,11 +100,37 @@ class VerbListRootTest {
             waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("être")).fetchSemanticsNodes().isNotEmpty() }
             onNodeWithTag(VerbListTestTags.DETAIL_PANE).assertExists()
 
-            onNode(hasText("être")).performClick()
-            onNode(hasContentDescription("Start a test") and hasAnyAncestor(hasText("être"))).performClick()
+            // The first steps card and the top 10 panel also show "être"; the tap goes to the cell in the list.
+            val etreCell = hasText("être") and hasAnyAncestor(hasTestTag(VerbListTestTags.GRID))
+            onNode(etreCell).performClick()
+            onNode(hasContentDescription("Start a test") and hasAnyAncestor(etreCell)).performClick()
 
             assertEquals(listOf("etre"), opened)
             assertEquals(listOf("etre"), tested)
+        }
+
+    @Test
+    fun theFirstStepsTestEtreButtonOpensTheTestSetupForEtreOnly() =
+        runComposeUiTest {
+            val opened = mutableListOf<String>()
+            val tested = mutableListOf<String>()
+            setContent {
+                VerbeClairTheme {
+                    VerbListRoot(
+                        onVerbClick = { opened += it },
+                        onTestClick = { tested += it },
+                        viewModel = viewModel,
+                        layout = WindowLayout.Compact,
+                    )
+                }
+            }
+            waitUntil(timeoutMillis = 5_000) { onAllNodes(hasText("Test être")).fetchSemanticsNodes().isNotEmpty() }
+
+            onNode(hasText("Test être")).performClick()
+
+            waitForIdle()
+            assertEquals(listOf("etre"), tested)
+            assertEquals(emptyList(), opened)
         }
 
     /**

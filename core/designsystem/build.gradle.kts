@@ -55,6 +55,7 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.compose.uiTest)
+            implementation(libs.assertk)
         }
         getByName("androidDeviceTest").dependencies {
             implementation(libs.androidx.testRunner)

@@ -44,6 +44,7 @@ class BundledCatalogPerformanceTest {
             override val verbDatabaseFile = (directory / "verbs.db").toString()
             override val userDatabaseFile = (directory / "user.db").toString()
             override val dataStoreFile = (directory / "settings.preferences_pb").toString()
+            override val firstStepsFile = (directory / "first_steps.preferences_pb").toString()
         }
     private var database: VerbDatabase? = null
 

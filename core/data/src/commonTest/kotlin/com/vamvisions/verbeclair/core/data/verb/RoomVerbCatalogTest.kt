@@ -269,6 +269,29 @@ class RoomVerbCatalogTest {
             assertEquals(emptySet(), catalog.existingSlugs(emptySet()).first())
         }
 
+    @Test
+    fun topVerbsAreTheMostFrequentNonReflexiveOnes() =
+        runTest {
+            seed()
+
+            val top = catalog.topVerbs(limit = 10)
+
+            // s'appeler (reflexive, same frequency as appeler) is left out; the fixture holds 11 verbs.
+            assertEquals(
+                listOf("etre", "aller", "savoir", "suivre", "parler", "passer", "appeler", "finir", "choisir"),
+                top.map { it.slug },
+            )
+            assertTrue(top.none { it.reflexive })
+        }
+
+    @Test
+    fun topVerbsStopAtTheLimit() =
+        runTest {
+            seed()
+
+            assertEquals(listOf("etre", "aller", "savoir"), catalog.topVerbs(limit = 3).map { it.slug })
+        }
+
     private suspend fun list(
         search: String = "",
         filters: ListFilters = ListFilters(),

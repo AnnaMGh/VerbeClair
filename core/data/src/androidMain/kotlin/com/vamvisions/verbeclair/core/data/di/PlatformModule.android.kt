@@ -13,6 +13,10 @@ class AndroidPlatformPaths(context: Context) : PlatformPaths {
     override val userDatabaseFile: String = context.getDatabasePath(USER_DATABASE_NAME).absolutePath
     override val dataStoreFile: String =
         File(context.filesDir, "datastore/$DATA_STORE_FILE_NAME").absolutePath
+
+    // noBackupFilesDir is never part of Auto Backup or device transfer.
+    override val firstStepsFile: String =
+        File(context.noBackupFilesDir, "datastore/$FIRST_STEPS_FILE_NAME").absolutePath
 }
 
 actual val platformModule: Module =

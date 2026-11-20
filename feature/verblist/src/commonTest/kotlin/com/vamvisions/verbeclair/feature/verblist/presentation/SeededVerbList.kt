@@ -30,6 +30,7 @@ fun verbListViewModel(database: VerbDatabase, favourites: FakeFavouritesReposito
         scores = FakeTestScoreRepository(),
         preferences = FakeListPreferences(),
         syncTrigger = FakeDataSyncTrigger(),
+        firstSteps = FakeFirstStepsPreferences(),
     )
 
 private suspend fun seed(database: VerbDatabase) {

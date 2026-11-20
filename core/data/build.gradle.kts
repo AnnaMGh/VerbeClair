@@ -58,6 +58,7 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.turbine)
+            implementation(libs.assertk)
             implementation(libs.paging.testing)
         }
         getByName("androidDeviceTest").dependencies {

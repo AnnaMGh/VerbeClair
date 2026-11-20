@@ -6,6 +6,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.vamvisions.verbeclair.core.data.di.PlatformPaths
 import com.vamvisions.verbeclair.core.domain.favourite.FavouritesRepository
+import com.vamvisions.verbeclair.core.domain.preferences.FirstStepsPreferences
 import com.vamvisions.verbeclair.core.domain.preferences.ListPreferences
 import com.vamvisions.verbeclair.core.domain.score.TestScoreRepository
 import com.vamvisions.verbeclair.core.domain.sync.DataSyncTrigger
@@ -42,6 +43,7 @@ class AppKoinGraphTest {
                         override val verbDatabaseFile = "$directory/verbs.db"
                         override val userDatabaseFile = "$directory/user.db"
                         override val dataStoreFile = "$directory/app_settings.preferences_pb"
+                        override val firstStepsFile = "$directory/first_steps.preferences_pb"
                     }
                 }
             }
@@ -63,6 +65,8 @@ class AppKoinGraphTest {
     fun resolvesPlatformPaths() {
         val paths = app.koin.get<PlatformPaths>()
         assertTrue(paths.verbDatabaseFile.startsWith(directory))
+        // The first steps flag must not share the backed-up app-settings file (OB-1).
+        assertTrue(paths.dataStoreFile != paths.firstStepsFile)
     }
 
     @Test
@@ -71,6 +75,7 @@ class AppKoinGraphTest {
         app.koin.get<FavouritesRepository>()
         app.koin.get<TestScoreRepository>()
         app.koin.get<ListPreferences>()
+        app.koin.get<FirstStepsPreferences>()
         app.koin.get<DataSyncTrigger>()
     }
 

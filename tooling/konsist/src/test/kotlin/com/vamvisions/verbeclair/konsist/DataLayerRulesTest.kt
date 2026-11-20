@@ -66,6 +66,31 @@ class DataLayerRulesTest {
     }
 
     @Test
+    fun `user data never touches app settings`() {
+        val subjects =
+            ProjectScope.productionFiles.filter { file ->
+                val name = file.packagee?.name.orEmpty()
+                name.startsWith("com.vamvisions.verbeclair.core.data.user") ||
+                    name.startsWith("com.vamvisions.verbeclair.core.database.user")
+            }
+
+        subjects.assertAllWhereApplicable(
+            rule = "user data is apart from app settings",
+            subject = "the user data packages (data and database)",
+            requirement =
+                "the first steps card's closed flag is an app setting that is never exported and that an " +
+                    "import never changes, so nothing that stores or reads user data may import the " +
+                    "preferences package or DataStore",
+        ) { file ->
+            file.imports.none { import ->
+                import.name.startsWith("com.vamvisions.verbeclair.core.domain.preferences") ||
+                    import.name.startsWith("com.vamvisions.verbeclair.core.data.preferences") ||
+                    import.name.startsWith("androidx.datastore")
+            }
+        }
+    }
+
+    @Test
     fun `every repository function returns a typed result`() {
         val subjects =
             ProjectScope.productionFiles

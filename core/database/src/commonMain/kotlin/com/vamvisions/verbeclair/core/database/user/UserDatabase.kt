@@ -77,6 +77,10 @@ interface AttemptDao {
     )
     fun observeLatestAttemptCounts(slugs: Set<String>): Flow<List<AttemptCounts>>
 
+    /** True while at least one attempt is stored, whatever its verb or kind. */
+    @Query("SELECT EXISTS (SELECT 1 FROM test_attempts)")
+    fun observeHasAny(): Flow<Boolean>
+
     @Insert
     suspend fun insertAttempt(attempt: TestAttemptEntity): Long
 
