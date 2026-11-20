@@ -400,12 +400,29 @@ class VerbListViewModelTest {
     }
 
     @Test
-    fun firstStepsAreHiddenUntilBothFlowsHaveEmitted() =
+    fun firstStepsWaitForTheClosedFlagEvenWhenTheAttemptsHaveLoaded() =
         runTest {
-            assertFalse(VerbListState().showFirstSteps)
-            assertFalse(VerbListState(firstStepsClosed = false).showFirstSteps)
-            assertFalse(VerbListState(hasAnyAttempt = false).showFirstSteps)
-            assertTrue(VerbListState(firstStepsClosed = false, hasAnyAttempt = false).showFirstSteps)
+            val slowFirstSteps = FakeFirstStepsPreferences(loaded = false)
+            val viewModel = VerbListViewModel(catalog, favourites, scores, preferences, sync, slowFirstSteps)
+            advanceUntilIdle()
+            assertFalse(viewModel.state.value.showFirstSteps)
+
+            slowFirstSteps.loaded.value = true
+            advanceUntilIdle()
+            assertTrue(viewModel.state.value.showFirstSteps)
+        }
+
+    @Test
+    fun firstStepsWaitForTheAttemptsEvenWhenTheClosedFlagHasLoaded() =
+        runTest {
+            val slowScores = FakeTestScoreRepository(loaded = false)
+            val viewModel = VerbListViewModel(catalog, favourites, slowScores, preferences, sync, firstSteps)
+            advanceUntilIdle()
+            assertFalse(viewModel.state.value.showFirstSteps)
+
+            slowScores.loaded.value = true
+            advanceUntilIdle()
+            assertTrue(viewModel.state.value.showFirstSteps)
         }
 
     @Test

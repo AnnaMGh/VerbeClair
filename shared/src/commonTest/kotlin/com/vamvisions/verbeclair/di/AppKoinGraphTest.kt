@@ -1,5 +1,7 @@
 package com.vamvisions.verbeclair.di
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewmodel.initializer
@@ -61,13 +63,27 @@ class AppKoinGraphTest {
         deleteTestDirectory(directory)
     }
 
+    /**
+     * Closes the card through the real [FirstStepsPreferences] binding. The flag must be read back through it
+     * (so `close()` stores something in the store it reads), and it must not land in the backed-up app-settings
+     * store (OB-1). It uses the stores the app wires, so it fails if the binding points at the wrong file.
+     */
     @Test
-    fun resolvesPlatformPaths() {
-        val paths = app.koin.get<PlatformPaths>()
-        assertTrue(paths.verbDatabaseFile.startsWith(directory))
-        // The first steps flag must not share the backed-up app-settings file (OB-1).
-        assertTrue(paths.dataStoreFile != paths.firstStepsFile)
-    }
+    fun closedFlagLandsInItsOwnStoreAndNotInTheAppSettingsStore() =
+        runTest {
+            val preferences = app.koin.get<FirstStepsPreferences>()
+            assertFalse(preferences.closed.first())
+
+            preferences.close()
+
+            assertTrue(preferences.closed.first())
+            val appSettings =
+                app.koin
+                    .get<DataStore<Preferences>>()
+                    .data
+                    .first()
+            assertTrue(appSettings.asMap().isEmpty())
+        }
 
     @Test
     fun resolvesTheDataLayer() {

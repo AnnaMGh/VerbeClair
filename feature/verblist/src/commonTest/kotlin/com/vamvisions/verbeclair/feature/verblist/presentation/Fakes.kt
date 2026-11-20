@@ -84,8 +84,15 @@ class FakeFavouritesRepository(
     }
 }
 
-class FakeTestScoreRepository(private val scores: Map<String, Int> = emptyMap(), hasAnyAttempt: Boolean = false) : TestScoreRepository {
+class FakeTestScoreRepository(
+    private val scores: Map<String, Int> = emptyMap(),
+    hasAnyAttempt: Boolean = false,
+    loaded: Boolean = true,
+) : TestScoreRepository {
     val hasAny = MutableStateFlow(hasAnyAttempt)
+
+    /** With `loaded = false` [observeHasAnyAttempt] emits nothing until this is set, like a slow database. */
+    val loaded = MutableStateFlow(loaded)
 
     /** The slugs of every call, in order. */
     val requested = mutableListOf<Set<String>>()
@@ -95,13 +102,17 @@ class FakeTestScoreRepository(private val scores: Map<String, Int> = emptyMap(),
         return flowOf(scores.filterKeys { it in slugs })
     }
 
-    override fun observeHasAnyAttempt(): Flow<Boolean> = hasAny
+    override fun observeHasAnyAttempt(): Flow<Boolean> =
+        combine(loaded, hasAny) { isLoaded, any -> if (isLoaded) any else null }.filterNotNull()
 }
 
-class FakeFirstStepsPreferences(closed: Boolean = false) : FirstStepsPreferences {
+/** With `loaded = false` [closed] emits nothing until [loaded] is set, like a DataStore that is still reading. */
+class FakeFirstStepsPreferences(closed: Boolean = false, loaded: Boolean = true) : FirstStepsPreferences {
     val storedClosed = MutableStateFlow(closed)
+    val loaded = MutableStateFlow(loaded)
 
-    override val closed: Flow<Boolean> = storedClosed
+    override val closed: Flow<Boolean> =
+        combine(this.loaded, storedClosed) { isLoaded, value -> if (isLoaded) value else null }.filterNotNull()
 
     override suspend fun close() {
         storedClosed.value = true
