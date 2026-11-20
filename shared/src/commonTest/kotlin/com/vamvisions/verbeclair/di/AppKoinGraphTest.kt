@@ -64,15 +64,19 @@ class AppKoinGraphTest {
     }
 
     /**
-     * Closes the card through the real [FirstStepsPreferences] binding and checks that the flag did not
-     * land in the backed-up app-settings store (OB-1). It reads the stores the app wires, so it fails if
-     * the binding points at the wrong file.
+     * Closes the card through the real [FirstStepsPreferences] binding. The flag must be read back through it
+     * (so `close()` stores something in the store it reads), and it must not land in the backed-up app-settings
+     * store (OB-1). It uses the stores the app wires, so it fails if the binding points at the wrong file.
      */
     @Test
-    fun closedFlagDoesNotLandInTheAppSettingsStore() =
+    fun closedFlagLandsInItsOwnStoreAndNotInTheAppSettingsStore() =
         runTest {
-            app.koin.get<FirstStepsPreferences>().close()
+            val preferences = app.koin.get<FirstStepsPreferences>()
+            assertFalse(preferences.closed.first())
 
+            preferences.close()
+
+            assertTrue(preferences.closed.first())
             val appSettings =
                 app.koin
                     .get<DataStore<Preferences>>()
