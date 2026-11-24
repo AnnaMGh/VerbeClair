@@ -97,8 +97,9 @@ The check fails if any task fails.
 
 ### Requirement: iOS simulator tests check
 CI SHALL compile the iOS targets and run every module's `commonTest` and `iosTest` tests on the iOS simulator, on a
-macOS runner with Xcode. Together with the checks and unit tests check, this SHALL cover everything that
-`./gradlew build` covers on a Mac. The check fails if any task fails.
+macOS runner with Xcode. Together with the checks and unit tests check and the iOS release link check, this SHALL
+cover everything that `./gradlew build` covers on a Mac. The release frameworks are the one part it does not build,
+because they are covered by the iOS release link check. The check fails if any task fails.
 
 #### Scenario: iOS tests pass
 - **WHEN** the iOS targets compile and every test passes on the iOS simulator
@@ -108,6 +109,25 @@ macOS runner with Xcode. Together with the checks and unit tests check, this SHA
 - **WHEN** an iOS simulator test fails
 - **THEN** the iOS simulator tests check fails and its log shows the failing test, while the other checks are
   unaffected
+
+### Requirement: iOS release link check
+CI SHALL link the release frameworks for the iOS simulator and the iOS device (`linkReleaseFrameworkIosSimulatorArm64`
+and `linkReleaseFrameworkIosArm64`) on a macOS runner, in a job of its own, on every push to `dev` that changes code. It
+SHALL NOT run for pull requests, because Kotlin/Native optimizes the whole program for a release framework on a single
+thread and the time varies from about 4 minutes to over 30 on the shared runner. The job SHALL have its own timeout of
+60 minutes, and a link that stalls SHALL fail the job with the busy Kotlin frames of the Gradle daemon in its log.
+
+#### Scenario: Release frameworks link
+- **WHEN** code is pushed to `dev` and both release frameworks link
+- **THEN** the iOS release link check passes
+
+#### Scenario: Release link fails or stalls
+- **WHEN** a release framework fails to link, or the link runs past the step timeout
+- **THEN** the iOS release link check fails on `dev`, where it is visible before the pull request into `main` is approved
+
+#### Scenario: Pull request
+- **WHEN** a pull request is opened or updated
+- **THEN** the iOS release link job does not run, so a slow release link never holds up the pull request
 
 ### Requirement: Android device tests check
 CI SHALL run `./gradlew connectedAndroidDeviceTest` on an Android emulator, so that every module's `commonTest`
