@@ -171,10 +171,14 @@ jobs:
       # A watchdog prints, every 3 minutes, which simulator and test processes are alive and how much memory and swap
       # the runner has left, so a stall shows what was running. It lives in this step because output from a
       # background process outlives its step only as lost lines.
-      # The runner has about 7 GB. The release links stalled for 18+ minutes after the first steps card merge (the
-      # tests had all passed), so they run last in a Gradle call of their own. They never overlapped (the build is not
-      # parallel), so this is about starting them fresh, not about limiting workers. The step timeout makes a stall
-      # fail with the watchdog output printed instead of the job being cancelled blind.
+      # The release links stalled for 30+ minutes after the first steps card merge, on cold and warm caches alike, with
+      # every test already passed. In the stalled runs the Gradle daemon was busy (45-114% CPU) with only about
+      # 1.3 GB resident and 30%+ of memory free, so it is not memory starvation and not a deadlock: something inside
+      # the daemon, probably the Kotlin/Native compiler, keeps running. The links run last in a Gradle call of their
+      # own so the tests are not blamed; on CI the two links start together or one after the other from run to run.
+      # Every watchdog tick also prints the busy Kotlin frames of the Gradle daemon's threads (the full dump goes to
+      # build/reports/tests/thread-dumps, which the failure upload keeps), so a stall names the compiler phase.
+      # The step timeout makes a stall fail with the watchdog output printed instead of the job being cancelled blind.
       - name: iOS simulator tests, device compilation and frameworks
         timeout-minutes: 35
         run: |
@@ -190,6 +194,17 @@ jobs:
             vm_stat | head -8
             echo "--- top processes by resident memory (KB)"
             ps -axo pid,etime,%cpu,rss,command | sort -k4 -n -r | head -6 | cut -c1-200
+            echo "--- Gradle daemon threads running Kotlin code"
+            daemon=$(pgrep -f 'org.gradle.launcher.daemon.bootstrap.GradleDaemon' | head -1 || true)
+            if [ -n "$daemon" ]; then
+              mkdir -p build/reports/tests/thread-dumps
+              dump="build/reports/tests/thread-dumps/daemon-$(date -u +%H%M%S).txt"
+              "$JAVA_HOME/bin/jcmd" "$daemon" Thread.print > "$dump" 2>&1 || echo "jcmd failed for pid $daemon"
+              awk 'BEGIN { RS = ""; ORS = "\n\n" } /RUNNABLE/ && /org\.jetbrains\.kotlin/' "$dump" \
+                | cut -c1-180 | head -90
+            else
+              echo "no Gradle daemon found"
+            fi
             echo "::endgroup::"
           done) &
           watchdog=$!
