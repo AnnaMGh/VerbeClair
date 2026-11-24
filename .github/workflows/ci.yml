@@ -171,9 +171,10 @@ jobs:
       # A watchdog prints, every 3 minutes, which simulator and test processes are alive and how much memory and swap
       # the runner has left, so a stall shows what was running. It lives in this step because output from a
       # background process outlives its step only as lost lines.
-      # The runner has about 7 GB. The two release links ran in parallel and stalled for 18+ minutes after the
-      # first steps card merge (the tests had all passed), so they run last, one at a time. The step timeout makes a
-      # stall fail with the watchdog output printed instead of the job being cancelled blind.
+      # The runner has about 7 GB. The release links stalled for 18+ minutes after the first steps card merge (the
+      # tests had all passed), so they run last in a Gradle call of their own. They never overlapped (the build is not
+      # parallel), so this is about starting them fresh, not about limiting workers. The step timeout makes a stall
+      # fail with the watchdog output printed instead of the job being cancelled blind.
       - name: iOS simulator tests, device compilation and frameworks
         timeout-minutes: 35
         run: |
@@ -211,7 +212,6 @@ jobs:
           ./gradlew \
           linkReleaseFrameworkIosSimulatorArm64 \
           linkReleaseFrameworkIosArm64 \
-          --max-workers=1 \
           --stacktrace
         env:
           FRENCH_VERBS_DATASET_TOKEN: ${{ secrets.FRENCH_VERBS_DATASET_TOKEN }}
