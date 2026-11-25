@@ -22,12 +22,12 @@ for base in "" "0000000000000000000000000000000000000000" "no-such-ref"; do
 done
 
 # previous-head-green.sh: the check runs of the previous head, as the GitHub API returns them
-green() { # name expected json
-  actual=$(printf '%s' "$3" | ./previous-head-green.sh)
+green() { # name expected json [event]
+  actual=$(printf '%s' "$3" | ./previous-head-green.sh "${4:-}")
   if [ "$actual" = "$2" ]; then echo "ok   $1"; else echo "FAIL $1: expected $2, got $actual"; fail=1; fi
 }
 run() { printf '{"id":%s,"name":"%s","conclusion":%s}' "$1" "$2" "$3"; }
-C="Checks and unit tests"; I="iOS simulator tests"; A="Android device tests"
+C="Checks and unit tests"; I="iOS simulator tests"; A="Android device tests"; R="iOS release link"
 green "all success"       true  "{\"check_runs\":[$(run 1 "$C" '"success"'),$(run 2 "$I" '"success"'),$(run 3 "$A" '"success"')]}"
 green "skipped passes"    true  "{\"check_runs\":[$(run 1 "$C" '"skipped"'),$(run 2 "$I" '"skipped"'),$(run 3 "$A" '"skipped"')]}"
 green "one failure"       false "{\"check_runs\":[$(run 1 "$C" '"success"'),$(run 2 "$I" '"failure"'),$(run 3 "$A" '"success"')]}"
@@ -39,4 +39,12 @@ green "other check runs"  true  "{\"check_runs\":[$(run 5 "Changes" '"failure"')
 green "no check runs"     false '{"check_runs":[]}'
 green "not json"          false 'garbage'
 green "empty input"       false ''
+# on a push the iOS release link job counts too; a pull request has none
+ALL3="$(run 1 "$C" '"success"'),$(run 2 "$I" '"success"'),$(run 3 "$A" '"success"')"
+green "push, link success"   true  "{\"check_runs\":[$ALL3,$(run 4 "$R" '"success"')]}" push
+green "push, link skipped"   true  "{\"check_runs\":[$ALL3,$(run 4 "$R" '"skipped"')]}" push
+green "push, link failed"    false "{\"check_runs\":[$ALL3,$(run 4 "$R" '"failure"')]}" push
+green "push, link running"   false "{\"check_runs\":[$ALL3,$(run 4 "$R" null)]}" push
+green "push, link missing"   false "{\"check_runs\":[$ALL3]}" push
+green "pr, link missing"     true  "{\"check_runs\":[$ALL3]}" pull_request
 exit $fail

@@ -33,8 +33,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Only the commits pushed since the previous head are looked at, and only when that head's three jobs passed
-      # (or were skipped). Otherwise a docs-only commit after a broken one would show green on broken code.
+      # Only the commits pushed since the previous head are looked at, and only when that head's jobs passed
+      # (or were skipped; on a push that includes iOS release link). Otherwise a docs-only commit after a broken one would show green on broken code.
       # A new, reopened or ready-for-review pull request always runs.
       - id: code
         name: Detect code changes
@@ -52,7 +52,7 @@ jobs:
             code=${code#code=}
             if [ "$code" = false ]; then
               green=$(gh api "repos/$REPO/commits/$BEFORE/check-runs?per_page=100" 2>/dev/null \
-                | scripts/ci/previous-head-green.sh || echo false)
+                | scripts/ci/previous-head-green.sh "$EVENT" || echo false)
               echo "previous head $BEFORE green: $green"
               [ "$green" = true ] || code=true
             fi

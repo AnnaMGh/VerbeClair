@@ -38,7 +38,7 @@ keeps its own status. A `dev` run still waiting behind it MAY be replaced by a n
 ### Requirement: Runs that prove nothing are skipped
 CI SHALL NOT start the checks and unit tests, iOS simulator tests and Android device tests jobs for a draft pull request,
 or for a change whose files are all documentation (`openspec/`, `docs/`, `*.md`, `LICENSE`) or agent configuration
-(`.claude/`). Any other file, and any case where the changed files can't be determined, SHALL count as code. A skipped
+(`.claude/`). Any other file, and any case where the changed files can't be determined, SHALL count as code. On a push, the previous head's iOS release link job SHALL count as one of the jobs that must have passed. A skipped
 job SHALL report Success, so that required checks do not block the pull request.
 
 #### Scenario: Documentation-only commit after a passing head
@@ -50,6 +50,11 @@ job SHALL report Success, so that required checks do not block the pull request.
 - **WHEN** a commit that only changes files under `openspec/` is pushed, and any of the previous head's three jobs failed,
   was cancelled, is still running or is missing
 - **THEN** the three jobs run, so documentation can't turn a broken head green
+
+#### Scenario: Documentation-only push to dev after a failing release link
+- **WHEN** a commit that only changes files under `openspec/` is pushed to `dev`, and the previous head's iOS release
+  link job failed, was cancelled, is still running or is missing
+- **THEN** the jobs run, including the iOS release link, so documentation can't hide a broken release link on `dev`
 
 #### Scenario: Workflow or script change
 - **WHEN** a commit changes `.github/workflows/ci.yml` or a file under `scripts/`
