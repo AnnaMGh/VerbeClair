@@ -34,7 +34,8 @@ jobs:
           fetch-depth: 0
 
       # Only the commits pushed since the previous head are looked at, and only when that head's jobs passed
-      # (or were skipped; on a push that includes iOS release link). Otherwise a docs-only commit after a broken one would show green on broken code.
+      # (or were skipped), and on a push its iOS release link run too. Otherwise a docs-only commit after a broken one
+      # would show green on broken code.
       # A new, reopened or ready-for-review pull request always runs.
       - id: code
         name: Detect code changes

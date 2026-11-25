@@ -39,10 +39,13 @@ green "other check runs"  true  "{\"check_runs\":[$(run 5 "Changes" '"failure"')
 green "no check runs"     false '{"check_runs":[]}'
 green "not json"          false 'garbage'
 green "empty input"       false ''
-# on a push the iOS release link job counts too; a pull request has none
+# on a push the iOS release link job counts too, skipped runs of it are ignored; a pull request has none
 ALL3="$(run 1 "$C" '"success"'),$(run 2 "$I" '"success"'),$(run 3 "$A" '"success"')"
 green "push, link success"   true  "{\"check_runs\":[$ALL3,$(run 4 "$R" '"success"')]}" push
-green "push, link skipped"   true  "{\"check_runs\":[$ALL3,$(run 4 "$R" '"skipped"')]}" push
+green "push, link skipped"   false "{\"check_runs\":[$ALL3,$(run 4 "$R" '"skipped"')]}" push
+green "push, failed link not hidden by a later skipped pr run" false "{\"check_runs\":[$ALL3,$(run 4 "$R" '"failure"'),$(run 8 "$R" '"skipped"')]}" push
+green "push, success link, later skipped pr run" true "{\"check_runs\":[$ALL3,$(run 4 "$R" '"success"'),$(run 8 "$R" '"skipped"')]}" push
+green "push, link rerun wins" true "{\"check_runs\":[$ALL3,$(run 4 "$R" '"failure"'),$(run 9 "$R" '"success"')]}" push
 green "push, link failed"    false "{\"check_runs\":[$ALL3,$(run 4 "$R" '"failure"')]}" push
 green "push, link running"   false "{\"check_runs\":[$ALL3,$(run 4 "$R" null)]}" push
 green "push, link missing"   false "{\"check_runs\":[$ALL3]}" push
