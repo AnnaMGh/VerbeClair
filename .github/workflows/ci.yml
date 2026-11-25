@@ -33,8 +33,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Only the commits pushed since the previous head are looked at, and only when that head's three jobs passed
-      # (or were skipped). Otherwise a docs-only commit after a broken one would show green on broken code.
+      # Only the commits pushed since the previous head are looked at, and only when that head's jobs passed
+      # (or were skipped), and on a push its iOS release link run too. Otherwise a docs-only commit after a broken one
+      # would show green on broken code.
       # A new, reopened or ready-for-review pull request always runs.
       - id: code
         name: Detect code changes
@@ -52,7 +53,7 @@ jobs:
             code=${code#code=}
             if [ "$code" = false ]; then
               green=$(gh api "repos/$REPO/commits/$BEFORE/check-runs?per_page=100" 2>/dev/null \
-                | scripts/ci/previous-head-green.sh || echo false)
+                | scripts/ci/previous-head-green.sh "$EVENT" || echo false)
               echo "previous head $BEFORE green: $green"
               [ "$green" = true ] || code=true
             fi
@@ -145,8 +146,9 @@ jobs:
           echo "DEVELOPER_DIR=$(xcode-select -p)" >> "$GITHUB_ENV"
           xcodebuild -version
 
-      # Everything ./gradlew build runs for the Apple targets: the simulator tests, device compilation, the
-      # frameworks Xcode links, and the iOS / Apple / Native metadata compilation. `checks` covers the rest.
+      # Everything ./gradlew build runs for the Apple targets except the release frameworks: the simulator tests,
+      # device compilation, the debug frameworks Xcode links, and the iOS / Apple / Native metadata compilation.
+      # `checks` covers the rest, and `ios-release-link` links the release frameworks on pushes to dev.
       - name: iOS simulator tests, device compilation and frameworks
         run: >
           ./gradlew
@@ -155,8 +157,6 @@ jobs:
           compileTestKotlinIosArm64
           linkDebugFrameworkIosSimulatorArm64
           linkDebugFrameworkIosArm64
-          linkReleaseFrameworkIosSimulatorArm64
-          linkReleaseFrameworkIosArm64
           compileIosMainKotlinMetadata
           compileAppleMainKotlinMetadata
           compileNativeMainKotlinMetadata
@@ -176,6 +176,81 @@ jobs:
           path: |
             **/build/reports/tests/
             **/build/test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # The release frameworks (`linkReleaseFramework…` for the simulator and the device). Kotlin/Native optimizes the
+  # whole program for them on one thread, and the time swings from about 4 minutes to over 20 and sometimes past
+  # 30 on the shared runner (thread dumps showed devirtualization, dead-code elimination and the LLVM passes, with
+  # the daemon busy and memory free), so a pull request cannot wait on them. They run on pushes to dev, which the
+  # pull request into main then ships, so the release link is still checked before anything reaches main.
+  ios-release-link:
+    name: iOS release link
+    needs: changes
+    if: github.event_name == 'push' && needs.changes.outputs.run == 'true'
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: zulu
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: false
+
+      # Only restores: `ios-tests` saves this cache under the same key, and a second save would just warn.
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: konan-${{ runner.os }}-
+
+      - name: Select Xcode
+        run: |
+          echo "DEVELOPER_DIR=$(xcode-select -p)" >> "$GITHUB_ENV"
+          xcodebuild -version
+
+      # Every 3 minutes the watchdog prints the busy Kotlin frames of the Gradle daemon's threads and keeps the full
+      # jcmd dump under build/reports/tests/thread-dumps (uploaded on failure), so a slow link names the compiler
+      # phase it is in. The step timeout fails a real stall with that output instead of cancelling the job blind.
+      - name: Link the release frameworks
+        timeout-minutes: 55
+        run: |
+          (while true; do
+            sleep 180
+            echo "::group::watchdog $(date -u +%T)"
+            ps -axo pid,etime,%cpu,rss,command | sort -k4 -n -r | head -3 | cut -c1-200
+            daemon=$(pgrep -f 'org.gradle.launcher.daemon.bootstrap.GradleDaemon' | head -1 || true)
+            if [ -n "$daemon" ]; then
+              mkdir -p build/reports/tests/thread-dumps
+              dump="build/reports/tests/thread-dumps/daemon-$(date -u +%H%M%S).txt"
+              "$JAVA_HOME/bin/jcmd" "$daemon" Thread.print > "$dump" 2>&1 || echo "jcmd failed for pid $daemon"
+              awk 'BEGIN { RS = ""; ORS = "\n\n" } /RUNNABLE/ && /org\.jetbrains\.kotlin/' "$dump" \
+                | cut -c1-180 | head -60
+            else
+              echo "no Gradle daemon found"
+            fi
+            echo "::endgroup::"
+          done) &
+          watchdog=$!
+          trap 'kill "$watchdog" 2>/dev/null || true' EXIT
+          ./gradlew \
+          linkReleaseFrameworkIosSimulatorArm64 \
+          linkReleaseFrameworkIosArm64 \
+          --stacktrace
+        env:
+          FRENCH_VERBS_DATASET_TOKEN: ${{ secrets.FRENCH_VERBS_DATASET_TOKEN }}
+
+      - name: Upload thread dumps
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ios-release-link-dumps
+          path: build/reports/tests/thread-dumps/
           retention-days: 7
           if-no-files-found: ignore
 
