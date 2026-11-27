@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Decides whether a pull request or push changes anything the heavy CI jobs can check.
+# Decides whether a pull request or push changes anything the CI check jobs can check.
 # Prints "code=true" or "code=false" (append the output to $GITHUB_OUTPUT).
 #
 # Only documentation and agent configuration count as "not code". Anything else, and any doubt

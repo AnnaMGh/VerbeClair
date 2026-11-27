@@ -1,0 +1,24 @@
+# The Gradle tasks of the "Checks and unit tests" CI job (Notion N-18), one per line. Lines starting with # are
+# comments. The coverage floors (jacocoCoverageVerification) run as a step of their own and aren't listed here.
+# task-drift.sh fails when ./gradlew build gains a test, detekt, ktlint or debug lint task that this list doesn't run.
+
+# Android debug build and Android lint of the app's debug build
+:androidApp:assembleDebug
+:androidApp:lintDebug
+
+# JVM and Android host unit tests. A module that gains tests has to be added here.
+:androidApp:testDebugUnitTest
+:shared:testAndroidHostTest
+:core:domain:jvmTest
+:core:database:jvmTest
+:tooling:detekt-rules:test
+:tooling:konsist:test
+
+# Static checks. A name without a module path runs in every module that has the task.
+# detektDebug is the type-resolved analysis; its release half belongs to the heavy tier.
+detekt
+:androidApp:detektDebug
+ktlintCheck
+
+# Compiles every module's Android instrumented tests without running them. ./gradlew build doesn't do this.
+compileAndroidDeviceTest
