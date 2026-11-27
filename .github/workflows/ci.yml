@@ -5,20 +5,25 @@ on:
     branches: [dev, main]
     # ready_for_review is not a default type: without it, marking a draft ready would not start a run.
     types: [opened, synchronize, reopened, ready_for_review]
-  # Pushes to main are not built: the pull request into main already built the same tree.
   push:
-    branches: [dev]
+    branches: [dev, main]
+  workflow_dispatch:
 
+# The event name keeps a manual run apart from a push run of the same branch. A newer run cancels the older one of the
+# same pull request or of a push to dev. Runs for main and manual runs are not cancelled once started.
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev') }}
 
 permissions:
   contents: read
 
 jobs:
-  # Decides whether the three jobs below run. They are skipped for drafts and for changes that only touch
-  # documentation or agent configuration. A job skipped by its `if` reports Success, so required checks still pass.
+  # Decides which of the check jobs below run (Notion N-18). The fast checks (checks and unit tests, iOS simulator
+  # tests) run for pull requests into dev or main and for pushes to dev. The heavy checks (Android release build, Android
+  # device tests, iOS frameworks) run for pull requests into main and pushes to main, and a push to main also runs the
+  # iOS simulator tests. A manual run runs everything. Drafts run nothing, and so can documentation or agent
+  # configuration changes to dev. A job skipped by its `if` reports Success, so required checks still pass.
   changes:
     name: Changes
     runs-on: ubuntu-latest
@@ -27,17 +32,21 @@ jobs:
       contents: read
       checks: read
     outputs:
-      run: ${{ steps.gate.outputs.run }}
+      checks: ${{ steps.jobs.outputs.checks }}
+      ios: ${{ steps.jobs.outputs.ios }}
+      heavy: ${{ steps.jobs.outputs.heavy }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
-      # Only the commits pushed since the previous head are looked at, and only when that head's three jobs passed
-      # (or were skipped). Otherwise a docs-only commit after a broken one would show green on broken code.
-      # A new, reopened or ready-for-review pull request always runs.
+      # Only the commits pushed since the previous head are looked at, and only when that head's fast checks passed
+      # (or were skipped). Otherwise a docs-only commit after a broken one would show green on broken code. A new,
+      # reopened or ready-for-review pull request has no previous head, so it counts as code. decide-jobs.sh ignores
+      # this result for anything about main.
       - id: code
         name: Detect code changes
+        shell: bash
         env:
           EVENT: ${{ github.event_name }}
           ACTION: ${{ github.event.action }}
@@ -47,34 +56,44 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           code=true
+          green=false
           if [ "$EVENT" = push ] || [ "$ACTION" = synchronize ]; then
             code=$(scripts/ci/changed-code.sh "$BEFORE" "$HEAD_SHA")
             code=${code#code=}
             if [ "$code" = false ]; then
-              green=$(gh api "repos/$REPO/commits/$BEFORE/check-runs?per_page=100" 2>/dev/null \
-                | scripts/ci/previous-head-green.sh || echo false)
+              # A failed API call leaves the script to read what there is, and it prints false for anything it can't
+              # read. A fallback echo here would print a second value under pipefail and break GITHUB_OUTPUT.
+              green=$({ gh api "repos/$REPO/commits/$BEFORE/check-runs?per_page=100" 2>/dev/null || true; } \
+                | scripts/ci/previous-head-green.sh)
               echo "previous head $BEFORE green: $green"
-              [ "$green" = true ] || code=true
             fi
           fi
           echo "code=$code" | tee -a "$GITHUB_OUTPUT"
+          echo "green=$green" >> "$GITHUB_OUTPUT"
 
-      - id: gate
+      # shell: bash turns on pipefail. Without it a failing script would be hidden by tee: this job would pass with empty
+      # outputs, and every check job would be skipped, which counts as passing.
+      - id: jobs
         name: Decide
+        shell: bash
         env:
-          CODE: ${{ steps.code.outputs.code }}
+          EVENT: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          TARGET: ${{ github.base_ref || github.ref_name }}
           DRAFT: ${{ github.event.pull_request.draft }}
+          CODE: ${{ steps.code.outputs.code }}
+          GREEN: ${{ steps.code.outputs.green }}
         run: |
-          if [ "$CODE" = true ] && [ "$DRAFT" != true ]; then run=true; else run=false; fi
-          echo "run=$run (code=$CODE, draft=${DRAFT:-n/a})"
-          echo "run=$run" >> "$GITHUB_OUTPUT"
+          echo "event=$EVENT action=${ACTION:-n/a} target=$TARGET draft=${DRAFT:-n/a} code=$CODE green=$GREEN"
+          scripts/ci/decide-jobs.sh "$EVENT" "$ACTION" "$TARGET" "$DRAFT" "$CODE" "$GREEN" | tee -a "$GITHUB_OUTPUT"
 
-  # Lint, detekt and the JVM / Android host unit tests. Linux is enough: the Apple targets are skipped there
-  # and covered by the ios-tests job.
+  # The Android debug build, app lint, the JVM / Android host unit tests, the static checks and compilation of the
+  # instrumented tests, as the explicit tasks of scripts/ci/fast-tasks.txt. No release variant and no iOS compilation:
+  # the macOS jobs cover iOS.
   checks:
     name: Checks and unit tests
     needs: changes
-    if: needs.changes.outputs.run == 'true'
+    if: needs.changes.outputs.checks == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -90,8 +109,11 @@ jobs:
           # Pull requests write their own cache too: GitHub scopes it to the PR, so dev and main never read it.
           cache-read-only: false
 
-      - name: Gradle build
-        run: ./gradlew build --stacktrace
+      - name: Build, unit tests and static checks
+        shell: bash
+        run: |
+          tasks=$(scripts/ci/task-drift.sh --print)
+          xargs ./gradlew --stacktrace <<< "$tasks"
         env:
           FRENCH_VERBS_DATASET_TOKEN: ${{ secrets.FRENCH_VERBS_DATASET_TOKEN }}
 
@@ -101,6 +123,37 @@ jobs:
         run: ./gradlew jacocoCoverageVerification --stacktrace
         env:
           FRENCH_VERBS_DATASET_TOKEN: ${{ secrets.FRENCH_VERBS_DATASET_TOKEN }}
+
+      # Fails when ./gradlew build has a check that the task list doesn't run. It only does dry runs; no job runs the
+      # full build.
+      - name: Task list drift guard
+        run: scripts/ci/task-drift.sh
+        env:
+          FRENCH_VERBS_DATASET_TOKEN: ${{ secrets.FRENCH_VERBS_DATASET_TOKEN }}
+
+      # Report only: there is no score floor, so surviving mutants never fail the job. Pitest itself failing does.
+      - id: pitest
+        name: Mutation testing
+        run: ./gradlew :core:domain:pitest :core:database:pitest --stacktrace
+        env:
+          FRENCH_VERBS_DATASET_TOKEN: ${{ secrets.FRENCH_VERBS_DATASET_TOKEN }}
+
+      # Both steps below also run when Pitest failed, to show whatever it wrote.
+      - name: Mutation score
+        if: ${{ !cancelled() && steps.pitest.outcome != 'skipped' }}
+        shell: bash
+        run: scripts/ci/pitest-summary.sh core/domain core/database | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload mutation reports
+        if: ${{ !cancelled() && steps.pitest.outcome != 'skipped' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pitest-reports
+          path: |
+            core/domain/build/reports/pitest/
+            core/database/build/reports/pitest/
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload test reports
         if: failure()
@@ -113,14 +166,15 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-  # Compiles the iOS targets and runs the commonTest / iosTest tests on the iOS simulator. These are plain
-  # simulator tests (Compose UI tests included), not XCUITest end-to-end tests of the installed app.
+  # Runs the commonTest / iosTest tests on the iOS simulator, as a debug test build. These are plain simulator tests
+  # (Compose UI tests included), not XCUITest end-to-end tests of the installed app. Device compilation and the
+  # frameworks are in the ios-frameworks job.
   ios-tests:
     name: iOS simulator tests
     needs: changes
-    if: needs.changes.outputs.run == 'true'
+    if: needs.changes.outputs.ios == 'true'
     runs-on: macos-15
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -134,7 +188,14 @@ jobs:
           # Pull requests write their own cache too: GitHub scopes it to the PR, so dev and main never read it.
           cache-read-only: false
 
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      # The Gradle and Kotlin daemon limits in gradle.properties may add up to more than the runner has.
+      - name: Runner memory
+        run: |
+          sysctl -n hw.memsize hw.ncpu
+          vm_stat
+
+      - id: konan-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
@@ -145,28 +206,29 @@ jobs:
           echo "DEVELOPER_DIR=$(xcode-select -p)" >> "$GITHUB_ENV"
           xcodebuild -version
 
-      # Everything ./gradlew build runs for the Apple targets: the simulator tests, device compilation, the
-      # frameworks Xcode links, and the iOS / Apple / Native metadata compilation. `checks` covers the rest.
-      - name: iOS simulator tests, device compilation and frameworks
-        run: >
-          ./gradlew
-          iosSimulatorArm64Test
-          compileKotlinIosArm64
-          compileTestKotlinIosArm64
-          linkDebugFrameworkIosSimulatorArm64
-          linkDebugFrameworkIosArm64
-          linkReleaseFrameworkIosSimulatorArm64
-          linkReleaseFrameworkIosArm64
-          compileIosMainKotlinMetadata
-          compileAppleMainKotlinMetadata
-          compileNativeMainKotlinMetadata
-          metadataIosMainClasses
-          metadataIosMainProcessResources
-          iosArm64MetadataElements
-          iosSimulatorArm64MetadataElements
-          --stacktrace
+      # Fetches the Kotlin/Native compiler and its dependencies (LLVM, libffi) by themselves, so that they can be
+      # saved before the tests: a test run that fails or times out would otherwise leave no cache. The save is skipped
+      # when this step fails, so an incomplete download is never saved.
+      - name: Fetch the Kotlin/Native toolchain
+        run: ./gradlew :core:domain:downloadKotlinNativeDistribution --stacktrace
         env:
           FRENCH_VERBS_DATASET_TOKEN: ${{ secrets.FRENCH_VERBS_DATASET_TOKEN }}
+
+      - name: Save the Kotlin/Native toolchain
+        if: steps.konan-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+
+      - name: iOS simulator tests
+        run: ./gradlew iosSimulatorArm64Test --stacktrace
+        env:
+          FRENCH_VERBS_DATASET_TOKEN: ${{ secrets.FRENCH_VERBS_DATASET_TOKEN }}
+
+      - name: Memory after the tests
+        if: always()
+        run: vm_stat
 
       - name: Upload test reports
         if: failure()
@@ -179,12 +241,78 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-  # commonTest and androidDeviceTest on an emulator. The runner is small (2 cores, ~7 GB for a private repo), so
-  # the test APKs are built first and the Gradle and Kotlin daemons are stopped before the emulator starts.
+  # The release variant of the app, with detekt's type-resolved analysis of it. The debug half is in checks.
+  android-release-build:
+    name: Android release build
+    needs: changes
+    if: needs.changes.outputs.heavy == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: zulu
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: false
+
+      - name: Release build and detekt
+        run: ./gradlew :androidApp:assembleRelease :androidApp:detektRelease --stacktrace
+        env:
+          FRENCH_VERBS_DATASET_TOKEN: ${{ secrets.FRENCH_VERBS_DATASET_TOKEN }}
+
+  # The debug and release frameworks for the iOS simulator and the iOS device, which also compiles the production code
+  # for devices. CI doesn't build the Xcode app. It only restores caches: ios-tests is the job that saves the toolchain.
+  ios-frameworks:
+    name: iOS frameworks
+    needs: changes
+    if: needs.changes.outputs.heavy == 'true'
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: zulu
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: konan-${{ runner.os }}-
+
+      - name: Select Xcode
+        run: |
+          echo "DEVELOPER_DIR=$(xcode-select -p)" >> "$GITHUB_ENV"
+          xcodebuild -version
+
+      - name: Link the iOS frameworks
+        run: >
+          ./gradlew
+          linkDebugFrameworkIosSimulatorArm64
+          linkDebugFrameworkIosArm64
+          linkReleaseFrameworkIosSimulatorArm64
+          linkReleaseFrameworkIosArm64
+          --stacktrace
+        env:
+          FRENCH_VERBS_DATASET_TOKEN: ${{ secrets.FRENCH_VERBS_DATASET_TOKEN }}
+
+  # commonTest and androidDeviceTest on an emulator. Gradle and the emulator compete for the runner's memory, so the
+  # test APKs are built first and the Gradle and Kotlin daemons are stopped before the emulator starts.
   android-device-tests:
     name: Android device tests
     needs: changes
-    if: needs.changes.outputs.run == 'true'
+    if: needs.changes.outputs.heavy == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:

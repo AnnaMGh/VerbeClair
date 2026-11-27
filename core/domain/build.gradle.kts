@@ -6,6 +6,7 @@ plugins {
     id("verbeclair.ktlint")
     id("verbeclair.detekt")
     id("verbeclair.jacoco")
+    id("verbeclair.pitest")
 }
 
 coverageFloor {

@@ -10,6 +10,7 @@ plugins {
     id("verbeclair.ktlint")
     id("verbeclair.detekt")
     id("verbeclair.jacoco")
+    id("verbeclair.pitest")
 }
 
 coverageFloor {
@@ -149,4 +150,15 @@ tasks.named<Test>("jvmTest") {
         .withPathSensitivity(PathSensitivity.RELATIVE)
     val filesDir = bundledVerbDatabaseDir.map { it.dir("files").asFile.absolutePath }
     jvmArgumentProviders += CommandLineArgumentProvider { listOf("-DbundledVerbDatabaseDir=${filesDir.get()}") }
+}
+
+// Pitest runs the same tests in a JVM of its own, so it needs the same database and property as jvmTest.
+tasks.named<JavaExec>("pitest") {
+    inputs
+        .files(
+            buildBundledVerbDatabase,
+        ).withPropertyName("bundledVerbDatabase")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    val filesDir = bundledVerbDatabaseDir.map { it.dir("files").asFile.absolutePath }
+    argumentProviders.add { listOf("--jvmArgs=-DbundledVerbDatabaseDir=${filesDir.get()}") }
 }

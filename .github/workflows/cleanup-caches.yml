@@ -1,7 +1,8 @@
 name: Cleanup caches
 
 # A pull request's caches are scoped to its own ref (refs/pull/<n>/merge) and nothing else reads them after it closes.
-# They add up to about 2.5 GB per pull request against the 10 GB repository limit, so they are deleted on close.
+# They take up a large share of the repository's cache limit, above all for a pull request into main, which can also
+# cache an emulator image of more than 2 GB, so they are deleted on close.
 on:
   pull_request:
     types: [closed]
