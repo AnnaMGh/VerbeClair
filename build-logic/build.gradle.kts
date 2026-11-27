@@ -54,6 +54,10 @@ gradlePlugin {
             id = "verbeclair.ktlint"
             implementationClass = "KtlintConventionPlugin"
         }
+        register("pitest") {
+            id = "verbeclair.pitest"
+            implementationClass = "PitestConventionPlugin"
+        }
         register("detekt") {
             id = "verbeclair.detekt"
             implementationClass = "DetektConventionPlugin"

@@ -36,6 +36,7 @@ jacoco = "0.8.13"
 junit5 = "5.11.3"
 konsist = "0.17.3"
 ktlint = "1.8.0"
+pitest = "1.30.2"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -93,6 +94,7 @@ junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engi
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
 konsist = { group = "com.lemonappdev", name = "konsist", version.ref = "konsist" }
 ktlint-cli = { group = "com.pinterest.ktlint", name = "ktlint-cli", version.ref = "ktlint" }
+pitest-commandLine = { module = "org.pitest:pitest-command-line", version.ref = "pitest" }
 
 [bundles]
 koin-compose = ["koin-core", "koin-compose", "koin-compose-viewmodel"]
